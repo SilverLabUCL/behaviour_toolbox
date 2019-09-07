@@ -29,11 +29,13 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
             end
 
             %% Print videos infos
-            folderpath = strsplit(current_experiment.fnames{video_type_idx}{1},'/');
-            fpath = dir([strjoin(folderpath(1:end-3), '/'),'/*_*_*_*']);
-            vertcat(fpath.name)
-            fprintf([strjoin(folderpath(1:end-3), '/'), '/\n']);
-            fprintf([folderpath{end}, '\n']);
+            if ~isempty(current_experiment.fnames{video_type_idx})
+                folderpath = strsplit(current_experiment.fnames{video_type_idx}{1},'/');
+                fpath = dir([strjoin(folderpath(1:end-3), '/'),'/*_*_*_*']);
+                vertcat(fpath.name)
+                fprintf([strjoin(folderpath(1:end-3), '/'), '/\n']);
+                fprintf([folderpath{end}, '\n']);
+            end
             
             %% Plot the representative_frame for the current expe
             display_video_frame(reference_frame, current_experiment.windows{video_type_idx}, video_paths{1}, display_duration);

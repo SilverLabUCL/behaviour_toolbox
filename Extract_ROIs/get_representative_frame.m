@@ -31,7 +31,7 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
                 video = VideoReader(current_path);                
                 video.CurrentTime = 1;
                 vidFrame = readFrame(video);
-                reference_frame = cat(3, reference_frame, rgb2gray(vidFrame));
+                reference_frame = cat(3, reference_frame, adapthisteq(rgb2gray(vidFrame)));
                 video_type = [video_type, video_idx];
                 video_paths = [video_paths, {current_path}];
             catch % empty videos etc...

@@ -3,6 +3,10 @@
 % What won't work (yet) 
 % - add a new videotype
 
+%% If you have a folder of video and want to set the MI ROIs :
+% batch_select_MI_rois('Z:/Antoine/VIDEOS/');
+%
+%
 % batch_select_MI_rois('Z:/Antoine/VIDEOS/', all_videos, {'Laser','Wheel','WhiskerPad','Eye','UpperBody/Forelimbs'}, true, {});
 
 % To extract MI, check batch_measure_MIs_from_ROIs
@@ -74,12 +78,17 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
 %         end
 %     end
   
+    %% For the initial call, or if all_experiments is '', generate an struct
+    if isempty(all_experiments)
+        all_experiments = cell(1, numel(video_folders));
+    end
+
     %% Use this function to edit the fname field or check for modified files
     [all_experiments, video_folders] = check_or_fix_path_issues(all_experiments, video_folders, filter_list);
 
     %% Analyse each experiment (i.e, with the camera pointing at the same mouse)
     % Go through all experiment folder
-    for exp_idx = 5:numel(video_folders) 
+    for exp_idx = 1:numel(video_folders) 
 
         %% Get all videos in the experiment
         % Videos are expected to be avi fiels in a subfolder. This is the
@@ -96,7 +105,7 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
             fprintf([strrep(splitvideo{end},'\','/'),' contains a split video and will not be analyzed\n'])
         end
 
-        %% For valid videos, reload any exisitng ROI and let the user do some editing (if display_duration = 0)
+        %% For valid videos, reload any existing ROI and let the user do some editing (if display_duration = 0)
         if ~isempty(recordings_paths) && ~any(contains({recordings_paths.name}, '-2.avi')) %no video files or segmented videos
             %% Check if we do a new analysis or an update. 
             % This check if there is already an experiment for these files.
@@ -151,12 +160,13 @@ function [already_there, all_videos, list_of_videotypes, exp_idx] = check_if_new
         all_videos{exp_idx}.MI              = cell(1, numel(videotypes));
         all_videos{exp_idx}.reference_image = cell(1, numel(videotypes));
         all_videos{exp_idx}.timestamps      = cell(1, numel(videotypes));
+        all_videos{exp_idx}.fnames          = cell(1, numel(videotypes));
     end
 end
 
 function [all_experiments, video_folders] = check_or_fix_path_issues(all_experiments, video_folders, filter_list)
     for expe_idx = numel(all_experiments):-1:1        
-        if isempty(filter_list) || any(cellfun(@(x) contains(strrep(all_experiments{expe_idx}.fnames{1}{1},'\','/'), strrep(x, '\','/')), filter_list))
+        if ~isempty(all_experiments{expe_idx}) &&(isempty(filter_list) || any(cellfun(@(x) contains(strrep(all_experiments{expe_idx}.fnames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
             for video_type_idx = numel(all_experiments{expe_idx}.fnames):-1:1
                 for video_record = numel(all_experiments{expe_idx}.fnames{video_type_idx}):-1:1
 
@@ -186,13 +196,13 @@ function [all_experiments, video_folders] = check_or_fix_path_issues(all_experim
                     end
                 end
             end
-        else
+        elseif ~isempty(filter_list) 
             all_experiments(expe_idx) = [];
         end
     end
     
 	for el = numel(video_folders):-1:1
-        if ~any(cellfun(@(x) contains(video_folders{el}, strrep(x, '\','/')), filter_list))
+        if ~isempty(filter_list) && ~any(cellfun(@(x) contains(video_folders{el}, strrep(x, '\','/')), filter_list))
             video_folders(el) = [];
         end
     end    

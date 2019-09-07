@@ -1,4 +1,8 @@
 %% Call batch_select_MI_rois() first to create ROIs, then pass the generated ouput
+%
+% [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output)
+% 
+%
 
 function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force)
     
