@@ -36,7 +36,7 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     failed_analysis = {};
     for exp_idx = 1:numel(all_experiments) 
         experiment = all_experiments{exp_idx};
-         try
+%        try
             if isfield(all_experiments{exp_idx},  'fnames')
                 for video_type_idx = 1:numel(experiment.windows)
                     if isempty(all_experiments{exp_idx}.MI{video_type_idx}) || ismember(exp_idx, force)
@@ -44,9 +44,9 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
 
                             fname = experiment.fnames{video_type_idx}{video_record};
                             
-                            if contains(fname, 'Whisk')
-                                %pass
-                            else
+%                             if contains(fname, 'Whisk')
+%                                 %pass
+%                             else
                                 path = strsplit(strrep(fname,'/','\'),'Cam');
                                 path = [path{1},'Cam-relative times.txt'];
 
@@ -68,12 +68,12 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
 
                                 %% Get MI
                                 motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.windows{video_type_idx}(1,:), false);
-
+                                
                                 %% Store results
                                 all_experiments{exp_idx}.MI{video_type_idx}{video_record} = motion_indexes;
                                 all_experiments{exp_idx}.timestamps{video_type_idx}{video_record} = camera_timescale;
                                 all_experiments{exp_idx}.absolute_time{video_type_idx}{video_record} = absolute_time;
-                            end
+%                             end
                         end
                     end 
                 end
@@ -84,9 +84,9 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
                     pause(0.1)
                 end
             end
-        catch
-           failed_analysis = [failed_analysis, {experiment}];
-        end
+    %    catch
+      %     failed_analysis = [failed_analysis, {experiment}];
+     %   end
     end
 end
 

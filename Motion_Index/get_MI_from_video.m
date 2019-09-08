@@ -59,8 +59,7 @@ function motion_indexes = get_MI_from_video(file_path_or_data, timestamp, render
         data = file_path_or_data;
     elseif ~isnumeric(file_path_or_data) && exist(file_path_or_data, 'file')
         fprintf(['please wait... loading videofile :',file_path_or_data,'\n'])
-        data = mmread_light(file_path_or_data);
-        data = single(squeeze(cat(4,data.frames.cdata))); % a bit slow
+        data = single(mmread_light(file_path_or_data));
         fprintf('video loaded \n')
     else
        error('source not identified. Pass a .avi/.tif path, or a [X * Y * T] Matrix \n') 
