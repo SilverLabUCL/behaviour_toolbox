@@ -2,7 +2,7 @@
 
 function plot_MIs(MIs, tags, keep, t_offset)
     if nargin < 2 || isempty(tags)
-        tags = cell(1, numel(MIs{1}));
+        tags = cell(1, max(cellfun(@numel, MIs)));
     end
     if nargin < 3 || isempty(keep)
         keep = false;

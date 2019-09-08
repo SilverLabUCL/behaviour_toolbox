@@ -6,7 +6,6 @@ function display_video_frame(reference_frame, ROI_window, video_path, display_du
     %% Display the frame, and add any existing ROI
     
     %% Preview figure
-    
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
     axis equal; hold on;
     title({'Close window to validate'; strrep(strrep(video_path,'\','/'),'_','-')})
@@ -19,6 +18,8 @@ function display_video_frame(reference_frame, ROI_window, video_path, display_du
     bgmenu = uimenu(cmenu,'label','Add ROI','Callback',@(src,eventdata) add_rect(src, eventdata, position));
     set(gca, 'uicontextmenu', cmenu)
 
+    set(fig_handle,'KeyPressFcn',{@escape_btn ,fig_handle});
+    
     %% Add ROIs
     if isempty(ROI_window)
         %% If it is the first call, add a first ROI in the middle
@@ -45,6 +46,15 @@ function display_video_frame(reference_frame, ROI_window, video_path, display_du
     close all
 end
 
+function escape_btn(varargin)
+    if any(strcmp(varargin{1,2}.Key,{'escape','return'}))
+        close(varargin{1});
+%     elseif strcmp(varargin{1,2}.Key, 'add')
+%         add_rect('', '', current_pos);
+%     elseif strcmp(varargin{1,2}.Key, 'subtract')
+%         delete_rect(src, eventdata,obj);
+    end
+end
 
 function add_rect(~, ~, position)
     %% Add a new ROI

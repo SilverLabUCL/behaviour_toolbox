@@ -19,7 +19,6 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     elseif isstr(force) && strcmp(force, 'all')
         force = 1:numel(existing_experiments);
     end
-    
     if nargin < 3 || isempty(display)
         display = true;
     end
@@ -78,6 +77,8 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
                                 motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.windows{video_type_idx}(1,:), false);
                                 
                                 %% Store results
+                                temp = cell2mat(motion_indexes);
+                                figure(123);cla();plot(temp(:,1:2:end));
                                 all_experiments{exp_idx}.MI{video_type_idx}{video_record} = motion_indexes;
                                 all_experiments{exp_idx}.timestamps{video_type_idx}{video_record} = camera_timescale;
                                 all_experiments{exp_idx}.absolute_time{video_type_idx}{video_record} = absolute_time;
