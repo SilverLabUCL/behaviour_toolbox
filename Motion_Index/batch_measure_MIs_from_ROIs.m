@@ -1,10 +1,15 @@
 %% Call batch_select_MI_rois() first to create ROIs, then pass the generated ouput
 %
-% [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output)
+% to re-measure all MIs  
+% [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, true)
 % 
-%
+% to measure only new y MIs , or display exisiting ones
+% [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, false)
+% 
 
-function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force)
+
+
+function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display)
     
     %% Force specific MI to be updated
     % By default, only ROIs with no MI are analysed. You can pass a list of
@@ -14,8 +19,11 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     elseif isstr(force) && strcmp(force, 'all')
         force = 1:numel(existing_experiments);
     end
-
-
+    
+    if nargin < 3 || isempty(display)
+        display = true;
+    end
+    
     %% Initialize variables
     % Globals are quite bad i know, but you don't want to loose info half 
     % way in the analysis. If you stop half
@@ -77,11 +85,15 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
                         end
                     end 
                 end
-                first_tp_of_exp = min(cellfun(@min, [all_experiments{exp_idx}.absolute_time{:}]));
-                for video_type_idx = 1:numel(experiment.windows)
-                    all_experiments{exp_idx}.absolute_time{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, all_experiments{exp_idx}.absolute_time{video_type_idx}, 'UniformOutput', false);
-                    plot_MIs(all_experiments{exp_idx}.MI{video_type_idx},'',video_type_idx > 1,first_tp_of_exp);
-                    pause(0.1)
+                
+                
+                if display
+                    first_tp_of_exp = min(cellfun(@min, [all_experiments{exp_idx}.absolute_time{:}]));
+                    for video_type_idx = 1:numel(experiment.windows)
+                        all_experiments{exp_idx}.absolute_time{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, all_experiments{exp_idx}.absolute_time{video_type_idx}, 'UniformOutput', false);
+                        plot_MIs(all_experiments{exp_idx}.MI{video_type_idx},'',video_type_idx > 1,first_tp_of_exp);
+                        pause(0.1)
+                    end
                 end
             end
     %    catch

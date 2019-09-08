@@ -1,4 +1,8 @@
-function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags)
+function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle)
+    if nargin < 7 || isempty(fig_handle)
+        fig_handle = '';
+    end
+
     global current_pos
     failed_video_loading = {};
     for video_type_idx = 1:numel(unique(list_of_videotypes))'
@@ -38,7 +42,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
             end
             
             %% Plot the representative_frame for the current expe
-            display_video_frame(reference_frame, current_experiment.windows{video_type_idx}, video_paths{1}, display_duration);
+            display_video_frame(reference_frame, current_experiment.windows{video_type_idx}, video_paths{1}, display_duration, fig_handle);
 
             %% Clear empty cells if you deleted some ROIs
             to_keep = ~cellfun(@isempty , current_pos);

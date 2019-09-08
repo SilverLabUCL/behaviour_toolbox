@@ -4,14 +4,14 @@
 % - add a new videotype
 
 %% If you have a folder of video and want to set the MI ROIs :
-% batch_select_MI_rois('Z:/Antoine/VIDEOS/');
+% batch_select_video_ROIs('Z:/Antoine/VIDEOS/');
 %
 %
-% batch_select_MI_rois('Z:/Antoine/VIDEOS/', all_videos, {'Laser','Wheel','WhiskerPad','Eye','UpperBody/Forelimbs'}, true, {});
+% batch_select_video_ROIs('Z:/Antoine/VIDEOS/', all_videos, {'Laser','Wheel','WhiskerPad','Eye','UpperBody/Forelimbs'}, true, {});
 
 % To extract MI, check batch_measure_MIs_from_ROIs
 
-function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_folder_path, existing_experiments, subplot_tags, display_duration, filter_list)
+function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_folder_path, existing_experiments, subplot_tags, display_duration, filter_list, fig_handle)
 
     %% Get all video folders
     % This is your top folder. You must sort your data by experiment, because
@@ -28,7 +28,7 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
     % videos, updates ROIs or file lists, you can pass a previous analysis
     % as first input arguement
     global all_experiments 
-    if nargin < 2 
+    if nargin < 2 || isempty(existing_experiments)
         all_experiments = {};
     else
         all_experiments = existing_experiments;
@@ -44,6 +44,9 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
     end
     if nargin < 5 || isempty(filter_list)
         filter_list = {};
+    end
+    if nargin < 6 || isempty(fig_handle)
+        fig_handle = '';
     end
     
     splitvideo = {}; % that will indicates problematic split videos
@@ -114,7 +117,7 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
             [already_there, all_experiments, list_of_videotypes, exp_idx] = check_if_new_video(all_experiments, expe_folder, exp_idx, recordings_paths);
 
             close all
-            [all_experiments{exp_idx}, failed_video_loading{exp_idx}] = select_video_ROIs(all_experiments{exp_idx}, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags);
+            [all_experiments{exp_idx}, failed_video_loading{exp_idx}] = select_video_ROIs(all_experiments{exp_idx}, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle);
         end
     end
 end
@@ -135,7 +138,10 @@ function [already_there, all_videos, list_of_videotypes, exp_idx] = check_if_new
     for el = 1:numel(all_videos)
         if isfield(all_videos{el},'fnames')
             test = horzcat(all_videos{el}.fnames{:});
-            if any(contains(strrep(test,'\','/'), expe_folder))
+%             if isempty(test)
+%                 break
+%             end
+            if ~isempty(test) && any(contains(strrep(test,'\','/'), expe_folder))
                 %% Update exp_idx
                 exp_idx         = el;
                 video_paths     = all_videos{exp_idx}.fnames;

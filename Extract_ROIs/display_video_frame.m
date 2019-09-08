@@ -1,8 +1,12 @@
-function display_video_frame(reference_frame, ROI_window, video_path, display_duration)
+function display_video_frame(reference_frame, ROI_window, video_path, display_duration, fig_handle)
+    if nargin < 5 || isempty(fig_handle)
+        fig_handle = figure(123); clf();hold on;
+    end
+
     %% Display the frame, and add any existing ROI
     
     %% Preview figure
-    fig_handle = figure(123); clf();hold on ;
+    
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
     axis equal; hold on;
     title({'Close window to validate'; strrep(strrep(video_path,'\','/'),'_','-')})
