@@ -172,7 +172,7 @@ end
 
 function [all_experiments, video_folders] = check_or_fix_path_issues(all_experiments, video_folders, filter_list)
     for expe_idx = numel(all_experiments):-1:1        
-        if ~isempty(all_experiments{expe_idx}) &&(isempty(filter_list) || any(cellfun(@(x) contains(strrep(all_experiments{expe_idx}.fnames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
+        if ~isempty(all_experiments{expe_idx}) && (isempty(filter_list) || any(cellfun(@(x) contains(strrep(all_experiments{expe_idx}.fnames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
             for video_type_idx = numel(all_experiments{expe_idx}.fnames):-1:1
                 for video_record = numel(all_experiments{expe_idx}.fnames{video_type_idx}):-1:1
 
