@@ -1,6 +1,6 @@
 %% For a given list of MIs, plot them, one per subplot
 
-function plot_MIs(MIs, tags, keep, t_offset)
+function plot_MIs(MIs, tags, keep, t_offset, manual_browsing)
     if nargin < 2 || isempty(tags)
         tags = cell(1, max(cellfun(@numel, MIs)));
     end
@@ -10,7 +10,10 @@ function plot_MIs(MIs, tags, keep, t_offset)
     if nargin < 4 || isempty(t_offset)
         t_offset = 0;
     end
-    
+    if nargin < 5 || isempty(manual_browsing)
+        manual_browsing = false;
+    end
+
     %% Regroup MIs
     all_rois = cell2mat(vertcat(MIs{:}));
     
@@ -44,4 +47,8 @@ function plot_MIs(MIs, tags, keep, t_offset)
         axes = [axes, ax]; hold on;
     end
     linkaxes(axes, 'x');
+
+    if manual_browsing
+    	uiwait(f);
+    end
 end

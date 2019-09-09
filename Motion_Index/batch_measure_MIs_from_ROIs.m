@@ -9,7 +9,7 @@
 
 
 
-function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display)
+function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display, manual_browsing)
     
     %% Force specific MI to be updated
     % By default, only ROIs with no MI are analysed. You can pass a list of
@@ -22,6 +22,9 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     if nargin < 3 || isempty(display)
         display = true;
     end
+    if nargin < 4 || isempty(manual_browsing)
+        manual_browsing = false;
+    end
     
     %% Initialize variables
     % Globals are quite bad i know, but you don't want to loose info half 
@@ -32,12 +35,10 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     all_experiments = existing_experiments;
     all_experiments = all_experiments(~cellfun(@isempty, all_experiments));
     clear existing_experiments;
-    
 
     %% This will send the current output to base workspace even if the
     % analysis is incomplete
     cleanupObj = onCleanup(@() cleanMeUp());
-
 
     %% Now that all Videos are ready, get the motion index if the MI section is empty
     failed_analysis = {};
@@ -77,8 +78,13 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
                                 motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.windows{video_type_idx}(1,:), false);
                                 
                                 %% Store results
-                                temp = cell2mat(motion_indexes);
-                                figure(123);cla();plot(temp(:,1:2:end));
+                                if display
+                                    temp = cell2mat(motion_indexes);
+                                    temp = temp - prctile(temp,1);
+                                    temp = temp ./ max(temp);
+                                    figure(123);cla();plot(temp(:,1:2:end)); drawnow
+                                end
+                                
                                 all_experiments{exp_idx}.MI{video_type_idx}{video_record} = motion_indexes;
                                 all_experiments{exp_idx}.timestamps{video_type_idx}{video_record} = camera_timescale;
                                 all_experiments{exp_idx}.absolute_time{video_type_idx}{video_record} = absolute_time;
@@ -92,7 +98,7 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
                     first_tp_of_exp = min(cellfun(@min, [all_experiments{exp_idx}.absolute_time{:}]));
                     for video_type_idx = 1:numel(experiment.windows)
                         all_experiments{exp_idx}.absolute_time{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, all_experiments{exp_idx}.absolute_time{video_type_idx}, 'UniformOutput', false);
-                        plot_MIs(all_experiments{exp_idx}.MI{video_type_idx},'',video_type_idx > 1,first_tp_of_exp);
+                        plot_MIs(all_experiments{exp_idx}.MI{video_type_idx}, '', video_type_idx > 1, first_tp_of_exp, manual_browsing);
                         pause(0.1)
                     end
                 end
