@@ -11,7 +11,7 @@
 
 % To extract MI, check batch_measure_MIs_from_ROIs
 
-function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_folder_path, existing_experiments, subplot_tags, display_duration, filter_list, fig_handle)
+function [all_experiments, failed_video_loading, splitvideo] = batch_select_video_ROIs(video_folder_path, existing_experiments, subplot_tags, display_duration, filter_list, fig_handle)
 
     %% Get all video folders
     % This is your top folder. You must sort your data by experiment, because
@@ -27,7 +27,7 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
     % workspace. If you reload a previous experiment and want to check
     % videos, updates ROIs or file lists, you can pass a previous analysis
     % as first input arguement
-    global all_experiments 
+    %global all_experiments 
     if nargin < 2 || isempty(existing_experiments)
         all_experiments = {};
     else
@@ -66,7 +66,7 @@ function [failed_video_loading, splitvideo] = batch_select_video_ROIs(video_fold
         end
     end
 
-    video_folders = arrayfun(@(x) strrep(fullfile(x.folder, x.name),'\', '/'), video_folders, 'UniformOutput', false);   
+    video_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], video_folders, 'UniformOutput', false);   
     
     %% Debugging section
     % this would print problematic folders
