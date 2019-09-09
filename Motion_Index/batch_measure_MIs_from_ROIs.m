@@ -36,7 +36,7 @@ function [all_experiments, failed_analysis] = batch_measure_MIs_from_ROIs(existi
 
     %% This will send the current output to base workspace even if the
     % analysis is incomplete
-    cleanupObj = onCleanup(@() cleanMeUp());
+%     cleanupObj = onCleanup(@() cleanMeUp());
 
     %% Now that all Videos are ready, get the motion index if the MI section is empty
     failed_analysis = {};
@@ -104,10 +104,10 @@ function [all_experiments, failed_analysis] = batch_measure_MIs_from_ROIs(existi
     end
 end
 
-
-function cleanMeUp()
-    %% if interrupted, send experiment to base workspace
-    global all_experiments
-    assignin('base', 'all_experiments_output', all_experiments);
-    clear global all_experiments
-end 
+% 
+% function cleanMeUp()
+%     %% If interrupted, send experiment to base workspace
+%     global all_experiments
+%     assignin('base', 'all_experiments_output', all_experiments);
+%     clear global all_experiments
+% end 
