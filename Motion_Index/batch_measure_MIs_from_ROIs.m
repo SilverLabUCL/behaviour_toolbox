@@ -7,8 +7,6 @@
 % [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, false)
 % 
 
-
-
 function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display, manual_browsing)
     
     %% Force specific MI to be updated
