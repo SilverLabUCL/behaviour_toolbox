@@ -122,7 +122,7 @@ function [all_experiments, failed_video_loading, splitvideo] = batch_select_vide
     end
 end
 
-function [already_there, all_videos, list_of_videotypes, exp_idx] = check_if_new_video(all_videos, expe_folder, exp_idx, recordings_paths)
+function [already_there, all_experiments, list_of_videotypes, exp_idx] = check_if_new_video(all_experiments, expe_folder, exp_idx, recordings_paths)
     %% We check if this experient has already be listed somewhere. If yes, 
     % we adjust the index to update the video. If not, we create a new
     % experiment at current index
@@ -135,17 +135,17 @@ function [already_there, all_videos, list_of_videotypes, exp_idx] = check_if_new
     
     %% If we find the recording somewhere, we update the index
     % This doesn't mean the analysis was complete
-    for el = 1:numel(all_videos)
-        if isfield(all_videos{el},'fnames')
-            test = horzcat(all_videos{el}.fnames{:});
+    for el = 1:numel(all_experiments)
+        if isfield(all_experiments{el},'fnames')
+            test = horzcat(all_experiments{el}.fnames{:});
 %             if isempty(test)
 %                 break
 %             end
             if ~isempty(test) && any(contains(strrep(test,'\','/'), expe_folder))
                 %% Update exp_idx
                 exp_idx         = el;
-                video_paths     = all_videos{exp_idx}.fnames;
-                video_type      = all_videos{exp_idx}.types;
+                video_paths     = all_experiments{exp_idx}.fnames;
+                video_type      = all_experiments{exp_idx}.types;
                 already_there   = true;  
                 %% qq we can add here a detection for any mismatch between fields
                 break
@@ -157,16 +157,18 @@ function [already_there, all_videos, list_of_videotypes, exp_idx] = check_if_new
     if ~already_there
         %% Initialise variables. 
         % QQ there will be an issue here if we start adding new videotypes
-        if ~isempty(all_videos{exp_idx}) % If it's a new video, but you are editing a previous analys, we add a new index
-            exp_idx = numel(all_videos)+1;
+        if exp_idx > numel(all_experiments) 
+            % pass, idx can be used
+        elseif ~isempty(all_experiments{exp_idx}) % If it's a new video, but you are editing a previous analys, we add a new index
+            exp_idx = numel(all_experiments)+1;
         end
         video_paths = {};
         video_type  = [];
-        all_videos{exp_idx}.windows         = cell(1, numel(videotypes));
-        all_videos{exp_idx}.MI              = cell(1, numel(videotypes));
-        all_videos{exp_idx}.reference_image = cell(1, numel(videotypes));
-        all_videos{exp_idx}.timestamps      = cell(1, numel(videotypes));
-        all_videos{exp_idx}.fnames          = cell(1, numel(videotypes));
+        all_experiments{exp_idx}.windows         = cell(1, numel(videotypes));
+        all_experiments{exp_idx}.MI              = cell(1, numel(videotypes));
+        all_experiments{exp_idx}.reference_image = cell(1, numel(videotypes));
+        all_experiments{exp_idx}.timestamps      = cell(1, numel(videotypes));
+        all_experiments{exp_idx}.fnames          = cell(1, numel(videotypes));
     end
 end
 
