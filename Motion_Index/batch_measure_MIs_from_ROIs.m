@@ -1,13 +1,13 @@
 %% Call batch_select_MI_rois() first to create ROIs, then pass the generated ouput
 %
 % to re-measure all MIs  
-% [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, true)
+% [all_experiments, failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, true)
 % 
 % to measure only new y MIs , or display exisiting ones
-% [failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, false)
+% [all_experiments, failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, false)
 % 
 
-function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display, manual_browsing)
+function [all_experiments, failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display, manual_browsing)
     
     %% Force specific MI to be updated
     % By default, only ROIs with no MI are analysed. You can pass a list of
@@ -29,7 +29,7 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     % way in the analysis. If you stop half
     % way, the cleanup function should send the current result in the base
     % workspace.
-    global all_experiments 
+    %global all_experiments 
     all_experiments = existing_experiments;
     all_experiments = all_experiments(~cellfun(@isempty, all_experiments));
     clear existing_experiments;
@@ -42,51 +42,48 @@ function [failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, f
     failed_analysis = {};
     for exp_idx = 1:numel(all_experiments) 
         experiment = all_experiments{exp_idx};
-%        try
+
             if isfield(all_experiments{exp_idx},  'fnames')
                 for video_type_idx = 1:numel(experiment.windows)
                     if isempty(all_experiments{exp_idx}.MI{video_type_idx}) || ismember(exp_idx, force)
                         for video_record = 1:size(experiment.windows{video_type_idx}, 1)
 
                             fname = experiment.fnames{video_type_idx}{video_record};
-                            
-%                             if contains(fname, 'Whisk')
-%                                 %pass
-%                             else
-                                path = strsplit(strrep(fname,'/','\'),'Cam');
-                                path = [path{1},'Cam-relative times.txt'];
 
-                                %% To use the parent folder instead (because it has absolute timestamps)
-                                path = strsplit(path,'\');
-                                path = strjoin(path([1:end-2,end]),'\');
+                            path = strsplit(strrep(fname,'/','\'),'Cam');
+                            path = [path{1},'Cam-relative times.txt'];
 
-                                fileID = fopen(path,'r');
-                                timescale = textscan(fileID, '%f%f%s%[^\n\r]', 'Delimiter', '\t', 'TextType', 'string', 'EmptyValue', NaN,  'ReturnOnError', false);
-                                fclose(fileID);
+                            %% To use the parent folder instead (because it has absolute timestamps)
+                            path = strsplit(path,'\');
+                            path = strjoin(path([1:end-2,end]),'\');
 
-                                %% Get real time
-                                absolute_time = cellfun(@(timepoint) strsplit(timepoint, ';'), timescale{3}, 'UniformOutput', false); % separate day from time
-                                absolute_time = cellfun(@(timepoint) cellfun(@str2num, (strsplit(timepoint{2},':'))), absolute_time, 'UniformOutput', false); % separte hr, min, s
-                                absolute_time = cell2mat((cellfun(@(timepoint) sum(timepoint .* [3600000, 60000, 1000]), absolute_time, 'UniformOutput', false))); % convert all to ms
+                            fileID = fopen(path,'r');
+                            timescale = textscan(fileID, '%f%f%s%[^\n\r]', 'Delimiter', '\t', 'TextType', 'string', 'EmptyValue', NaN,  'ReturnOnError', false);
+                            fclose(fileID);
 
-                                %% Get camera timestamps
-                                camera_timescale = timescale{2}/1000;
+                            %% Get real time
+                            absolute_time = cellfun(@(timepoint) strsplit(timepoint, ';'), timescale{3}, 'UniformOutput', false); % separate day from time
+                            absolute_time = cellfun(@(timepoint) cellfun(@str2num, (strsplit(timepoint{2},':'))), absolute_time, 'UniformOutput', false); % separte hr, min, s
+                            absolute_time = cell2mat((cellfun(@(timepoint) sum(timepoint .* [3600000, 60000, 1000]), absolute_time, 'UniformOutput', false))); % convert all to ms
 
-                                %% Get MI
-                                motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.windows{video_type_idx}(1,:), false);
-                                
-                                %% Store results
-                                if display
-                                    temp = cell2mat(motion_indexes);
-                                    temp = temp - prctile(temp,1);
-                                    temp = temp ./ max(temp);
-                                    figure(123);cla();plot(temp(:,1:2:end)); drawnow
-                                end
-                                
-                                all_experiments{exp_idx}.MI{video_type_idx}{video_record} = motion_indexes;
-                                all_experiments{exp_idx}.timestamps{video_type_idx}{video_record} = camera_timescale;
-                                all_experiments{exp_idx}.absolute_time{video_type_idx}{video_record} = absolute_time;
-%                             end
+                            %% Get camera timestamps
+                            camera_timescale = timescale{2}/1000;
+
+                            %% Get MI
+                            motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.windows{video_type_idx}(1,:), false);
+
+                            %% Store results
+                            if display
+                                temp = cell2mat(motion_indexes);
+                                temp = temp - prctile(temp,1);
+                                temp = temp ./ max(temp);
+                                figure(123);cla();plot(temp(:,1:2:end)); drawnow
+                            end
+
+                            all_experiments{exp_idx}.MI{video_type_idx}{video_record} = motion_indexes;
+                            all_experiments{exp_idx}.timestamps{video_type_idx}{video_record} = camera_timescale;
+                            all_experiments{exp_idx}.absolute_time{video_type_idx}{video_record} = absolute_time;
+
                         end
                     end 
                 end
