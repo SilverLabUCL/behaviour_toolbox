@@ -11,7 +11,7 @@
 
 % To extract MI, check batch_measure_MIs_from_ROIs
 
-function [all_experiments, failed_video_loading, splitvideo] = batch_select_video_ROIs(video_folder_path, existing_experiments, subplot_tags, display_duration, filter_list, fig_handle)
+function [all_experiments, failed_video_loading, splitvideo] = batch_select_video_ROIs(video_folder_path, existing_experiments, subplot_tags, display_duration, filter_list, fig_handle, select_ROIs)
 
     %% Get all video folders
     % This is your top folder. You must sort your data by experiment, because
@@ -47,6 +47,9 @@ function [all_experiments, failed_video_loading, splitvideo] = batch_select_vide
     end
     if nargin < 6 || isempty(fig_handle)
         fig_handle = '';
+    end
+    if nargin < 7 || isempty(select_ROIs)
+        select_ROIs = true; % If false, we just list everythin and create empty cells
     end
     
     splitvideo = {}; % that will indicates problematic split videos
@@ -117,7 +120,7 @@ function [all_experiments, failed_video_loading, splitvideo] = batch_select_vide
             [already_there, all_experiments, list_of_videotypes, exp_idx] = check_if_new_video(all_experiments, expe_folder, exp_idx, recordings_paths);
 
             close all
-            [all_experiments{exp_idx}, failed_video_loading{exp_idx}] = select_video_ROIs(all_experiments{exp_idx}, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle);
+            [all_experiments{exp_idx}, failed_video_loading{exp_idx}] = select_video_ROIs(all_experiments{exp_idx}, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs);
         end
     end
 end

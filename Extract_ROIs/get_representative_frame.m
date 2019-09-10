@@ -1,5 +1,9 @@
-function [reference_frame, video_type, video_paths, failed_video_loading] = get_representative_frame(experiment, paths, video_type_idx, video_types_location, failed_video_loading)
-    %% For the current videotype, get one frame from each video and generate a representative frame
+function [reference_frame, video_type, video_paths, failed_video_loading] = get_representative_frame(experiment, paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
+	if nargin < 6 || isempty(get_preview)
+        get_preview = true;
+    end
+
+        %% For the current videotype, get one frame from each video and generate a representative frame
     % red for the normalized sum
     % green for the normalized variance
     % blue for the normalized max
@@ -28,10 +32,12 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
             % the experiment
             current_path = strrep([paths(video_idx).folder,'/', paths(video_idx).name],'\','/'); 
             try
-                video = VideoReader(current_path);                
-                video.CurrentTime = 1;
-                vidFrame = readFrame(video);
-                reference_frame = cat(3, reference_frame, adapthisteq(rgb2gray(vidFrame)));
+                if get_preview
+                    video = VideoReader(current_path);                
+                    video.CurrentTime = 1;
+                    vidFrame = readFrame(video);
+                    reference_frame = cat(3, reference_frame, adapthisteq(rgb2gray(vidFrame)));
+                end
                 video_type = [video_type, video_idx];
                 video_paths = [video_paths, {current_path}];
             catch % empty videos etc...
@@ -40,17 +46,21 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
                 fprintf([current_path, ' has an issue\n'])
             end
         end
-        corrimage = correlation_image(double(reference_frame));
-        mask = repmat(isnan(corrimage),1,1,3); % No DATA
+        if get_preview
+            corrimage = correlation_image(double(reference_frame));
+            mask = repmat(isnan(corrimage),1,1,3); % No DATA
+        end
     end
     
     %% Get some info to help choosing ROIs
-    sumimage = mean(double(reference_frame), 3);
-    varimage = var(double(reference_frame), 1, 3);
-    maximage = max(double(reference_frame), [], 3);
-    reference_frame = cat(3,...
-                          (sumimage - min(sumimage(:))) / (max(sumimage(:)) - min(sumimage(:))),...
-                          (varimage - min(varimage(:))) / (max(varimage(:)) - min(varimage(:))),...
-                          (maximage - min(maximage(:))) / (max(maximage(:)) - min(maximage(:))));
-    reference_frame(mask) = 0; % blank saturated regions  
+    if get_preview
+        sumimage = mean(double(reference_frame), 3);
+        varimage = var(double(reference_frame), 1, 3);
+        maximage = max(double(reference_frame), [], 3);
+        reference_frame = cat(3,...
+                              (sumimage - min(sumimage(:))) / (max(sumimage(:)) - min(sumimage(:))),...
+                              (varimage - min(varimage(:))) / (max(varimage(:)) - min(varimage(:))),...
+                              (maximage - min(maximage(:))) / (max(maximage(:)) - min(maximage(:))));
+        reference_frame(mask) = 0; % blank saturated regions  
+    end
 end
