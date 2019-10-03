@@ -2,7 +2,8 @@
 % This version can load the avi and crop ROIs on the fly
 % -------------------------------------------------------------------------
 % Model : 
-%   MI = get_MI_from_video(file_path, timestamp, rendering, ROI, normalize)
+%   [motion_indexes, video] = get_MI_from_video(file_path, timestamp, 
+%                               rendering, ROI, normalize)
 %
 % -------------------------------------------------------------------------
 % Inputs : 
@@ -34,6 +35,12 @@
 %                       First column is motion index (between 0 and 1).
 %                       Second column are timestamps copied from given 
 %                       Timestamp vector.
+%
+%   video (X * Y * T)
+%                       The video used for motion index. If you passed the
+%                       video as an input, this is the same as
+%                       file_path_or_data. If you passed a file path, this
+%                       is the corresponding video (UINT8)
 % -------------------------------------------------------------------------
 % Extra Notes:
 % Determine a motion index based on Jelitai et al., Nature communications,
@@ -52,19 +59,20 @@
 % See also load_stack
 %
 
-function motion_indexes = get_MI_from_video(file_path_or_data, timestamp, rendering, ROI, normalize)
-    
+function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestamp, rendering, ROI, normalize)
+    profile on
     %% Open stack
     if isnumeric(file_path_or_data)
-        data = file_path_or_data;
+        video = file_path_or_data;
+        clear file_path_or_data;
     elseif ~isnumeric(file_path_or_data) && exist(file_path_or_data, 'file')
         fprintf(['please wait... loading videofile :',file_path_or_data,'\n'])
-        data = single(mmread_light(file_path_or_data));
+        video = mmread_light(file_path_or_data);
         fprintf('video loaded \n')
     else
        error('source not identified. Pass a .avi/.tif path, or a [X * Y * T] Matrix \n') 
     end
-    nFrames = size(data, 3);
+    nFrames = size(video, 3);
 
     if nargin < 2 || isempty(timestamp)
         timestamp = (1:nFrames)';
@@ -77,22 +85,22 @@ function motion_indexes = get_MI_from_video(file_path_or_data, timestamp, render
             temp = {};
             for el = 1:numel(ROI)
                 roi = round(ROI{el});
-                temp{el} = data(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
+                temp{el} = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
             end
-            data = temp; clear temp
+            video = temp; clear temp
         else % If you passed a single ROI as a 1 * 4 DOUBLE
-            data = {data(ROI(2):ROI(2)+ROI(4), ROI(1):ROI(1)+ROI(3), :)};
+            video = {video(ROI(2):ROI(2)+ROI(4), ROI(1):ROI(1)+ROI(3), :)};
         end
     else % If you didn't pass any ROI, then the whole video is your ROI
-        data = {data};
+        video = {video};
     end
     if nargin < 5 || isempty(normalize)
         normalize = true;
     end
     
-    motion_indexes = {};
-    for video = 1:numel(data)
-        local_data = data{video};
+    motion_indexes = cell(1, numel(video));
+    for MI_idx = 1:numel(video)
+        local_data = video{MI_idx};
         
         %% Preallocate output
         MI = nan(nFrames, 2);  
@@ -102,7 +110,9 @@ function motion_indexes = get_MI_from_video(file_path_or_data, timestamp, render
             X  = local_data(:,:,i-1);
             X1 = local_data(:,:,i);
             FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
-            MI(i,1) = (sum(sum(FrameDiff.*FrameDiff)));%^2;
+            MI(i,1) = (sum(sum(FrameDiff.*FrameDiff)));            
+            % FrameDiff = diff(local_data(:,:,i-1:i),1,3).^2;
+            % MI(i,1) = sum(FrameDiff(:));
         end
 
         %% Normalize
@@ -115,7 +125,7 @@ function motion_indexes = get_MI_from_video(file_path_or_data, timestamp, render
         MI(:,2) = timestamp(1:nFrames,end);
         MI = MI(2:end,:);
         
-        motion_indexes{video} = MI;
+        motion_indexes{MI_idx} = MI;
     end
     
     if rendering 
@@ -125,4 +135,7 @@ function motion_indexes = get_MI_from_video(file_path_or_data, timestamp, render
         end
         %plot(mean(cell2mat(cellfun(@(x) x(:,1), motion_indexes, 'UniformOutput', false)), 2), 'k')
     end
+    
+    profile off
+    profile viewer
 end
