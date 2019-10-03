@@ -20,7 +20,7 @@ function video_full = mmread_light(filename, dump_data)
     end
     
     %% Data collection, for each batch
-    for idx = 1:5%numel(batches(1:end-1))
+    for idx = 1:numel(batches(1:end-1))
         fprintf([num2str(100*idx/numel(batches(1:end-1))),'%% done\n']);
         frames = batches(idx):(batches(idx+1)-1);
         FFGrab('build',filename,'',double(false),double(true),double(trySeeking));
