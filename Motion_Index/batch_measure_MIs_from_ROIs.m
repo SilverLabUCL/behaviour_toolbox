@@ -43,12 +43,12 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
     for exp_idx = 1:analysis.n_expe 
         experiment = analysis.recordings(exp_idx);
 
-            if isfield(analysis.recordings(exp_idx),  'fnames')
-                for video_type_idx = 1:numel(experiment.windows)
-                    if isempty(analysis.recordings(exp_idx).MI{video_type_idx}) || ismember(exp_idx, force)
-                        for video_record = 1:size(experiment.windows{video_type_idx}, 1)
+            if isfield(analysis.recordings(exp_idx),  'filenames')
+                for video_type_idx = 1:numel(experiment.MI_windows)
+                    if isempty(analysis.recordings(exp_idx).motion_indexes{video_type_idx}) || ismember(exp_idx, force)
+                        for video_record = 1:size(experiment.MI_windows{video_type_idx}, 1)
 
-                            fname = experiment.fnames{video_type_idx}{video_record};
+                            fname = experiment.filenames{video_type_idx}{video_record};
 
                             path = strsplit(strrep(fname,'/','\'),'Cam');
                             path = [path{1},'Cam-relative times.txt'];
@@ -70,7 +70,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                             camera_timescale = timescale{2}/1000;
 
                             %% Get MI
-                            motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.windows{video_type_idx}(1,:), false);
+                            motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.MI_windows{video_type_idx}(1,:), false);
 
                             %% Store results
                             if display
@@ -80,7 +80,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                                 figure(123);cla();plot(temp(:,1:2:end)); drawnow
                             end
 
-                            analysis.recordings(exp_idx).MI{video_type_idx}{video_record} = motion_indexes;
+                            analysis.recordings(exp_idx).motion_indexes{video_type_idx}{video_record} = motion_indexes;
                             analysis.recordings(exp_idx).timestamps{video_type_idx}{video_record} = camera_timescale;
                             analysis.recordings(exp_idx).absolute_time{video_type_idx}{video_record} = absolute_time;
 
@@ -91,9 +91,9 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                 
                 if display
                     first_tp_of_exp = min(cellfun(@min, [analysis.recordings(exp_idx).absolute_time{:}]));
-                    for video_type_idx = 1:numel(experiment.windows)
+                    for video_type_idx = 1:numel(experiment.MI_windows)
                         analysis.recordings(exp_idx).absolute_time{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, analysis.recordings(exp_idx).absolute_time{video_type_idx}, 'UniformOutput', false);
-                        plot_MIs(analysis.recordings(exp_idx).MI{video_type_idx}, '', video_type_idx > 1, first_tp_of_exp, manual_browsing);
+                        plot_MIs(analysis.recordings(exp_idx).motion_indexes{video_type_idx}, '', video_type_idx > 1, first_tp_of_exp, manual_browsing);
                         pause(0.1)
                     end
                 end

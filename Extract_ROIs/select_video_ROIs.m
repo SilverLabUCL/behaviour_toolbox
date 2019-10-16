@@ -32,13 +32,13 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
             %% Reset position to center, with 1 ROI
             current_pos = {}; 
 
-            if any(~cellfun(@isempty, current_experiment.MI)) && select_ROIs
-                plot_MIs(current_experiment.MI{video_type_idx}, subplot_tags, video_type_idx > 1);
+            if any(~cellfun(@isempty, current_experiment.motion_indexes)) && select_ROIs
+                plot_MIs(current_experiment.motion_indexes{video_type_idx}, subplot_tags, video_type_idx > 1);
             end
 
             %% Print videos infos
-            if ~isempty(current_experiment.fnames{video_type_idx})
-                folderpath = strsplit(current_experiment.fnames{video_type_idx}{1},'/');
+            if ~isempty(current_experiment.filenames{video_type_idx})
+                folderpath = strsplit(current_experiment.filenames{video_type_idx}{1},'/');
                 fpath = dir([strjoin(folderpath(1:end-3), '/'),'/*_*_*_*']);
                 vertcat(fpath.name)
                 fprintf([strjoin(folderpath(1:end-3), '/'), '/\n']);
@@ -47,7 +47,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
             
             %% Plot the representative_frame for the current expe
             if select_ROIs
-                display_video_frame(reference_frame, current_experiment.windows{video_type_idx}, video_paths{1}, display_duration, fig_handle);
+                display_video_frame(reference_frame, current_experiment.MI_windows{video_type_idx}, video_paths{1}, display_duration, fig_handle);
             end
             
             %% Clear empty cells if you deleted some ROIs
@@ -61,14 +61,14 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
                     window_location = current_pos{el};
                     
                     try
-                        roi_change_detected = isempty(window_location) || isempty(current_experiment.windows{video_type_idx}) || numel(current_pos) ~= numel(current_experiment.windows{video_type_idx}(1,:)) || roi_change_detected;
+                        roi_change_detected = isempty(window_location) || isempty(current_experiment.MI_windows{video_type_idx}) || numel(current_pos) ~= numel(current_experiment.MI_windows{video_type_idx}(1,:)) || roi_change_detected;
                     catch
                         error_box('Unable to store result for this video. This is usually due to a missing video');
                         roi_change_detected = true;
                     end
                     if ~roi_change_detected
-                        for r = 1:numel(current_experiment.windows{video_type_idx}(1,:)) 
-                            rois = current_experiment.windows{video_type_idx}(1,:);
+                        for r = 1:numel(current_experiment.MI_windows{video_type_idx}(1,:)) 
+                            rois = current_experiment.MI_windows{video_type_idx}(1,:);
                             roi_change_detected = roi_change_detected || any(rois{r} ~= window_location);
                         end
                     end
@@ -81,12 +81,12 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
 
             %% Now push data into the right cell
             if ~already_there
-                current_experiment.fnames{video_type_idx}          = video_paths;
+                current_experiment.filenames{video_type_idx}          = video_paths;
                 current_experiment.reference_image{video_type_idx} = reference_frame;            
-                current_experiment.windows{video_type_idx}         = repmat(current_pos, numel(video_paths), 1); 
-                current_experiment.types{video_type_idx}           = video_type; 
+                current_experiment.MI_windows{video_type_idx}         = repmat(current_pos, numel(video_paths), 1); 
+                current_experiment.video_types{video_type_idx}           = video_type; 
             elseif roi_change_detected
-                current_experiment.windows{video_type_idx}         = repmat(current_pos, numel(video_paths), 1); 
+                current_experiment.MI_windows{video_type_idx}         = repmat(current_pos, numel(video_paths), 1); 
             end
         end
     end

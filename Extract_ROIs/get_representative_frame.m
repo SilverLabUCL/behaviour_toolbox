@@ -18,8 +18,8 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
     if ~isempty(experiment.reference_image) && ~isempty(experiment.reference_image{video_type_idx})
         %% If the frame existed, we just get a new one
         reference_frame = experiment.reference_image{video_type_idx};
-        video_paths = experiment.fnames{video_type_idx};
-        video_type = experiment.types{video_type_idx};
+        video_paths = experiment.filenames{video_type_idx};
+        video_type = experiment.video_types{video_type_idx};
         mask = ones(size(reference_frame, 1), size(reference_frame, 2));
     else
         %% If experiment.reference_image is empty, create new frame
