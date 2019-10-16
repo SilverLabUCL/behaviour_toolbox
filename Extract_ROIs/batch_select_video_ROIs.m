@@ -32,7 +32,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
         analysis = Analysis_Set;
     else
         analysis = existing_experiments;
-        analysis.recordings = analysis.recordings(~cellfun(@isempty, analysis.recordings));
+        analysis.recordings = analysis.recordings(~arrayfun(@isempty, analysis.recordings));
         clear existing_experiments;
     end
     
@@ -122,7 +122,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
             [already_there, analysis, list_of_videotypes, exp_idx] = check_if_new_video(analysis, expe_folder, exp_idx, recordings_paths);
 
             close all
-            [analysis.recordings{exp_idx}, failed_video_loading{exp_idx}] = select_video_ROIs(analysis.recordings{exp_idx}, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs);
+            [analysis.recordings(exp_idx), failed_video_loading{exp_idx}] = select_video_ROIs(analysis.recordings(exp_idx), already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs);
         end
     end
 end
@@ -141,16 +141,16 @@ function [already_there, analysis, list_of_videotypes, exp_idx] = check_if_new_v
     %% If we find the recording somewhere, we update the index
     % This doesn't mean the analysis was complete
     for el = 1:analysis.n_expe
-        if isfield(analysis.recordings{el},'fnames')
-            test = horzcat(analysis.recordings{el}.fnames{:});
+        if isfield(analysis.recordings(el),'fnames') && ~all(isempty(analysis.recordings(el).fnames))
+            test = horzcat(analysis.recordings(el).fnames{:});
 %             if isempty(test)
 %                 break
 %             end
             if ~isempty(test) && any(contains(strrep(test,'\','/'), expe_folder))
                 %% Update exp_idx
                 exp_idx         = el;
-                video_paths     = analysis.recordings{exp_idx}.fnames;
-                video_type      = analysis.recordings{exp_idx}.types;
+                video_paths     = analysis.recordings(exp_idx).fnames;
+                video_type      = analysis.recordings(exp_idx).types;
                 already_there   = true;  
                 %% qq we can add here a detection for any mismatch between fields
                 break
@@ -164,23 +164,25 @@ function [already_there, analysis, list_of_videotypes, exp_idx] = check_if_new_v
         % QQ there will be an issue here if we start adding new videotypes
         if exp_idx > analysis.n_expe
             % pass, idx can be used
-        elseif ~isempty(analysis.recordings{exp_idx}) % If it's a new video, but you are editing a previous analys, we add a new index
+        elseif ~isempty(analysis.recordings(exp_idx)) % If it's a new video, but you are editing a previous analys, we add a new index
             exp_idx = numel(analysis)+1;
         end
         video_paths                                  = {};
         video_type                                   = [];
-        analysis.recordings{exp_idx}.windows         = cell(1, numel(videotypes));
-        analysis.recordings{exp_idx}.MI              = cell(1, numel(videotypes));
-        analysis.recordings{exp_idx}.reference_image = cell(1, numel(videotypes));
-        analysis.recordings{exp_idx}.timestamps      = cell(1, numel(videotypes));
-        analysis.recordings{exp_idx}.fnames          = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).windows         = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).MI              = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).reference_image = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).timestamps      = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).fnames          = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).types           = cell(1, numel(videotypes));
+        analysis.recordings(exp_idx).absolute_time   = cell(1, numel(videotypes)); 
     end
 end
 
 function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_folders, filter_list)
     for expe_idx = analysis.n_expe:-1:1     
-        recording = analysis.recordings{expe_idx};
-        if ~isempty(recording) && (isempty(filter_list) || any(cellfun(@(x) contains(strrep(recording.fnames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
+        recording = analysis.recordings(expe_idx);
+        if ~isempty(fieldnames(recording)) && (isempty(filter_list) || any(cellfun(@(x) contains(strrep(recording.fnames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
             for video_type_idx = numel(recording.fnames):-1:1
                 for video_record = numel(recording.fnames{video_type_idx}):-1:1
 
@@ -213,7 +215,7 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
         elseif ~isempty(filter_list) 
             analysis.pop(expe_idx);
         end
-        analysis.recordings{expe_idx} = recording;        
+        analysis.recordings(expe_idx) = recording;        
     end
     
     %% Filter video folders accordingly

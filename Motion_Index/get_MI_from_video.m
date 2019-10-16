@@ -68,7 +68,6 @@
 %
 
 function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestamp, rendering, ROI, normalize, dump_data)
-    profile on
     
     %% Open stack
     if isnumeric(file_path_or_data)
@@ -206,7 +205,4 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
         end
         %plot(mean(cell2mat(cellfun(@(x) x(:,1), motion_indexes, 'UniformOutput', false)), 2), 'k')
     end
-    
-    profile off
-    profile viewer
 end

@@ -2,7 +2,7 @@ classdef Analysis_Set
     % This is the container for the analysis. 
     
     properties
-        recordings = {};
+        recordings = [];
         video_folder = '';
         n_expe = 0;
     end
@@ -26,7 +26,11 @@ classdef Analysis_Set
             if nargin < 2
                 to_add = 1;
             end
-            obj.recordings{end + to_add} = {};
+            if ~isempty(obj.recordings)
+                obj.recordings(end + to_add) = struct;
+            else
+                obj.recordings = struct; % first object
+            end
         end
         
     end
