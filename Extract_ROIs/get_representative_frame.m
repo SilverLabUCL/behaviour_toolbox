@@ -1,9 +1,9 @@
-function [reference_frame, video_type, video_paths, failed_video_loading] = get_representative_frame(experiment, paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
+function [reference_frame, video_type, video_paths, failed_video_loading] = get_representative_frame(experiment, type)%paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
 	if nargin < 6 || isempty(get_preview)
         get_preview = true;
     end
 
-        %% For the current videotype, get one frame from each video and generate a representative frame
+    %% For the current videotype, get one frame from each video and generate a representative frame
     % red for the normalized sum
     % green for the normalized variance
     % blue for the normalized max

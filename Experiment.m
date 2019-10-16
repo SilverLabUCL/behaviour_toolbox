@@ -5,6 +5,7 @@ classdef Experiment
     properties
         recordings = Recording;
         expe_path
+        videotypes
         n_rec = 0;
     end
     
@@ -21,8 +22,26 @@ classdef Experiment
         end
         
         function n_rec = get.n_rec(obj)
+            %% Return the number of recordings available (including empty)
             n_rec = numel(obj.recordings);
-        end        
+        end       
+
+        function videotypes = get.videotypes(obj)
+            %% List all video_types available in the Children
+            filenames = {};
+            for rec = 1:obj.n_rec
+                filenames = [filenames, obj.recordings(rec).videotypes];
+            end
+            
+            %% Create a helper to extract video name
+            function second = Out2(varargin)
+                [~,second] = fileparts(varargin{:}); % get only the second output of the function
+            end
+            filenames = cellfun(@(x) Out2(x),filenames,'UniformOutput',false);
+            
+            %% Regroup videos by video type (eyecam, bodycam etc...)
+            videotypes = unique(filenames(cellfun('isclass', filenames, 'char')));
+        end   
     end
 end
 

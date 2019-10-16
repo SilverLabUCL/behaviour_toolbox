@@ -6,6 +6,7 @@ classdef Recording
         n_vid = 0;
         recording_path
         videos
+        videotypes
     end
     
     methods
@@ -20,6 +21,11 @@ classdef Recording
             obj.recording_path  = recording_path;
         end
         
+        function n_vid = get.n_vid(obj)
+            %% Return the number of video available
+            n_vid = numel(obj.videos);
+        end
+        
         function clear(obj, video_type_idx, video_record)
             try
                 obj.filenames{video_type_idx}(video_record)         = [];
@@ -32,6 +38,11 @@ classdef Recording
                 obj.absolute_times{video_type_idx}(video_record)    = [];
             end
         end
+        
+        function videotypes = get.videotypes(obj)
+            %% List all video_types available in the Children
+            videotypes = {obj.videos.file_path};
+        end 
     end
 end
 

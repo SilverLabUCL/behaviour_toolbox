@@ -122,27 +122,23 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
                 % This check if there is already an experiment for these files.
                 % If yes, it will locate and adjust the exp_idx in case it
                 % changed
-                [already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, numel(recordings_folder), current_expe_path, current_recording_path, numel(recordings_videos));
+                [already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, numel(recordings_folder), current_expe_path, current_recording_path, numel(recordings_videos), recordings_videos);
             end
         end
         
         %% Not that all recordings were added, we can select ROIs
         close all
-        [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
+        %[analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx))%, already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
     end
 end
 
-function [expe_already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, n_recordings_in_expe, current_expe_path, current_recording_path, n_videos_in_recording)
+function [expe_already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, n_recordings_in_expe, current_expe_path, current_recording_path, n_videos_in_recording, recordings_videos)
     %% We check if this experiment has already be listed somewhere. If yes, 
     % we adjust the index to update the video. If not, we create a new
     % experiment at current index
     % If the experiment exist, we check if the recording is already 
     % present. If yes, we carry on, if no, we add a new recording object  
-    
-    %% Regroup videos by video type (eyecam, bodycam etc...)
-%     filenames = {recordings_paths.name};
-%     [filenames, videotypes, list_of_videotypes] = unique(filenames(cellfun('isclass', filenames, 'char')));
-%     
+
     expe_already_there = false;
     recording_already_there = false;
     
@@ -150,12 +146,10 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
     % This doesn't mean the analysis was complete
     for el = 1:analysis.n_expe
         if ~isempty(analysis.experiments(el).expe_path) && strcmp(analysis.experiments(el).expe_path, current_expe_path)
-            if ~isempty(analysis.experiments(el).expe_path)  %% MATCH PREVIOUS PATH&& any(contains(strrep(test,'\','/'), expe_folder))
-                %% Adjust exp_idx
-                experiment_idx       = el;
-                expe_already_there   = true;  
-                break
-            end
+            %% Adjust exp_idx
+            experiment_idx       = el;
+            expe_already_there   = true;  
+            break
         end
     end
 
@@ -172,14 +166,12 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
     end
     
     %% If it is the first time we see this recording, we create the object
-    for el = 1:analysis.n_expe
-        if any([analysis.experiments(el).recordings(:).n_vid])
-            test = horzcat(analysis.experiments(el).filenames{:});
-            if ~isempty(test) && any(contains(strrep(test,'\','/'), expe_folder))
-                %% Update exp_idx
+    for el = 1:analysis.experiments(experiment_idx).n_rec
+        if any([analysis.experiments(experiment_idx).recordings(:).n_vid])
+            if ~isempty(analysis.experiments(experiment_idx).recordings(el).recording_path) && strcmp(analysis.experiments(experiment_idx).recordings(el).recording_path, current_recording_path)
+                %% Update recording_idx
                 recording_idx            = el;
                 recording_already_there   = true;  
-                %% qq we can add here a detection for any mismatch between fields
                 break
             end
         end
@@ -194,6 +186,9 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
 %             experiment_idx = analysis.n_expe + 1;
         end
         analysis.experiments(experiment_idx).recordings(recording_idx) = Recording(n_videos_in_recording, current_recording_path);
+        for video = 1:n_videos_in_recording
+            analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).file_path  = [recordings_videos(video).folder,'/',recordings_videos(video).name];    
+        end
     end
 end
 
