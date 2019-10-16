@@ -1,4 +1,4 @@
-classdef Recording
+classdef Experiment
     %EXPERIMENT Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -13,7 +13,7 @@ classdef Recording
     end
     
     methods
-        function obj = Recording(n_video_types)
+        function obj = Experiment(n_video_types)
             if nargin < 1
                 n_video_types = 0; % Empty recording
             end

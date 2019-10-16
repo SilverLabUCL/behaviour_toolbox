@@ -2,7 +2,7 @@ classdef Analysis_Set
     % This is the container for the analysis. 
     
     properties
-        recordings = Recording;
+        experiments = Experiment;
         video_folder = '';
         n_expe = 0;
     end
@@ -15,21 +15,21 @@ classdef Analysis_Set
         end
         
         function n_expe = get.n_expe(obj)
-            n_expe = numel(obj.recordings);
+            n_expe = numel(obj.experiments);
         end
         
         function pop(obj, expe_number)
-            obj.recordings(expe_number) = [];
+            obj.experiments(expe_number) = [];
         end
         
         function add_experiment(obj, to_add)
             if nargin < 2
                 to_add = 1;
             end
-            if ~isempty(obj.recordings.filenames)
-                obj.recordings(end + to_add) = Recording;
+            if ~isempty(obj.experiments.filenames)
+                obj.experiments(end + to_add) = Experiment;
             else
-                obj.recordings = Recording; % first object
+                obj.experiments = Experiment; % first object
             end
         end
         
