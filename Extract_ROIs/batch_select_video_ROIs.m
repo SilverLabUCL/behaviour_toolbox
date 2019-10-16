@@ -141,7 +141,7 @@ function [already_there, analysis, list_of_videotypes, exp_idx] = check_if_new_v
     %% If we find the recording somewhere, we update the index
     % This doesn't mean the analysis was complete
     for el = 1:analysis.n_expe
-        if isfield(analysis.recordings(el),'filenames') && ~all(isempty(analysis.recordings(el).filenames))
+        if ~all(isempty(analysis.recordings(el).filenames))
             test = horzcat(analysis.recordings(el).filenames{:});
 %             if isempty(test)
 %                 break
@@ -190,16 +190,7 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
                     %% Check if file has not been deleted
                     if ~isfile(videopath)
                         %% If it was, delete any corresponding fields
-                        try
-                            recording.filenames{video_type_idx}(video_record) = [];
-                            recording.video_types{video_type_idx}(video_record) = [];
-                            recording.MI_windows{video_type_idx}(video_record,:) = [];
-                            recording.reference_image{video_type_idx} = []; % will force the regeneration of the thumbail
-                            % This part could fail if there was no export yet
-                            recording.motion_indexes{video_type_idx}(video_record) = [];
-                            recording.timestamps{video_type_idx}(video_record) = [];
-                            recording.absolute_time{video_type_idx}(video_record) = [];
-                        end
+                        recording.clear(video_type_idx,video_record);
                         fprintf([videopath,'\n'])
                     end
                 end

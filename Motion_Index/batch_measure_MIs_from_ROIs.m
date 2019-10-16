@@ -42,8 +42,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
     failed_analysis = {};
     for exp_idx = 1:analysis.n_expe 
         experiment = analysis.recordings(exp_idx);
-
-            if isfield(analysis.recordings(exp_idx),  'filenames')
+            if ~isempty(analysis.recordings(exp_idx).filenames{1}) % qq not sure for {1}
                 for video_type_idx = 1:numel(experiment.MI_windows)
                     if isempty(analysis.recordings(exp_idx).motion_indexes{video_type_idx}) || ismember(exp_idx, force)
                         for video_record = 1:size(experiment.MI_windows{video_type_idx}, 1)

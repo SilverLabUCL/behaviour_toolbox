@@ -26,8 +26,17 @@ classdef Recording
             obj.absolute_time   = cell(1, n_video_types);
         end
         
-        function outputArg = method1(obj,inputArg)
-            
+        function clear(obj, video_type_idx, video_record)
+            try
+                obj.filenames{video_type_idx}(video_record) = [];
+                obj.video_types{video_type_idx}(video_record) = [];
+                obj.MI_windows{video_type_idx}(video_record,:) = [];
+                obj.reference_image{video_type_idx} = []; % will force the regeneration of the thumbail
+                % This part could fail if there was no export yet
+                obj.motion_indexes{video_type_idx}(video_record) = [];
+                obj.timestamps{video_type_idx}(video_record) = [];
+                obj.absolute_time{video_type_idx}(video_record) = [];
+            end
         end
     end
 end
