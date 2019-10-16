@@ -23,7 +23,7 @@ classdef Video
             obj.file_path       = file_path;
             obj.ROI_location    = cell(1, n_roi);
             obj.motion_indexes  = cell(1, n_roi);
-            obj.reference_image = cell(1, n_roi);
+            obj.reference_image = [];
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);
             obj.absolute_times  = cell(1, n_roi);

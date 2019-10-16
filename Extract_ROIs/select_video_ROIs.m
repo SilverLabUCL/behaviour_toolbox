@@ -1,13 +1,36 @@
-function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs)
-    if nargin < 7 || isempty(fig_handle)
-        fig_handle = '';
-    end
-    if nargin < 8 || isempty(select_ROIs)
-        select_ROIs = true;
-    end
+function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, select_ROIs)%, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs)
+   
+%     if nargin < 7 || isempty(fig_handle)
+%         fig_handle = '';
+%     end
+%     if nargin < 8 || isempty(select_ROIs)
+%         select_ROIs = true;
+%     end
 
     global current_pos
     failed_video_loading = {};
+    
+    
+    list_of_videotypes = current_experiment.videotypes;
+    for video_type_idx = 1:numel(list_of_videotypes)
+        type = list_of_videotypes{video_type_idx};
+        [reference_frame, video_type, video_paths, failed_video_loading] = get_representative_frame(current_experiment, video_type_idx, type, select_ROIs);
+%                                                                                                     recordings_paths,...
+%                                                                                                     video_type_idx,...
+%                                                                                                     valid_indexes,...
+%                                                                                                     failed_video_loading,...
+%                                                                                                     select_ROIs);
+
+    end
+
+
+
+
+    %% QQ TEMP FIX
+    if~select_ROIs
+        return
+    end
+    
     for video_type_idx = 1:numel(unique(list_of_videotypes))'
 
         %% For each videotype, get a representative frame
@@ -81,10 +104,10 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
 
             %% Now push data into the right cell
             if ~already_there
-                current_experiment.filenames{video_type_idx}          = video_paths;
-                current_experiment.reference_image{video_type_idx} = reference_frame;            
+                current_experiment.filenames{video_type_idx}            = video_paths;
+                current_experiment.reference_image{video_type_idx}      = reference_frame;            
                 current_experiment.ROI_location{video_type_idx}         = repmat(current_pos, numel(video_paths), 1); 
-                current_experiment.video_types{video_type_idx}           = video_type; 
+                current_experiment.video_types{video_type_idx}          = video_type; 
             elseif roi_change_detected
                 current_experiment.ROI_location{video_type_idx}         = repmat(current_pos, numel(video_paths), 1); 
             end

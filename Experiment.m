@@ -7,6 +7,7 @@ classdef Experiment
         expe_path
         videotypes
         n_rec = 0;
+        global_reference_images
     end
     
     methods
@@ -42,6 +43,16 @@ classdef Experiment
             %% Regroup videos by video type (eyecam, bodycam etc...)
             videotypes = unique(filenames(cellfun('isclass', filenames, 'char')));
         end   
+
+        function global_reference_images = get.global_reference_images(obj)
+            %% List all video_types available in the Children
+            global_reference_images = {};
+            for rec = 1:obj.n_rec
+                global_reference_images = [global_reference_images; obj.recordings(rec).reference_images];
+            end
+            
+            %% Do some operation here
+        end 
     end
 end
 

@@ -7,6 +7,7 @@ classdef Recording
         recording_path
         videos
         videotypes
+        reference_images
     end
     
     methods
@@ -26,22 +27,27 @@ classdef Recording
             n_vid = numel(obj.videos);
         end
         
-        function clear(obj, video_type_idx, video_record)
+        function pop(obj, video_type_idx)
             try
-                obj.filenames{video_type_idx}(video_record)         = [];
-                obj.video_types{video_type_idx}(video_record)       = [];
-                obj.ROI_location{video_type_idx}(video_record,:)    = [];
-                obj.reference_image{video_type_idx}                 = []; % will force the regeneration of the thumbail
+                obj.filenames(video.file_path)      = [];
+                obj.video_types(video.file_path)    = [];
+                obj.ROI_location(video.file_path)   = [];
+                obj.reference_image{video_type_idx} = []; % will force the regeneration of the thumbail
                 % This part could fail if there was no export yet
-                obj.motion_indexes{video_type_idx}(video_record)    = [];
-                obj.timestamps{video_type_idx}(video_record)        = [];
-                obj.absolute_times{video_type_idx}(video_record)    = [];
+                obj.motion_indexes(video.file_path) = [];
+                obj.timestamps(video.file_path)     = [];
+                obj.absolute_times(video.file_path) = [];
             end
         end
         
         function videotypes = get.videotypes(obj)
             %% List all video_types available in the Children
             videotypes = {obj.videos.file_path};
+        end 
+
+        function reference_images = get.reference_images(obj)
+            %% Get reference image per Video
+            reference_images = {obj.videos.reference_image};
         end 
     end
 end

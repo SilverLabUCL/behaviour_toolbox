@@ -72,24 +72,6 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
     end
 
     experiment_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], experiment_folders, 'UniformOutput', false);   
-    
-    %% Debugging section
-    % this would print problematic folders
-%     for expe_idx = 1:numel(all_experiments)
-%         for video_type_idx = 1:numel(all_experiments{expe_idx}.ROI_location)
-%             for video_record = 1:numel(all_experiments{expe_idx}.ROI_location{video_type_idx})
-%                 for roi = 1:numel(all_experiments{expe_idx}.ROI_location{video_type_idx}(1,:))
-%                     rois = all_experiments{expe_idx}.ROI_location{video_type_idx}(1,:);
-%                     rois{roi}
-%                 end
-%             end
-%         end
-%     end
-  
-%     %% For the initial call, or if all_experiments is '', generate an struct
-%     if isempty(analysis)
-%         analysis = cell(1, numel(video_folders));
-%     end
 
     %% Use this function to edit the fname field or check for modified files
     [analysis, experiment_folders] = check_or_fix_path_issues(analysis, experiment_folders, filter_list);
@@ -128,7 +110,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
         
         %% Not that all recordings were added, we can select ROIs
         close all
-        %[analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx))%, already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
+        [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs);%, already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
     end
 end
 
@@ -196,23 +178,14 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
     for expe_idx = analysis.n_expe:-1:1     
         experiment = analysis.experiments(expe_idx);
         if ~isempty(experiment.recordings) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
-            n_videos = numel(experiment.recordings.filenames);
-            for video_record = numel(experiment.filenames):-1:1
-                for video_type_idx = numel(experiment.filenames):-1:1                
-
-                    temp = strsplit(strrep(experiment.filenames{video_type_idx}{video_record},'\','/'),'/');
-
-                    %% Check if folderpath is right (should contain VidRec)
-                    if ~contains(temp{6}, ' VidRec') && contains(temp{6}, '_')
-                        temp{6} = [temp{6},' VidRec'];
-                    end      
-                    videopath = strrep(strjoin(temp,'\'),'\','/');
-                    experiment.filenames{video_type_idx}{video_record} = videopath;
+            for video_record = experiment.n_rec:-1:1
+                for video_type_idx = experiment.recordings(video_record).n_vid:-1:1                
+                    video = experiment.recordings(video_record).videos(video_type_idx);
 
                     %% Check if file has not been deleted
-                    if ~isfile(videopath)
+                    if ~isfile(video.file_path)
                         %% If it was, delete any corresponding fields
-                        experiment.clear(video_type_idx,video_record);
+                        experiment.recordings(video_record).pop(video_type_idx);
                         fprintf([videopath,'\n'])
                     end
                 end
