@@ -26,7 +26,7 @@ classdef Analysis_Set
             if nargin < 2
                 to_add = 1;
             end
-            if ~isempty(obj.experiments.filenames)
+            if ~isempty(obj.experiments.recordings)
                 obj.experiments(end + to_add) = Experiment;
             else
                 obj.experiments = Experiment; % first object

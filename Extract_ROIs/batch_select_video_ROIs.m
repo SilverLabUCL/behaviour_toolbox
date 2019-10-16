@@ -18,7 +18,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
     % you will select the ROIs only once per experiment. If you moved the
     % cameras during an experiment, you may want to split the experiment in 2
     % for now (the code could be adjusted for that scenario but not yet)
-    video_folders = dir([video_folder_path, '/*-*-*/experiment_*']); 
+    experiment_folders = dir([video_folder_path, '/*-*-*/experiment_*']); 
 
     %% Initialize variables
     % Globals are quite bad i know, but you don't want to loose info half 
@@ -63,23 +63,23 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
 
     %% Print selected folders. Filter rogue sets. 
     % This section could be used for further filtering
-    for el = 1:numel(video_folders)
-        if contains(video_folders(el).name,' unidentified')
+    for el = 1:numel(experiment_folders)
+        if contains(experiment_folders(el).name,' unidentified')
             %1
         else
-            fprintf([strrep(video_folders(el).folder,'\', '/'),'/',video_folders(el).name, '/\n'])
+            fprintf([strrep(experiment_folders(el).folder,'\', '/'),'/',experiment_folders(el).name, '/\n'])
         end
     end
 
-    video_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], video_folders, 'UniformOutput', false);   
+    experiment_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], experiment_folders, 'UniformOutput', false);   
     
     %% Debugging section
     % this would print problematic folders
 %     for expe_idx = 1:numel(all_experiments)
-%         for video_type_idx = 1:numel(all_experiments{expe_idx}.MI_windows)
-%             for video_record = 1:numel(all_experiments{expe_idx}.MI_windows{video_type_idx})
-%                 for roi = 1:numel(all_experiments{expe_idx}.MI_windows{video_type_idx}(1,:))
-%                     rois = all_experiments{expe_idx}.MI_windows{video_type_idx}(1,:);
+%         for video_type_idx = 1:numel(all_experiments{expe_idx}.ROI_location)
+%             for video_record = 1:numel(all_experiments{expe_idx}.ROI_location{video_type_idx})
+%                 for roi = 1:numel(all_experiments{expe_idx}.ROI_location{video_type_idx}(1,:))
+%                     rois = all_experiments{expe_idx}.ROI_location{video_type_idx}(1,:);
 %                     rois{roi}
 %                 end
 %             end
@@ -92,105 +92,132 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
 %     end
 
     %% Use this function to edit the fname field or check for modified files
-    [analysis, video_folders] = check_or_fix_path_issues(analysis, video_folders, filter_list);
+    [analysis, experiment_folders] = check_or_fix_path_issues(analysis, experiment_folders, filter_list);
 
     %% Analyse each experiment (i.e, with the camera pointing at the same mouse)
     % Go through all experiment folder
-    for exp_idx = 1:numel(video_folders)
+    for experiment_idx = 1:numel(experiment_folders)
+        current_expe_path = experiment_folders{experiment_idx};
+        recordings_folder = dir([current_expe_path, '/*_*_*']);
+        for recording_idx = 1:numel(recordings_folder)
 
-        %% Get all videos in the experiment
-        % Videos are expected to be avi fiels in a subfolder. This is the
-        % structure provided by the export software
-        expe_folder = video_folders{exp_idx}; 
-        recordings_paths = dir([expe_folder, '/**/*.avi']);
+            %% Get all videos in the experiment
+            % Videos are expected to be avi files in a subfolder. This is the
+            % structure provided by the export software
+            current_recording_path = [recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name];
+            recordings_videos = dir([current_recording_path, '/**/*.avi']);
 
-        %% QQ Need to be sorted by merging exported files
-        % This happens for some very big files i think, or when you use the
-        % wrong codec
-        if any(any(contains({recordings_paths.name}, '-2.avi')))
-            id = contains({recordings_paths.name}, '-2.avi');
-            splitvideo = [splitvideo, {recordings_paths(id).folder}];
-            fprintf([strrep(splitvideo{end},'\','/'),' contains a split video and will not be analyzed\n'])
+            %% QQ Need to be sorted by merging exported files
+            % This happens for some very big files i think, or when you use the
+            % wrong codec
+            if any(any(contains({recordings_videos.name}, '-2.avi')))
+                id = contains({recordings_videos.name}, '-2.avi');
+                splitvideo = [splitvideo, {recordings_videos(id).folder}];
+                fprintf([strrep(splitvideo{end},'\','/'),' contains a split video and will not be analyzed\n'])
+            end
+
+            %% For valid videos, reload any existing ROI and let the user do some editing (if display_duration = 0)
+            if ~isempty(recordings_videos) && ~any(contains({recordings_videos.name}, '-2.avi')) %no video files or segmented videos
+                %% Check if we do a new analysis or an update. 
+                % This check if there is already an experiment for these files.
+                % If yes, it will locate and adjust the exp_idx in case it
+                % changed
+                [already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, numel(recordings_folder), current_expe_path, current_recording_path, numel(recordings_videos));
+            end
         end
-
-        %% For valid videos, reload any existing ROI and let the user do some editing (if display_duration = 0)
-        if ~isempty(recordings_paths) && ~any(contains({recordings_paths.name}, '-2.avi')) %no video files or segmented videos
-            %% Check if we do a new analysis or an update. 
-            % This check if there is already an experiment for these files.
-            % If yes, it will locate and adjust the exp_idx in case it
-            % changed
-            [already_there, analysis, list_of_videotypes, exp_idx] = check_if_new_video(analysis, expe_folder, exp_idx, recordings_paths);
-
-            close all
-            [analysis.experiments(exp_idx), failed_video_loading{exp_idx}] = select_video_ROIs(analysis.experiments(exp_idx), already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs);
-        end
+        
+        %% Not that all recordings were added, we can select ROIs
+        close all
+        [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
     end
 end
 
-function [already_there, analysis, list_of_videotypes, exp_idx] = check_if_new_video(analysis, expe_folder, exp_idx, recordings_paths)
-    %% We check if this experient has already be listed somewhere. If yes, 
+function [expe_already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, n_recordings_in_expe, current_expe_path, current_recording_path, n_videos_in_recording)
+    %% We check if this experiment has already be listed somewhere. If yes, 
     % we adjust the index to update the video. If not, we create a new
     % experiment at current index
+    % If the experiment exist, we check if the recording is already 
+    % present. If yes, we carry on, if no, we add a new recording object  
     
     %% Regroup videos by video type (eyecam, bodycam etc...)
-    filenames = {recordings_paths.name};
-    [filenames, videotypes, list_of_videotypes] = unique(filenames(cellfun('isclass', filenames, 'char')));
-    
-    already_there = false;
+%     filenames = {recordings_paths.name};
+%     [filenames, videotypes, list_of_videotypes] = unique(filenames(cellfun('isclass', filenames, 'char')));
+%     
+    expe_already_there = false;
+    recording_already_there = false;
     
     %% If we find the recording somewhere, we update the index
     % This doesn't mean the analysis was complete
     for el = 1:analysis.n_expe
-        if ~all(isempty(analysis.experiments(el).filenames))
-            test = horzcat(analysis.experiments(el).filenames{:});
-%             if isempty(test)
-%                 break
-%             end
-            if ~isempty(test) && any(contains(strrep(test,'\','/'), expe_folder))
-                %% Update exp_idx
-                exp_idx         = el;
-                video_paths     = analysis.experiments(exp_idx).filenames;
-                video_type      = analysis.experiments(exp_idx).video_types;
-                already_there   = true;  
-                %% qq we can add here a detection for any mismatch between fields
+        if ~isempty(analysis.experiments(el).expe_path) && strcmp(analysis.experiments(el).expe_path, current_expe_path)
+            if ~isempty(analysis.experiments(el).expe_path)  %% MATCH PREVIOUS PATH&& any(contains(strrep(test,'\','/'), expe_folder))
+                %% Adjust exp_idx
+                experiment_idx       = el;
+                expe_already_there   = true;  
                 break
             end
         end
     end
 
-    %% If it is the first time we see this experiment, we create new fields
-    if ~already_there
+    %% If it is the first time we see this experiment, we create the object
+    if ~expe_already_there
         %% Initialise variables. 
         % QQ there will be an issue here if we start adding new videotypes
-        if exp_idx > analysis.n_expe
+        if experiment_idx > analysis.n_expe
             % pass, idx can be used
-        elseif ~(isempty(analysis.experiments(exp_idx).filenames)) % If it's a new video, but you are editing a previous analys, we add a new index
-            exp_idx = numel(analysis)+1;
+        %elseif ~(isempty(analysis.experiments(experiment_idx).filenames)) % If it's a new video, but you are editing a previous analysis, we add a new index
+%             experiment_idx = analysis.n_expe + 1;
         end
-        analysis.experiments(exp_idx)                 = Experiment(numel(videotypes));
+        analysis.experiments(experiment_idx) = Experiment(n_recordings_in_expe, current_expe_path);
+    end
+    
+    %% If it is the first time we see this recording, we create the object
+    for el = 1:analysis.n_expe
+        if any([analysis.experiments(el).recordings(:).n_vid])
+            test = horzcat(analysis.experiments(el).filenames{:});
+            if ~isempty(test) && any(contains(strrep(test,'\','/'), expe_folder))
+                %% Update exp_idx
+                recording_idx            = el;
+                recording_already_there   = true;  
+                %% qq we can add here a detection for any mismatch between fields
+                break
+            end
+        end
+    end
+    
+    if ~recording_already_there
+        %% Initialise variables. 
+        % QQ there will be an issue here if we start adding new videotypes
+        if recording_idx > analysis.experiments(experiment_idx).n_rec
+            % pass, idx can be used
+%         elseif ~(isempty(analysis.experiments(experiment_idx).filenames)) % If it's a new video, but you are editing a previous analysis, we add a new index
+%             experiment_idx = analysis.n_expe + 1;
+        end
+        analysis.experiments(experiment_idx).recordings(recording_idx) = Recording(n_videos_in_recording, current_recording_path);
     end
 end
 
 function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_folders, filter_list)
     for expe_idx = analysis.n_expe:-1:1     
-        recording = analysis.experiments(expe_idx);
-        if ~isempty(fieldnames(recording)) && (isempty(filter_list) || any(cellfun(@(x) contains(strrep(recording.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
-            for video_type_idx = numel(recording.filenames):-1:1
-                for video_record = numel(recording.filenames{video_type_idx}):-1:1
+        experiment = analysis.experiments(expe_idx);
+        if ~isempty(experiment.recordings) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
+            n_videos = numel(experiment.recordings.filenames);
+            for video_record = numel(experiment.filenames):-1:1
+                for video_type_idx = numel(experiment.filenames):-1:1                
 
-                    temp = strsplit(strrep(recording.filenames{video_type_idx}{video_record},'\','/'),'/');
+                    temp = strsplit(strrep(experiment.filenames{video_type_idx}{video_record},'\','/'),'/');
 
                     %% Check if folderpath is right (should contain VidRec)
                     if ~contains(temp{6}, ' VidRec') && contains(temp{6}, '_')
                         temp{6} = [temp{6},' VidRec'];
                     end      
                     videopath = strrep(strjoin(temp,'\'),'\','/');
-                    recording.filenames{video_type_idx}{video_record} = videopath;
+                    experiment.filenames{video_type_idx}{video_record} = videopath;
 
                     %% Check if file has not been deleted
                     if ~isfile(videopath)
                         %% If it was, delete any corresponding fields
-                        recording.clear(video_type_idx,video_record);
+                        experiment.clear(video_type_idx,video_record);
                         fprintf([videopath,'\n'])
                     end
                 end
@@ -198,7 +225,7 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
         elseif ~isempty(filter_list) 
             analysis.pop(expe_idx);
         end
-        analysis.experiments(expe_idx) = recording;        
+        analysis.experiments(expe_idx) = experiment;        
     end
     
     %% Filter video folders accordingly

@@ -43,10 +43,9 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
     for exp_idx = 1:analysis.n_expe 
         experiment = analysis.experiments(exp_idx);
             if ~isempty(analysis.experiments(exp_idx).filenames{1}) % qq not sure for {1}
-                for video_type_idx = 1:numel(experiment.MI_windows)
-                    if isempty(analysis.experiments(exp_idx).motion_indexes{video_type_idx}) || ismember(exp_idx, force)
-                        for video_record = 1:size(experiment.MI_windows{video_type_idx}, 1)
-
+                for video_record = 1:size(experiment.ROI_location{video_type_idx}, 1)
+                    for video_type_idx = 1:numel(experiment.ROI_location)
+                        if isempty(analysis.experiments(exp_idx).motion_indexes{video_type_idx}) || ismember(exp_idx, force)
                             fname = experiment.filenames{video_type_idx}{video_record};
 
                             path = strsplit(strrep(fname,'/','\'),'Cam');
@@ -61,15 +60,15 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                             fclose(fileID);
 
                             %% Get real time
-                            absolute_time = cellfun(@(timepoint) strsplit(timepoint, ';'), timescale{3}, 'UniformOutput', false); % separate day from time
-                            absolute_time = cellfun(@(timepoint) cellfun(@str2num, (strsplit(timepoint{2},':'))), absolute_time, 'UniformOutput', false); % separte hr, min, s
-                            absolute_time = cell2mat((cellfun(@(timepoint) sum(timepoint .* [3600000, 60000, 1000]), absolute_time, 'UniformOutput', false))); % convert all to ms
+                            absolute_times = cellfun(@(timepoint) strsplit(timepoint, ';'), timescale{3}, 'UniformOutput', false); % separate day from time
+                            absolute_times = cellfun(@(timepoint) cellfun(@str2num, (strsplit(timepoint{2},':'))), absolute_times, 'UniformOutput', false); % separte hr, min, s
+                            absolute_times = cell2mat((cellfun(@(timepoint) sum(timepoint .* [3600000, 60000, 1000]), absolute_times, 'UniformOutput', false))); % convert all to ms
 
                             %% Get camera timestamps
                             camera_timescale = timescale{2}/1000;
 
                             %% Get MI
-                            motion_indexes = get_MI_from_video(fname, absolute_time, false, experiment.MI_windows{video_type_idx}(1,:), false);
+                            motion_indexes = get_MI_from_video(fname, absolute_times, false, experiment.ROI_location{video_type_idx}(1,:), false);
 
                             %% Store results
                             if display
@@ -81,16 +80,16 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
 
                             analysis.experiments(exp_idx).motion_indexes{video_type_idx}{video_record} = motion_indexes;
                             analysis.experiments(exp_idx).timestamps{video_type_idx}{video_record} = camera_timescale;
-                            analysis.experiments(exp_idx).absolute_time{video_type_idx}{video_record} = absolute_time;
+                            analysis.experiments(exp_idx).absolute_times{video_type_idx}{video_record} = absolute_times;
                         end
                     end 
                 end
                 
                 
                 if display
-                    first_tp_of_exp = min(cellfun(@min, [analysis.experiments(exp_idx).absolute_time{:}]));
-                    for video_type_idx = 1:numel(experiment.MI_windows)
-                        analysis.experiments(exp_idx).absolute_time{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, analysis.experiments(exp_idx).absolute_time{video_type_idx}, 'UniformOutput', false);
+                    first_tp_of_exp = min(cellfun(@min, [analysis.experiments(exp_idx).absolute_times{:}]));
+                    for video_type_idx = 1:numel(experiment.ROI_location)
+                        analysis.experiments(exp_idx).absolute_times{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, analysis.experiments(exp_idx).absolute_times{video_type_idx}, 'UniformOutput', false);
                         plot_MIs(analysis.experiments(exp_idx).motion_indexes{video_type_idx}, '', video_type_idx > 1, first_tp_of_exp, manual_browsing);
                         pause(0.1)
                     end
