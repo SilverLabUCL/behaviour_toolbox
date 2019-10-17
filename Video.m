@@ -6,6 +6,7 @@ classdef Video
         rois
         reference_image
         timestamps
+        absolute_times
         file_path
         video_types
         n_roi
@@ -46,6 +47,12 @@ classdef Video
             end
         end
 
+        function obj = set.motion_indexes(obj, motion_indexes)
+            %% Return the number of ROI windows
+            for roi = 1:obj.n_roi
+                obj.rois(roi).motion_index = motion_indexes{roi};
+            end
+        end
 
         function motion_indexes = get.motion_indexes(obj)
             %% Return the number of ROI windows

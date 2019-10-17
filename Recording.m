@@ -14,6 +14,7 @@ classdef Recording
         t_stop
         comment
         trial_number
+        motion_indexes
     end
     
     methods
@@ -54,6 +55,14 @@ classdef Recording
         function reference_images = get.reference_images(obj)
             %% Get reference image per Video
             reference_images = {obj.videos.reference_image};
+        end 
+
+        function motion_indexes = get.motion_indexes(obj)
+            %% Get 
+            motion_indexes = {};
+            for vid = 1:obj.n_vid
+                motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
+            end
         end 
     end
 end

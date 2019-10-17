@@ -55,29 +55,28 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         current_pos = current_pos(to_keep);
 
         %% If there were some preexisitng values, check if we need an update
-        if any(existing_windows)
-            %% Check if ethere was any change
-            roi_change_detected = false;
-            for el = 1:numel(current_pos)
-                window_location = current_pos{el};
+        roi_change_detected = false;
 
-                try
-                    roi_change_detected = isempty(window_location) || ~all(existing_windows) || numel(current_pos) ~= current_experiment.recordings(1).videos(video_type_idx).n_roi || roi_change_detected;
-                catch
-                    error_box('Unable to store result for this video. This is usually due to a missing video');
-                    roi_change_detected = true;
-                end
+        %% Check if ethere was any change            
+        for el = 1:numel(current_pos)
+            window_location = current_pos{el};
 
-                %% If N ROI didn't obviously change, check location
-                if ~roi_change_detected
-                    former_rois = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
-                    roi_change_detected = ~any(sum(vertcat(former_rois{:}) == window_location,2) == 5);
-                else
-                    break
-                end
+            try
+                roi_change_detected = isempty(window_location) || ~all(existing_windows) || numel(current_pos) ~= current_experiment.recordings(1).videos(video_type_idx).n_roi || roi_change_detected;
+            catch
+                error_box('Unable to store result for this video. This is usually due to a missing video');
+                roi_change_detected = true;
+            end
+
+            %% If N ROI didn't obviously change, check location
+            if ~roi_change_detected
+                former_rois = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
+                roi_change_detected = ~any(sum(vertcat(former_rois{:}) == window_location,2) == 5);
+            else
+                break
             end
         end
-
+      
         %% Add new windows and update motion indexes windows location  
         if roi_change_detected
             for rec = 1:current_experiment.n_rec
