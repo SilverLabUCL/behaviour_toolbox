@@ -41,10 +41,10 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
     %% Now that all Videos are ready, get the motion index if the MI section is empty
     failed_analysis = {};
     for exp_idx = 1:analysis.n_expe 
-        for rec = 1:2%analysis.experiments(exp_idx).n_rec
-            for vid = analysis.experiments(exp_idx).recordings(rec).n_vid
+        for rec = 1:analysis.experiments(exp_idx).n_rec
+            for vid = 1:analysis.experiments(exp_idx).recordings(rec).n_vid
                 current_video = analysis.experiments(exp_idx).recordings(rec).videos(vid);
-                if any(cellfun(@isempty, current_video.motion_indexes)) % || ismember(exp_idx, force)
+                if any(cellfun(@isempty, current_video.motion_indexes))  || ismember(exp_idx, force)
                     path = strsplit(strrep(current_video.file_path,'/','\'),'Cam');
                     path = [path{1},'Cam-relative times.txt'];
 
@@ -66,15 +66,14 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                     current_video.sampling_rate = 1/mean(diff(current_video.absolute_times))*1000;
 
                     %% Get MI
-                    motion_indexes = get_MI_from_video(current_video.file_path, current_video.absolute_times, false, current_video.ROI_location, false);
+                    current_video.motion_indexes = get_MI_from_video(current_video.file_path, current_video.absolute_times, false, current_video.ROI_location, false);
 
                     %% Update analysis object
-                    analysis.experiments(exp_idx).recordings(rec).videos(vid).motion_indexes = motion_indexes;
-
+                    analysis.experiments(exp_idx).recordings(rec).videos(vid) = current_video;
 
                     %% Store results
                     if display
-                        temp = cell2mat(motion_indexes);
+                        temp = cell2mat(current_video.motion_indexes);
                         temp = temp - prctile(temp,1);
                         temp = temp ./ max(temp);
                         figure(123);cla();plot(temp(:,1:2:end)); drawnow
@@ -82,22 +81,11 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                 end
             end 
         end
-                
-        display = false      
+               
         if display
-            first_tp_of_exp = 0;%min(cellfun(@min, [analysis.experiments(exp_idx).absolute_times{:}]));            
-            plot_MIs([analysis.experiments(exp_idx).recordings.motion_indexes], '', first_tp_of_exp, manual_browsing);
-
-%             for video_type_idx = 1:numel(experiment.ROI_location)
-%                 analysis.experiments(exp_idx).absolute_times{video_type_idx} = cellfun(@(x) x- first_tp_of_exp, analysis.experiments(exp_idx).absolute_times{video_type_idx}, 'UniformOutput', false);
-%                 plot_MIs(analysis.experiments(exp_idx).motion_indexes{video_type_idx}, '', video_type_idx > 1, first_tp_of_exp, manual_browsing);
-%                 pause(0.1)
-%             end
+            first_tp_of_exp = analysis.experiments(exp_idx).t_start;            
+            plot_MIs(analysis.experiments(exp_idx).recordings, '', first_tp_of_exp, manual_browsing);
         end
-           % end
-    %    catch
-      %     failed_analysis = [failed_analysis, {experiment}];
-     %   end
     end
 end
 

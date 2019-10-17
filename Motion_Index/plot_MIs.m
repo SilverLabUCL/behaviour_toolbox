@@ -1,9 +1,6 @@
 %% For a given list of MIs, plot them, one per subplot
 
-function plot_MIs(MIs, tags, t_offset, manual_browsing)
-    if nargin < 2 || isempty(tags)
-        tags = cell(1, max(cellfun(@numel, MIs)));
-    end
+function plot_MIs(recordings, tags, t_offset, manual_browsing)
     if nargin < 3 || isempty(t_offset)
         t_offset = 0;
     end
@@ -14,12 +11,20 @@ function plot_MIs(MIs, tags, t_offset, manual_browsing)
     %% Regroup MIs
     %max_MI = max(cellfun(@numel, MIs));
     %keep = max_MI > 1;
-    for MI = 1:1
-        all_rois = cell2mat(vertcat(MIs{:}));
+    
+    all_MIs = vertcat(recordings.motion_indexes);
+    if nargin < 2 || isempty(tags)
+        tags = cell(1, numel([all_MIs{1,:}]));
+    end
+    keep = size(all_MIs, 2) > 1;
+    types = recordings.videotypes;
+    for MI = 1:numel(types)
+        current_MIs = all_MIs(:,MI);
+        all_rois = cell2mat(vertcat(current_MIs{:}));
 
         %% Set image to full screen onm screen 2 (if any)
         screens = get(0,'MonitorPositions');
-        f = figure(122);
+        f = figure(122+MI); hold on;
         if ~keep
             clf();
         end
@@ -46,10 +51,10 @@ function plot_MIs(MIs, tags, t_offset, manual_browsing)
             end
             axes = [axes, ax]; hold on;
         end
-        linkaxes(axes, 'x');
+        linkaxes(axes, 'x'); hold on;
 
         if manual_browsing
             uiwait(f);
         end
-    %end
+    end
 end

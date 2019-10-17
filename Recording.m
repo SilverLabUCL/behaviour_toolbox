@@ -64,6 +64,14 @@ classdef Recording
                 motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
             end
         end 
+
+        function t_start = get.t_start(obj)
+            t_start = [];
+            for vid = 1:obj.n_vid
+                t_start = [t_start, t_start, nanmin(obj.videos(vid).absolute_times)];
+            end
+            t_start = nanmin(t_start);
+        end
     end
 end
 

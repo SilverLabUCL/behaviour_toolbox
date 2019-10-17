@@ -8,6 +8,7 @@ classdef Experiment
         videotypes
         n_rec = 0;
         global_reference_images
+        t_start % experiment t_start
         comment
     end
     
@@ -54,6 +55,14 @@ classdef Experiment
             
             %% Do some operation here
         end 
+
+        function t_start = get.t_start(obj)
+            t_start = NaN;
+            for rec = 1:obj.n_rec
+                t_start = [t_start, nanmin(obj.recordings(rec).t_start)];
+            end
+            t_start = nanmin(t_start);
+        end
 
         function find_missing_video(obj)
             %% TODO
