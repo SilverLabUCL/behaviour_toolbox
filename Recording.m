@@ -8,6 +8,12 @@ classdef Recording
         videos
         videotypes
         reference_images
+        name
+        duration
+        t_start
+        t_stop
+        comment
+        trial_number
     end
     
     methods
@@ -28,16 +34,16 @@ classdef Recording
         end
         
         function pop(obj, video_type_idx)
-            try
-                obj.filenames(video.file_path)      = [];
-                obj.video_types(video.file_path)    = [];
-                obj.ROI_location(video.file_path)   = [];
-                obj.reference_image{video_type_idx} = []; % will force the regeneration of the thumbail
-                % This part could fail if there was no export yet
-                obj.motion_indexes(video.file_path) = [];
-                obj.timestamps(video.file_path)     = [];
-                obj.absolute_times(video.file_path) = [];
-            end
+%             try
+%                 obj.filenames(video.file_path)      = [];
+%                 obj.video_types(video.file_path)    = [];
+%                 obj.ROI_location(video.file_path)   = [];
+%                 obj.reference_image{video_type_idx} = []; % will force the regeneration of the thumbail
+%                 % This part could fail if there was no export yet
+%                 obj.motion_indexes(video.file_path) = [];
+%                 obj.timestamps(video.file_path)     = [];
+%                 obj.absolute_times(video.file_path) = [];
+%             end
         end
         
         function videotypes = get.videotypes(obj)

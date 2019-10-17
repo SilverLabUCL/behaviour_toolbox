@@ -1,9 +1,16 @@
-function display_video_frame(reference_frame, ROI_window, video_path, display_duration, fig_handle)
-    if nargin < 5 || isempty(fig_handle)
+function current_experiment = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle)
+    %% Display the frame, and add any existing ROI
+    if nargin < 4 || isempty(fig_handle)
         fig_handle = figure(123); clf();hold on;
     end
+    list_of_videotypes = current_experiment.videotypes;
+    type = list_of_videotypes{video_type_idx};
+    [reference_frame, ~, ~, ~] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
-    %% Display the frame, and add any existing ROI
+    %% QQ ONLY VIDEO 1 USED
+    video_path = current_experiment.recordings(1).videos(video_type_idx).file_path;
+    ROI_window = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
+    
     
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
@@ -23,6 +30,8 @@ function display_video_frame(reference_frame, ROI_window, video_path, display_du
     %% Add ROIs
     if isempty(ROI_window)
         %% If it is the first call, add a first ROI in the middle
+        id = round(unifrnd(1,10000)); % use this to identify rectangles
+        position = [position, id];
         add_rect('', '', position);
     else
         %% If there are preexisting ROIs, display them
@@ -30,7 +39,11 @@ function display_video_frame(reference_frame, ROI_window, video_path, display_du
             roi_position = ROI_window(1,:); %first video is enough
             roi_position = roi_position{roi_idx};
             add_rect('', '', roi_position);
-            text(roi_position(1)-5,roi_position(2)-5, ['\bf ',num2str(roi_idx)], 'Color', [1,0.2,0.2]);
+            if isempty(current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name)                
+                current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name = ['Label # ',num2str(roi_idx)];
+            end
+            label = current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name;
+            text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2]);
         end                
     end
     
@@ -58,10 +71,16 @@ end
 
 function add_rect(~, ~, position)
     %% Add a new ROI
-    global current_pos
+    global current_pos;
+    if numel(position) == 4
+        id = round(unifrnd(1,10000)); % use this to identify rectangles
+        position = [position, id];
+    else
+        id = position(5);
+    end
     current_pos = [current_pos, {position}]; 
-    hrect = imrect(gca, current_pos{end});hold on;
-    set(hrect,'userdata',num2str(numel(current_pos)));
+    hrect = imrect(gca, current_pos{end}(1:end-1));hold on;
+    set(hrect,'userdata',num2str(id));
     set(hrect,'DeleteFcn', @(src,eventdata) delete_rect(src,eventdata,hrect));
     hrectchild = get(hrect, 'Children');
     hcmenu = get(hrectchild(2),'UIContextMenu');
@@ -77,8 +96,9 @@ end
 function read(obj, p)
     %% Read current ROI location and size
     global current_pos;
-    idx = str2num(get(obj,'userdata'));
-    current_pos{idx} = p;
+    id = str2num(get(obj,'userdata'));
+    idx = find(cellfun(@(x) x(end), current_pos) == id);
+    current_pos{idx} = [p, id];
 end
 
 function delete_rect(src, eventdata,obj)
@@ -87,8 +107,9 @@ function delete_rect(src, eventdata,obj)
     % also clear the corresponding fiel in current_pos
     try % fails when you close the wind
         global current_pos;
-        idx = str2num(get(obj,'userdata'));
-        current_pos{idx} = {};
+        id = str2num(get(obj,'userdata'));
+        idx = find(cellfun(@(x) x(end), current_pos) == id);
+        current_pos{idx} = id;
         childrens = get(obj,'Children');
         for el = 1:numel(childrens)
             delete(childrens(el));

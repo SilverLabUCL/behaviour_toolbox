@@ -6,14 +6,14 @@ classdef ROI
         n_ROI
         ROI_location
         motion_index
-        absolute_time
+        name
     end
     
     methods
         function obj = ROI()
             obj.ROI_location    = [];
             obj.motion_index    = [];
-            obj.absolute_time   = [];
+            obj.name            = [];
         end
         
         function outputArg = method1(obj,inputArg)

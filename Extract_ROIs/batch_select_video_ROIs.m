@@ -53,7 +53,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
     end
     
     %% Add Video folder field
-    analysis.video_folder = [video_folder_path, '/'];
+    analysis.video_folder = strrep([video_folder_path, '/'],'\','/');
     splitvideo = {}; % that will indicates problematic split videos
     failed_video_loading = {};
 
@@ -86,7 +86,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
             %% Get all videos in the experiment
             % Videos are expected to be avi files in a subfolder. This is the
             % structure provided by the export software
-            current_recording_path = [recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name];
+            current_recording_path = strrep([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name],'\','/');
             recordings_videos = dir([current_recording_path, '/**/*.avi']);
 
             %% QQ Need to be sorted by merging exported files
@@ -110,7 +110,7 @@ function [analysis, failed_video_loading, splitvideo] = batch_select_video_ROIs(
         
         %% Not that all recordings were added, we can select ROIs
         close all
-        [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs);%, already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
+        [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle);%, already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
     end
 end
 
@@ -169,7 +169,7 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
         end
         analysis.experiments(experiment_idx).recordings(recording_idx) = Recording(n_videos_in_recording, current_recording_path);
         for video = 1:n_videos_in_recording
-            analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).file_path  = [recordings_videos(video).folder,'/',recordings_videos(video).name];    
+            analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).file_path  = strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/');    
         end
     end
 end

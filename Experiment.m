@@ -8,6 +8,7 @@ classdef Experiment
         videotypes
         n_rec = 0;
         global_reference_images
+        comment
     end
     
     methods
@@ -50,6 +51,13 @@ classdef Experiment
             for rec = 1:obj.n_rec
                 global_reference_images = [global_reference_images; obj.recordings(rec).reference_images];
             end
+            
+            %% Do some operation here
+        end 
+
+        function find_missing_video(obj)
+            %% TODO
+       
             
             %% Do some operation here
         end 

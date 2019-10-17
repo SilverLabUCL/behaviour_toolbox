@@ -3,13 +3,19 @@ classdef Video
     %   Detailed explanation goes here
     
     properties
+        rois
         reference_image
-        ROI_location
-        motion_indexes
         timestamps
         file_path
         video_types
-        absolute_times 
+        n_roi
+        sampling_rate
+        position
+        comment
+        pixel_size
+        quality = 5;
+        ROI_location
+        motion_indexes
     end
     
     methods
@@ -21,12 +27,32 @@ classdef Video
                 file_path = ''; % Empty recording
             end
             obj.file_path       = file_path;
-            obj.ROI_location    = cell(1, n_roi);
-            obj.motion_indexes  = cell(1, n_roi);
             obj.reference_image = [];
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);
-            obj.absolute_times  = cell(1, n_roi);
+            obj.rois            = repmat(ROI, 1, n_roi);
+        end
+
+        function n_roi = get.n_roi(obj)
+            %% Return the number of ROI windows
+            n_roi = numel(obj.rois);
+        end
+
+        function ROI_location = get.ROI_location(obj)
+            %% Return the number of ROI windows
+            ROI_location    = cell(1, obj.n_roi);
+            for roi = 1:obj.n_roi
+                ROI_location{roi} = obj.rois(roi).ROI_location;
+            end
+        end
+
+
+        function motion_indexes = get.motion_indexes(obj)
+            %% Return the number of ROI windows
+            motion_indexes    = cell(1, obj.n_roi);
+            for roi = 1:obj.n_roi
+                motion_indexes{roi} = obj.rois(roi).motion_index;
+            end
         end
     end
 end
