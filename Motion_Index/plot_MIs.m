@@ -37,6 +37,9 @@ function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
 %     
     all_MIs = vertcat(recordings.motion_indexes);
     all_MIs = all_MIs(to_use);
+    if all(to_use(:)) % not sure why we loose the shape when they are all 1's
+        all_MIs = reshape(all_MIs, size(to_use));
+    end
     if nargin < 2 || isempty(tags)
         tags = cell(1, numel([all_MIs{1,:}]));
     end
@@ -44,10 +47,19 @@ function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
     
     for MI = 1:numel(types)
         current_MIs = all_MIs(:,MI);
-        if ~all(cellfun(@isempty, [current_MIs{:}]))
-            all_rois = cell2mat(vertcat(current_MIs{:}));
-        else
+        if all(cellfun(@isempty, [current_MIs{:}]))
             all_rois = [];
+        elseif any(cellfun(@isempty, [current_MIs{:}]))
+            all_rois = vertcat(current_MIs{:});
+            to_fix = cellfun(@isempty, all_rois);
+            template = all_rois(~to_fix);
+            for missing_MI = 1:size(template, 1)
+                all_rois(missing_MI, to_fix(missing_MI, :)) = {NaN(size(template{missing_MI, 1}))};
+            end
+            all_rois = cell2mat(all_rois);
+        else
+            all_rois = vertcat(current_MIs{:});
+            all_rois = cell2mat(all_rois);
         end
 
         %% Set image to full screen onm screen 2 (if any)

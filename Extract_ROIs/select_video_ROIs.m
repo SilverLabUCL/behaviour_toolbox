@@ -48,7 +48,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
 
         %% Plot the representative_frame for the current expe
         if select_ROIs
-            current_experiment = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle);
+            [current_experiment, names] = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle);
         end
 
         %% Clear empty cells if you deleted some ROIs. get id of deleted cells
@@ -58,6 +58,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
             poped = [current_pos{poped}];
         end
         current_pos = current_pos(to_keep);
+        names       = names(to_keep);
 
         %% If there were some preexisitng values, check if we need an update
         roi_change_detected = false;
@@ -92,6 +93,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
                     if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
                         n_roi = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
                         current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
+                        current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).name = names{roi};
                     else    
                         %% List ROIs to delete
                         to_pop = [];
@@ -103,6 +105,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
                             %% Then it's an update (or the same location)
                             current_experiment.recordings(rec).videos(video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
                             current_experiment.recordings(rec).videos(video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
+                            current_experiment.recordings(rec).videos(video_type_idx).rois(roi).name = names{roi};
                         else
                             %% Then it's a deletion
                             current_experiment.recordings(rec).videos(video_type_idx).rois(to_pop) = [];
