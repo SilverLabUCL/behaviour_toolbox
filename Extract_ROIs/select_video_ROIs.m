@@ -30,10 +30,13 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         existing_windows = false(1, current_experiment.n_rec);
         existing_motion_indexes = false(1, current_experiment.n_rec);
         for rec = 1:current_experiment.n_rec
-            existing_windows(1, rec) = ~isempty(current_experiment.recordings(rec).videos(video_type_idx).ROI_location); % no nested indexing method available as far as i know
-            existing_motion_indexes(1, rec) = ~all(cellfun(@isempty, current_experiment.recordings(rec).videos(video_type_idx).motion_indexes)); % no nested indexing method available as far as i know
+            real_idx = find(contains({current_experiment.recordings(rec).videos.file_path}, list_of_videotypes{video_type_idx}));
+            if real_idx %When one video is missing for a specific recording
+                existing_windows(1, rec) = ~isempty(current_experiment.recordings(rec).videos(real_idx).ROI_location); % no nested indexing method available as far as i know
+                existing_motion_indexes(1, rec) = ~all(cellfun(@isempty, current_experiment.recordings(rec).videos(real_idx).motion_indexes)); % no nested indexing method available as far as i know
+            end
         end
-        %existing_motion_indexes = ~cellfun(@isempty ,arrayfun(@(x) x.videos(video_type_idx).motion_indexes ,current_experiment.recordings, 'UniformOutput', false));
+
         if all(existing_motion_indexes) && select_ROIs
             first_tp_of_exp = current_experiment.t_start; 
             manual_browsing = false;
@@ -41,10 +44,10 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         end
 
         %% Print videos infos
-        folderpaths = cellfun(@(x) x(video_type_idx).file_path, {current_experiment.recordings.videos}, 'UniformOutput', false);
-        if all(~cellfun(@isempty ,folderpaths))
-            fprintf([strjoin(folderpaths, '\n'),'\n']);
-        end
+%         folderpaths = cellfun(@(x) x(video_type_idx).file_path, {current_experiment.recordings.videos}, 'UniformOutput', false);
+%         if all(~cellfun(@isempty ,folderpaths))
+%             fprintf([strjoin(folderpaths, '\n'),'\n']);
+%         end
 
         %% Plot the representative_frame for the current expe
         names = [];

@@ -15,7 +15,7 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
     reference_frame = [];
     video_type = [];
     video_paths = [];
-    failed_video_loading = false
+    failed_video_loading = false;
 
 
     %% Reload previous frame or create new one
