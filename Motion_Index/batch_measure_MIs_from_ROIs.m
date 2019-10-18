@@ -7,7 +7,7 @@
 % [all_experiments, failed_analysis] = batch_measure_MIs_from_ROIs(all_experiments_output, false)
 % 
 
-function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_experiments, force, display, manual_browsing)
+function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, force, display, manual_browsing)
     
     %% Force specific MI to be updated
     % By default, only ROIs with no MI are analysed. You can pass a list of
@@ -15,7 +15,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
     if nargin < 2 || isempty(force)
         force = -1;
     elseif isstr(force) && strcmp(force, 'all')
-        force = 1:numel(existing_experiments);
+        force = 1:numel(analysis);
     end
     if nargin < 3 || isempty(display)
         display = true;
@@ -24,18 +24,11 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
         manual_browsing = false;
     end
     
-    %% Initialize variables
-    % Globals are quite bad i know, but you don't want to loose info half 
-    % way in the analysis. If you stop half
-    % way, the cleanup function should send the current result in the base
-    % workspace.
-    %global all_experiments 
-    analysis = existing_experiments;
+    %% Setup a safety backup
     analysis.experiments = analysis.experiments(~arrayfun(@isempty, analysis.experiments));
-    clear existing_experiments;
-
-    %% This will send the current output to base workspace even if the
-    % analysis is incomplete
+    assignin('base', 'analysis', analysis);
+%     global analysis_complete
+%     analysis_complete = false;
 %     cleanupObj = onCleanup(@() cleanMeUp());
 
     %% Now that all Videos are ready, get the motion index if the MI section is empty
@@ -78,6 +71,9 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
                         temp = temp ./ max(temp);
                         figure(123);cla();plot(temp(:,1:2:end)); drawnow
                     end
+
+                    %% Safety backup after each video export
+                    assignin('base', 'analysis', analysis);
                 end
             end 
         end
@@ -88,11 +84,11 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(existing_expe
         end
     end
 end
-
 % 
 % function cleanMeUp()
-%     %% If interrupted, send experiment to base workspace
-%     global all_experiments
-%     assignin('base', 'all_experiments_output', all_experiments);
-%     clear global all_experiments
+%     %% prevent crash in case of interrupt
+%     global analysis_complete
+%     if ~analysis_complete
+%         error('ctrl-C captured')
+%     end
 % end 
