@@ -144,6 +144,9 @@ function read(obj, p)
     idx = find(cellfun(@(x) x(end), current_pos) == id);
     current_pos{idx} = [p, id(1)];
     link.label{idx}.Position(1:2) = p(1:2)-5;
+    if all(link.label{idx}.Color == [0 1 0])
+        link.label{idx}.Color = [1 1 0];
+    end
 end
 
 
