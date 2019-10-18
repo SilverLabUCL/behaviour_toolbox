@@ -4,6 +4,7 @@ classdef Video
     
     properties
         rois
+        roi_labels
         reference_image
         timestamps
         absolute_times
@@ -32,6 +33,7 @@ classdef Video
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);
             obj.rois            = repmat(ROI, 1, n_roi);
+            
         end
 
         function n_roi = get.n_roi(obj)
@@ -59,6 +61,15 @@ classdef Video
             motion_indexes    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
                 motion_indexes{roi} = obj.rois(roi).motion_index;
+            end
+        end
+
+
+        function roi_labels = get.roi_labels(obj)
+            %% Return the number of ROI windows
+            roi_labels    = cell(1, obj.n_roi);
+            for roi = 1:obj.n_roi
+                roi_labels{roi} = obj.rois(roi).name;
             end
         end
     end

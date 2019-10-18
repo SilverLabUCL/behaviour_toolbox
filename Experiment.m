@@ -6,6 +6,7 @@ classdef Experiment
         recordings = Recording;
         expe_path
         videotypes
+        roi_labels
         n_rec = 0;
         global_reference_images
         t_start % experiment t_start
@@ -44,6 +45,17 @@ classdef Experiment
             
             %% Regroup videos by video type (eyecam, bodycam etc...)
             videotypes = unique(filenames(cellfun('isclass', filenames, 'char')));
+        end   
+
+        function roi_labels = get.roi_labels(obj)
+            %% List all video_types available in the Children
+            roi_labels = {};
+            for rec = 1:obj.n_rec
+                roi_labels = [roi_labels, obj.recordings(rec).roi_labels];
+            end
+
+            %% Regroup videos by video type (eyecam, bodycam etc...)
+            roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));
         end   
 
         function global_reference_images = get.global_reference_images(obj)

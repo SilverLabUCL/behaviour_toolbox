@@ -7,6 +7,7 @@ classdef Recording
         recording_path
         videos
         videotypes
+        roi_labels
         reference_images
         name
         duration
@@ -63,6 +64,15 @@ classdef Recording
             for vid = 1:obj.n_vid
                 motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
             end
+        end 
+
+        function roi_labels = get.roi_labels(obj)
+            %% Get 
+            roi_labels = {};
+            for vid = 1:obj.n_vid
+                roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
+            end
+            roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));
         end 
 
         function t_start = get.t_start(obj)

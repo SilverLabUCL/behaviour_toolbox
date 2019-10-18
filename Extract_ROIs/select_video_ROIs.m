@@ -1,13 +1,16 @@
-function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, select_ROIs, display_duration, fig_handle)%, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs)
+function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, select_ROIs, display_duration, fig_handle, subplot_tags)%, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs)
    
     if nargin < 4 || isempty(fig_handle)
         fig_handle = '';
+    end
+    if nargin < 5 || isempty(subplot_tags)
+        subplot_tags = '';
     end
 %     if nargin < 8 || isempty(select_ROIs)
 %         select_ROIs = true;
 %     end
 
-    global current_pos current_labels
+    global current_pos
 
     failed_video_loading = {};
     list_of_videotypes = current_experiment.videotypes;
@@ -32,7 +35,9 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         end
         %existing_motion_indexes = ~cellfun(@isempty ,arrayfun(@(x) x.videos(video_type_idx).motion_indexes ,current_experiment.recordings, 'UniformOutput', false));
         if all(existing_motion_indexes) && select_ROIs
-            plot_MIs(current_experiment.motion_indexes{video_type_idx}, subplot_tags, video_type_idx > 1);
+            first_tp_of_exp = current_experiment.t_start; 
+            manual_browsing = false;
+            plot_MIs(current_experiment.recordings, subplot_tags, first_tp_of_exp, manual_browsing, list_of_videotypes{video_type_idx});
         end
 
         %% Print videos infos
@@ -96,7 +101,8 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
 
                         if isempty(to_pop)
                             %% Then it's an update (or the same location)
-                            current_experiment.recordings(rec).videos(video_type_idx).rois(roi).ROI_location = current_pos{roi};
+                            current_experiment.recordings(rec).videos(video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
+                            current_experiment.recordings(rec).videos(video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
                         else
                             %% Then it's a deletion
                             current_experiment.recordings(rec).videos(video_type_idx).rois(to_pop) = [];
