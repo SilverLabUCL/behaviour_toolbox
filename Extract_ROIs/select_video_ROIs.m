@@ -47,6 +47,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         end
 
         %% Plot the representative_frame for the current expe
+        names = [];
         if select_ROIs
             [current_experiment, names] = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle);
         end

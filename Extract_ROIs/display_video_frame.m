@@ -4,7 +4,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         fig_handle = figure(123); clf();hold on;
     end
     if nargin < 5 || isempty(preset_buttons)
-        preset_buttons = {'Whisker', 'Nose', 'Jaw', 'Breast', 'Wheel', 'Laser', 'Caudal Forelimb', 'Trunk', 'Tail'};
+        preset_buttons = {'Whisker', 'Nose', 'Jaw', 'Breast', 'Wheel', 'Laser', 'Caudal Forelimb', 'Trunk', 'Tail', 'Eye'};
     end
 
     global link
@@ -18,9 +18,9 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     [reference_frame, ~, ~, ~] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ ONLY VIDEO 1 USED
-    video_path = current_experiment.recordings(1).videos(video_type_idx).file_path;
-    ROI_window = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
-    
+    video_path      = current_experiment.recordings(1).videos(video_type_idx).file_path;
+    ROI_window      = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
+    link.existing_MI= current_experiment.recordings(1).videos(video_type_idx).motion_indexes;
     
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
@@ -38,33 +38,39 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     set(fig_handle,'KeyPressFcn',{@escape_btn ,fig_handle});
     
     %% Add ROIs
-    if isempty(ROI_window)
-        %% If it is the first call, add a first ROI in the middle
-        id = round(unifrnd(1,10000)); % use this to identify rectangles
-        position = [position, id];
-        add_rect('', '', position);
-    else
-        %% If there are preexisting ROIs, display them
-        for roi_idx = 1:size(ROI_window,2)
-            roi_position = ROI_window(1,:); %first video is enough
-            roi_position = roi_position{roi_idx};
-            
-            if isempty(current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name)     
-                label = ['Label # ',num2str(roi_idx)];
-            else
-                label = current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name;
-            end
-            add_rect('', '', roi_position, label);
-            %link.name(roi_idx)  = {label};
-            %link.label(roi_idx) = {text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
-        end                
-    end
+%     if isempty(ROI_window)
+%         %% If it is the first call, add a first ROI in the middle
+%         id = round(unifrnd(1,10000)); % use this to identify rectangles
+%         position = [position, id];
+%         add_rect('', '', position);
+%     else
+    %% If there are preexisting ROIs, display them
+    for roi_idx = 1:size(ROI_window,2)
+        roi_position = ROI_window(1,:); %first video is enough
+        roi_position = roi_position{roi_idx};
+
+        if isempty(current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name)     
+            label = ['Label # ',num2str(roi_idx)];
+        else
+            label = current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name;
+        end
+        if isempty(current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).motion_index)
+            color = 'y';
+        else
+            color = 'g';
+        end  
+        add_rect('', '', roi_position, label, color);
+        %link.name(roi_idx)  = {label};
+        %link.label(roi_idx) = {text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
+    end                
+%     end
     
     %% Add preview button
-    MI_test = uicontrol('Style', 'pushbutton', 'String', 'Test', 'Position', [50 50 100 40], 'Callback', @(event, src) MI_preview(event, src, video_path));
+    %MI_test = uicontrol('Style', 'pushbutton', 'String', 'Test', 'Position', [50 50 100 40], 'Callback', @(event, src) MI_preview(event, src, video_path));
     offset = 0;
     for preset = 1:numel(preset_buttons)
         offset = offset + 50;
+        position = position(1:4); % no keeping id
         uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position));
     end
     
@@ -89,10 +95,14 @@ function escape_btn(varargin)
     end
 end
 
-function add_rect(~, src, position, label)
+function add_rect(~, src, position, label, color)
     if nargin < 4 
         label = '';
     end
+    if nargin < 5 
+        color = 'r';
+    end
+
     %% Add a new ROI
     global current_pos link
     if numel(position) == 4
@@ -103,6 +113,7 @@ function add_rect(~, src, position, label)
     end
     current_pos = [current_pos, {position}]; 
     hrect = imrect(gca, current_pos{end}(1:end-1));hold on;
+  
     if ~isempty(label)
         %% then use label
     elseif ~isempty(src)
@@ -113,7 +124,7 @@ function add_rect(~, src, position, label)
     set(hrect,'userdata',num2str(id));
     link.id(numel(current_pos))     = id;
     link.name(numel(current_pos))   = {label};
-    link.label(numel(current_pos))  = {text(position(1)-5,position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
+    link.label(numel(current_pos))  = {text(position(1)-5,position(2)-5, ['\bf ',label], 'Color', color)};
     set(hrect,'DeleteFcn', @(src,eventdata) delete_rect(src,eventdata,hrect));
     hrectchild = get(hrect, 'Children');
     hcmenu = get(hrectchild(2),'UIContextMenu');
@@ -131,7 +142,7 @@ function read(obj, p)
     global current_pos link;
     id = str2num(get(obj,'userdata'));
     idx = find(cellfun(@(x) x(end), current_pos) == id);
-    current_pos{idx} = [p, id];
+    current_pos{idx} = [p, id(1)];
     link.label{idx}.Position(1:2) = p(1:2)-5;
 end
 
