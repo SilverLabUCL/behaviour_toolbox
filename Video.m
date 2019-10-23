@@ -64,7 +64,6 @@ classdef Video
             end
         end
 
-
         function roi_labels = get.roi_labels(obj)
             %% Return the number of ROI windows
             roi_labels    = cell(1, obj.n_roi);

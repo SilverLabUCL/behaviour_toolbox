@@ -56,7 +56,7 @@ classdef Recording
             for vid = 1:obj.n_vid
                 motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
             end
-        end 
+        end
 
         function roi_labels = get.roi_labels(obj)
             %% Get 
@@ -64,6 +64,7 @@ classdef Recording
             for vid = 1:obj.n_vid
                 roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
             end
+            roi_labels = [roi_labels{:}];
             roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));
         end 
 

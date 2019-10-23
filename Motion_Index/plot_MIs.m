@@ -36,17 +36,29 @@ function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
 %     end
 %     
     all_MIs = vertcat(recordings.motion_indexes);
+    labels = recordings.roi_labels;  % a list of all labels
+    all_labels = {};
+    for rec = 1:numel(recordings)
+        for vid = 1:recordings(rec).n_vid
+            all_labels = [all_labels, {recordings(rec).videos(vid).roi_labels}];
+        end
+    end
+    original_shape = size(to_use);
+    to_use = to_use(:);
     all_MIs = all_MIs(to_use);
+    all_labels = all_labels(to_use);
     if all(to_use(:)) % not sure why we loose the shape when they are all 1's
-        all_MIs = reshape(all_MIs, size(to_use));
+        all_MIs = reshape(all_MIs, original_shape);
+        all_labels = reshape(all_labels, fliplr(original_shape))';
     end
     if nargin < 2 || isempty(tags)
         tags = cell(1, numel([all_MIs{1,:}]));
     end
     keep = size(all_MIs, 2) > 1;
     
-    for MI = 1:numel(types)
-        current_MIs = all_MIs(:,MI);
+    for videotype_idx = 1:numel(types)
+        current_MIs = all_MIs(:,videotype_idx);
+        current_labels = all_labels(:,videotype_idx);
         if all(cellfun(@isempty, [current_MIs{:}]))
             all_rois = [];
         elseif any(cellfun(@isempty, [current_MIs{:}]))
@@ -64,7 +76,7 @@ function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
 
         %% Set image to full screen onm screen 2 (if any)
         screens = get(0,'MonitorPositions');
-        f = figure(122+MI); hold on;
+        f = figure(122+videotype_idx); hold on;
         if ~keep
             clf();
         end
@@ -73,23 +85,30 @@ function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
         end
 
         %% Create subplot
-        nrois = (size(all_rois,2)/2);
+        %nrois = (size(all_rois,2)/2);
         axes = [];
-        for roi = 0:nrois-1
-            ax = subplot(nrois,1,roi+1);hold on
-            title(['ROI ',num2str(roi+1), ' ', tags{roi+1}]);hold on
-            v = all_rois(:,1 + (roi*2));
-            v = (v - min(v)) / (max(v) - min(v));
-            novid = diff(all_rois(:,2));
-            [idx] = find(novid > (median(novid) * 2));
-            taxis = (all_rois(:,2)- t_offset)/1000;
-            plot(taxis, v); hold on;
-            for p = 1:numel(idx)
-                x = [taxis(idx(p)), taxis(idx(p)+1), taxis(idx(p)+1), taxis(idx(p))];
-                y = [max(v), max(v), min(v), min(v)];
-                patch(x, y, [0.8,0.8,0.8], 'EdgeColor', 'none'); hold on;
+        n_rois = numel(labels);
+        for roi = 0:n_rois-1
+            rois = cell2mat(cellfun(@(x) find(strcmp(x, labels{roi+1})) , current_labels, 'UniformOutput', false));
+            roi = unique(rois)-1;
+            if numel(roi) > 1
+                error_box('to fix, there is an issue with ROI indexing')
+            elseif ~isempty(roi)
+                ax = subplot(n_rois,1,roi+1);cla();hold on
+                title(labels{roi+1});hold on
+                v = all_rois(:,1 + (roi*2));
+                v = (v - min(v)) / (max(v) - min(v));
+                novid = diff(all_rois(:,2));
+                [idx] = find(novid > (median(novid) * 2));
+                taxis = (all_rois(:,2)- t_offset)/1000;
+                plot(taxis, v); hold on;
+                for p = 1:numel(idx)
+                    x = [taxis(idx(p)), taxis(idx(p)+1), taxis(idx(p)+1), taxis(idx(p))];
+                    y = [max(v), max(v), min(v), min(v)];
+                    patch(x, y, [0.8,0.8,0.8], 'EdgeColor', 'none'); hold on;
+                end
+                axes = [axes, ax]; hold on;
             end
-            axes = [axes, ax]; hold on;
         end
         linkaxes(axes, 'x'); hold on;
 
