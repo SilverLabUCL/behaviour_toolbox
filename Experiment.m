@@ -28,7 +28,12 @@ classdef Experiment
         function n_rec = get.n_rec(obj)
             %% Return the number of recordings available (including empty)
             n_rec = numel(obj.recordings);
-        end       
+        end    
+   
+        function obj = pop(obj, recording_idx)
+            %% Remove a specific recording objct based on the video index
+            obj.recordings(recording_idx) = [];
+        end
 
         function videotypes = get.videotypes(obj)
             %% List all video_types available in the Children

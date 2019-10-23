@@ -18,7 +18,7 @@ classdef Analysis_Set
             n_expe = numel(obj.experiments);
         end
         
-        function pop(obj, expe_number)
+        function obj = pop(obj, expe_number)
             obj.experiments(expe_number) = [];
         end
         

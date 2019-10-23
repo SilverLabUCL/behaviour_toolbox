@@ -116,8 +116,7 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
     expe_already_there = false;
     recording_already_there = false;
     
-    %% If we find the recording somewhere, we update the index
-    % This doesn't mean the analysis was complete
+    %% If we find the experiment somewhere, we update the index
     for el = 1:analysis.n_expe
         if ~isempty(analysis.experiments(el).expe_path) && strcmp(analysis.experiments(el).expe_path, current_expe_path)
             %% Adjust exp_idx
@@ -127,63 +126,76 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
         end
     end
 
-    %% If it is the first time we see this experiment, we create the object
+    %% If it is the first time we see this experiment, we create the Experiment object
     if ~expe_already_there
-        %% Initialise variables. 
-        % QQ there will be an issue here if we start adding new videotypes
-        if experiment_idx > analysis.n_expe
-            % pass, idx can be used
-        %elseif ~(isempty(analysis.experiments(experiment_idx).filenames)) % If it's a new video, but you are editing a previous analysis, we add a new index
-%             experiment_idx = analysis.n_expe + 1;
-        end
+        %% Add new experiment
+        experiment_idx = analysis.n_expe + 1;
         analysis.experiments(experiment_idx) = Experiment(n_recordings_in_expe, current_expe_path);
     end
     
-    %% If it is the first time we see this recording, we create the object
+    %% If we find the recording somewhere, we update the index
     for el = 1:analysis.experiments(experiment_idx).n_rec
         if any([analysis.experiments(experiment_idx).recordings(:).n_vid])
             if ~isempty(analysis.experiments(experiment_idx).recordings(el).recording_path) && strcmp(analysis.experiments(experiment_idx).recordings(el).recording_path, current_recording_path)
                 %% Update recording_idx
-                recording_idx            = el;
+                recording_idx             = el;
                 recording_already_there   = true;  
                 break
             end
         end
     end
     
-    if ~recording_already_there
-        %% Initialise variables. 
-        % QQ there will be an issue here if we start adding new videotypes
-        if recording_idx > analysis.experiments(experiment_idx).n_rec
-            % pass, idx can be used
-%         elseif ~(isempty(analysis.experiments(experiment_idx).filenames)) % If it's a new video, but you are editing a previous analysis, we add a new index
-%             experiment_idx = analysis.n_expe + 1;
-        end
-        analysis.experiments(experiment_idx).recordings(recording_idx) = Recording(n_videos_in_recording, current_recording_path);
+    %% Check if all videos are in place
+    update_existing = false;
+    if recording_already_there
+        existing = isfile(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.file_path})); % Find if a listed file is missing
+        update_existing = ~all(existing) || numel(existing) ~= n_videos_in_recording;
+    end
+
+
+    %% If it is the first time we see this recording, we create the Recording object
+    % If there a new video, we need to add it
+    if ~recording_already_there || update_existing
+        %% Add new recording or update exisitng one (when a new video is found)
+        if ~update_existing
+            recording_idx = analysis.experiments(experiment_idx).n_rec + 1;
+            analysis.experiments(experiment_idx).recordings(recording_idx) = Recording(n_videos_in_recording, current_recording_path);
+        end     
+        
+        %% Add any new video (or all new videos)
         for video = 1:n_videos_in_recording
-            analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).file_path  = strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/');    
+            if ~ismember(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.file_path}), strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'))
+                analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).file_path  = strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'); 
+            end
         end
     end
 end
 
 function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_folders, filter_list)
+    %% Remove filtered or absent files/folders
     for expe_idx = analysis.n_expe:-1:1     
         experiment = analysis.experiments(expe_idx);
-        if ~isempty(experiment.recordings) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
-            for video_record = experiment.n_rec:-1:1
-                for video_type_idx = experiment.recordings(video_record).n_vid:-1:1                
-                    video = experiment.recordings(video_record).videos(video_type_idx);
+        if ~isempty(experiment.recordings) && isfolder(experiment.expe_path) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
+            for recording_idx = experiment.n_rec:-1:1
+                if isfolder(experiment.recordings(recording_idx).recording_path)
+                    for video_type_idx = experiment.recordings(recording_idx).n_vid:-1:1                
+                        video = experiment.recordings(recording_idx).videos(video_type_idx);
 
-                    %% Check if file has not been deleted
-                    if ~isfile(video.file_path)
-                        %% If it was, delete any corresponding fields
-                        experiment.recordings(video_record).pop(video_type_idx);
-                        fprintf([videopath,'\n'])
+                        %% Check if file has not been deleted
+                        if ~isfile(video.file_path)
+                            %% Remove the whole video object
+                            fprintf(['Could no find ', experiment.recordings(recording_idx).videos(video_type_idx).file_path,'\n'])
+                            experiment.recordings(recording_idx) = experiment.recordings(recording_idx).pop(video_type_idx);                        
+                        end
                     end
+                else
+                    %% Remove the whole recording
+                    experiment = experiment.pop(recording_idx);
                 end
             end
-        elseif ~isempty(filter_list) 
-            analysis.pop(expe_idx);
+        elseif ~isempty(filter_list) || ~isfolder(experiment.expe_path)
+            %% Remove the whole experiment
+            analysis = analysis.pop(expe_idx);
         end
         analysis.experiments(expe_idx) = experiment;        
     end
