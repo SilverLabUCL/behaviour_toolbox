@@ -35,7 +35,7 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
             %% We're going to try to get an "average video" for that experiment
             % --> if it is not sharp, you may have moved the camera during
             % the experiment
-            current_path = experiment.recordings(rec).videos(video_type_idx).file_path;
+            current_path = experiment.recordings(rec).videos(video_type_idx).path;
             current_path = strrep(current_path,'\','/'); 
             try
                 if get_preview

@@ -18,7 +18,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     [reference_frame, ~, ~, ~] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ ONLY VIDEO 1 USED
-    video_path      = current_experiment.recordings(1).videos(video_type_idx).file_path;
+    video_path      = current_experiment.recordings(1).videos(video_type_idx).path;
     ROI_window      = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
     link.existing_MI= current_experiment.recordings(1).videos(video_type_idx).motion_indexes;
     

@@ -4,7 +4,7 @@ classdef Recording
     
     properties
         n_vid = 0;
-        recording_path
+        path
         videos
         videotypes
         roi_labels
@@ -27,7 +27,7 @@ classdef Recording
                 recording_path = '';   % Empty recording
             end
             obj.videos          = repmat(Video, 1, n_video);
-            obj.recording_path  = recording_path;
+            obj.path            = recording_path;
         end
         
         function n_vid = get.n_vid(obj)
@@ -42,7 +42,7 @@ classdef Recording
         
         function videotypes = get.videotypes(obj)
             %% List all video_types available in the Children
-            videotypes = {obj.videos.file_path};
+            videotypes = {obj.videos.path};
         end 
 
         function reference_images = get.reference_images(obj)

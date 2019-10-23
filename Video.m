@@ -8,7 +8,7 @@ classdef Video
         reference_image
         timestamps
         absolute_times
-        file_path
+        path
         video_types
         n_roi
         sampling_rate
@@ -28,7 +28,7 @@ classdef Video
             if nargin < 2
                 file_path = ''; % Empty recording
             end
-            obj.file_path       = file_path;
+            obj.path            = file_path;
             obj.reference_image = [];
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);

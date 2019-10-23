@@ -103,7 +103,7 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     end
 
     %% Empty experiments an be detected here 
-    invalid = arrayfun(@(x) isempty(x.expe_path), analysis.experiments);
+    invalid = arrayfun(@(x) isempty(x.path), analysis.experiments);
 end
 
 function [expe_already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, n_recordings_in_expe, current_expe_path, current_recording_path, n_videos_in_recording, recordings_videos)
@@ -118,7 +118,7 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
     
     %% If we find the experiment somewhere, we update the index
     for el = 1:analysis.n_expe
-        if ~isempty(analysis.experiments(el).expe_path) && strcmp(analysis.experiments(el).expe_path, current_expe_path)
+        if ~isempty(analysis.experiments(el).path) && strcmp(analysis.experiments(el).path, current_expe_path)
             %% Adjust exp_idx
             experiment_idx       = el;
             expe_already_there   = true;  
@@ -136,7 +136,7 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
     %% If we find the recording somewhere, we update the index
     for el = 1:analysis.experiments(experiment_idx).n_rec
         if any([analysis.experiments(experiment_idx).recordings(:).n_vid])
-            if ~isempty(analysis.experiments(experiment_idx).recordings(el).recording_path) && strcmp(analysis.experiments(experiment_idx).recordings(el).recording_path, current_recording_path)
+            if ~isempty(analysis.experiments(experiment_idx).recordings(el).path) && strcmp(analysis.experiments(experiment_idx).recordings(el).path, current_recording_path)
                 %% Update recording_idx
                 recording_idx             = el;
                 recording_already_there   = true;  
@@ -148,7 +148,7 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
     %% Check if all videos are in place
     update_existing = false;
     if recording_already_there
-        existing = isfile(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.file_path})); % Find if a listed file is missing
+        existing = isfile(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.path})); % Find if a listed file is missing
         update_existing = ~all(existing) || numel(existing) ~= n_videos_in_recording;
     end
 
@@ -164,8 +164,8 @@ function [expe_already_there, analysis, experiment_idx] = check_if_new_video(ana
         
         %% Add any new video (or all new videos)
         for video = 1:n_videos_in_recording
-            if ~ismember(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.file_path}), strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'))
-                analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).file_path  = strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'); 
+            if ~ismember(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.path}), strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'))
+                analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).path  = strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'); 
             end
         end
     end
@@ -175,16 +175,16 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
     %% Remove filtered or absent files/folders
     for expe_idx = analysis.n_expe:-1:1     
         experiment = analysis.experiments(expe_idx);
-        if ~isempty(experiment.recordings) && isfolder(experiment.expe_path) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
+        if ~isempty(experiment.recordings) && ~isempty(experiment.path) && isfolder(experiment.path) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
             for recording_idx = experiment.n_rec:-1:1
-                if isfolder(experiment.recordings(recording_idx).recording_path)
+                if isfolder(experiment.recordings(recording_idx).path)
                     for video_type_idx = experiment.recordings(recording_idx).n_vid:-1:1                
                         video = experiment.recordings(recording_idx).videos(video_type_idx);
 
                         %% Check if file has not been deleted
-                        if ~isfile(video.file_path)
+                        if ~isfile(video.path)
                             %% Remove the whole video object
-                            fprintf(['Could no find ', experiment.recordings(recording_idx).videos(video_type_idx).file_path,'\n'])
+                            fprintf(['Could no find ', experiment.recordings(recording_idx).videos(video_type_idx).path,'\n'])
                             experiment.recordings(recording_idx) = experiment.recordings(recording_idx).pop(video_type_idx);                        
                         end
                     end
@@ -193,7 +193,7 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
                     experiment = experiment.pop(recording_idx);
                 end
             end
-        elseif ~isempty(filter_list) || ~isfolder(experiment.expe_path)
+        elseif ~isempty(filter_list) || (~isempty(experiment.path) && ~isfolder(experiment.path))
             %% Remove the whole experiment
             analysis = analysis.pop(expe_idx);
         end

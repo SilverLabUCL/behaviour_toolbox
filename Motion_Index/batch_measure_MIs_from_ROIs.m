@@ -38,7 +38,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
             for vid = 1:analysis.experiments(exp_idx).recordings(rec).n_vid
                 current_video = analysis.experiments(exp_idx).recordings(rec).videos(vid);
                 if any(cellfun(@isempty, current_video.motion_indexes))  || ismember(exp_idx, force)
-                    path = strsplit(strrep(current_video.file_path,'/','\'),'Cam');
+                    path = strsplit(strrep(current_video.path,'/','\'),'Cam');
                     path = [path{1},'Cam-relative times.txt'];
 
                     %% To use the parent folder instead (because it has absolute timestamps)
@@ -59,7 +59,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
                     current_video.sampling_rate = 1/mean(diff(current_video.absolute_times))*1000;
 
                     %% Get MI
-                    current_video.motion_indexes = get_MI_from_video(current_video.file_path, current_video.absolute_times, false, current_video.ROI_location, false);
+                    current_video.motion_indexes = get_MI_from_video(current_video.path, current_video.absolute_times, false, current_video.ROI_location, false);
 
                     %% Update analysis object
                     analysis.experiments(exp_idx).recordings(rec).videos(vid) = current_video;

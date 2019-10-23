@@ -4,7 +4,7 @@ classdef Experiment
     
     properties
         recordings = Recording;
-        expe_path
+        path
         videotypes
         roi_labels
         n_rec = 0;
@@ -22,7 +22,7 @@ classdef Experiment
                 expe_path = '';   % Empty recording
             end
             obj.recordings    = repmat(Recording, 1, n_recordings);
-            obj.expe_path     = expe_path;
+            obj.path          = expe_path;
         end
         
         function n_rec = get.n_rec(obj)
