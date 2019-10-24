@@ -4,7 +4,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         fig_handle = figure(123); clf();hold on;
     end
     if nargin < 5 || isempty(preset_buttons)
-        preset_buttons = {'Whisker', 'Nose', 'Jaw', 'Breast', 'Wheel', 'Laser', 'Caudal Forelimb', 'Trunk', 'Tail', 'Eye'};
+        preset_buttons = '';
     end
 
     global link

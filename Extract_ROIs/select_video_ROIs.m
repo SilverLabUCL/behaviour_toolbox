@@ -1,14 +1,12 @@
-function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, select_ROIs, display_duration, fig_handle, subplot_tags)%, already_there, list_of_videotypes, recordings_paths, display_duration, subplot_tags, fig_handle, select_ROIs)
+function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, select_ROIs, display_duration, fig_handle, default_tags)
    
     if nargin < 4 || isempty(fig_handle)
         fig_handle = '';
     end
-    if nargin < 5 || isempty(subplot_tags)
-        subplot_tags = '';
+    if nargin < 5 || isempty(default_tags)
+        default_tags = '';
     end
-%     if nargin < 8 || isempty(select_ROIs)
-%         select_ROIs = true;
-%     end
+
 
     global current_pos
 
@@ -40,7 +38,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         if all(existing_motion_indexes) && select_ROIs
             first_tp_of_exp = current_experiment.t_start; 
             manual_browsing = false;
-            plot_MIs(current_experiment.recordings, subplot_tags, first_tp_of_exp, manual_browsing, list_of_videotypes{video_type_idx});
+            plot_MIs(current_experiment.recordings, first_tp_of_exp, manual_browsing, list_of_videotypes{video_type_idx});
         end
 
         %% Print videos infos
@@ -52,7 +50,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         %% Plot the representative_frame for the current expe
         names = [];
         if select_ROIs
-            [current_experiment, names] = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle);
+            [current_experiment, names] = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle, default_tags);
         end
 
         %% Clear empty cells if you deleted some ROIs. get id of deleted cells

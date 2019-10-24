@@ -11,7 +11,7 @@
 
 % To extract MI, check batch_measure_MIs_from_ROIs
 
-function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_video_ROIs(video_folder_path, analysis, subplot_tags, display_duration, filter_list, fig_handle, select_ROIs)
+function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_video_ROIs(video_folder_path, analysis, default_tags, display_duration, filter_list, fig_handle, select_ROIs)
 
     %% Get all video folders
     % This is your top folder. You must sort your data by experiment, because
@@ -27,8 +27,8 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
         analysis.experiments = analysis.experiments(~arrayfun(@isempty, analysis.experiments));
     end
     
-    if nargin < 3 || isempty(subplot_tags)
-        subplot_tags = ''; % {'Laser','Wheel','WhiskerPad','Eye','UpperBody/Forelimbs'}
+    if nargin < 3 || isempty(default_tags)
+        default_tags = ''; % {'Laser','Wheel','WhiskerPad','Eye','UpperBody/Forelimbs'}
     end
     if nargin < 4 || isempty(display_duration)
         display_duration = 0;
@@ -45,6 +45,7 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     
     %% Add Video folder field
     analysis.video_folder = strrep([video_folder_path, '/'],'\','/');
+    assignin('base', 'analysis', analysis); %% Setup a safety backup
     splitvideo = {}; % that will indicates problematic split videos
     failed_video_loading = {};
 
@@ -98,7 +99,10 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
 
             %% Not that all recordings were added, we can select ROIs
             close all
-            [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle);%, already_there, list_of_videotypes, recordings_videos, display_duration, subplot_tags, fig_handle, select_ROIs);
+            [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle, default_tags);
+            
+            %% Safety backup after each video export
+            assignin('base', 'analysis', analysis);
         end
     end
 

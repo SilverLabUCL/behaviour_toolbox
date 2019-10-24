@@ -1,13 +1,13 @@
 %% For a given list of MIs, plot them, one per subplot
 
-function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
-    if nargin < 3 || isempty(t_offset)
+function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter)
+    if nargin < 2 || isempty(t_offset)
         t_offset = 0;
     end
-    if nargin < 4 || isempty(manual_browsing)
+    if nargin < 3 || isempty(manual_browsing)
         manual_browsing = false;
     end
-    if nargin < 5 || isempty(videotype_filter)
+    if nargin < 4 || isempty(videotype_filter)
         videotype_filter = '';
     end
 
@@ -50,9 +50,6 @@ function plot_MIs(recordings, tags, t_offset, manual_browsing, videotype_filter)
     if all(to_use(:)) % not sure why we loose the shape when they are all 1's
         all_MIs = reshape(all_MIs, original_shape);
         all_labels = reshape(all_labels, fliplr(original_shape))';
-    end
-    if nargin < 2 || isempty(tags)
-        tags = cell(1, numel([all_MIs{1,:}]));
     end
     keep = size(all_MIs, 2) > 1;
     

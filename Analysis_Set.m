@@ -5,6 +5,7 @@ classdef Analysis_Set
         experiments = Experiment;
         video_folder = '';
         n_expe = 0;
+        default_tags = {'Whisker', 'Nose', 'Jaw', 'Breast', 'Wheel', 'Laser', 'Caudal Forelimb', 'Trunk', 'Tail', 'Eye'};
     end
     
     
