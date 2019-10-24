@@ -1,6 +1,6 @@
 %% For a given list of MIs, plot them, one per subplot
 
-function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter)
+function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filter_laser)
     if nargin < 2 || isempty(t_offset)
         t_offset = 0;
     end
@@ -10,7 +10,9 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter)
     if nargin < 4 || isempty(videotype_filter)
         videotype_filter = '';
     end
-
+    if nargin < 5 || isempty(filter_laser)
+        filter_laser = false;
+    end
 
 
     %% Regroup MIs
@@ -98,6 +100,9 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter)
                 novid = diff(all_rois(:,2));
                 [idx] = find(novid > (median(novid) * 2));
                 taxis = (all_rois(:,2)- t_offset)/1000;
+                if filter_laser
+                    v = movmin(v, 3);
+                end
                 plot(taxis, v); hold on;
                 for p = 1:numel(idx)
                     x = [taxis(idx(p)), taxis(idx(p)+1), taxis(idx(p)+1), taxis(idx(p))];
