@@ -61,13 +61,14 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
     
     %% Get some info to help choosing ROIs
     if get_preview
-        sumimage = mean(double(reference_frame), 3);
+        meanimage = mean(double(reference_frame), 3);        
         varimage = var(double(reference_frame), 1, 3);
         maximage = max(double(reference_frame), [], 3);
+        maximage = (maximage-meanimage);
         reference_frame = cat(3,...
-                              (sumimage - min(sumimage(:))) / (max(sumimage(:)) - min(sumimage(:))),...
-                              (varimage - min(varimage(:))) / (max(varimage(:)) - min(varimage(:))),...
-                              (maximage - min(maximage(:))) / (max(maximage(:)) - min(maximage(:))));
-        reference_frame(mask) = 0; % blank saturated regions  
+                              (meanimage - min(meanimage(:))) / (max(meanimage(:)) - min(meanimage(:))),...
+                              (3*varimage - min(varimage(:))) / (max(varimage(:)) - min(varimage(:))),...
+                              (3*maximage - min(maximage(:))) / (max(maximage(:)) - min(maximage(:))));
+        reference_frame(imerode(mask, strel('disk',3))) = 0; % blank saturated regions  
     end
 end
