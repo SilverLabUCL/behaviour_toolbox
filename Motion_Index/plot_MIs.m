@@ -89,13 +89,21 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
         n_rois = numel(labels);
         for roi = 0:n_rois-1
             rois = cell2mat(cellfun(@(x) find(strcmp(x, labels{roi+1})) , current_labels, 'UniformOutput', false));
-            roi = unique(rois)-1;
-            if numel(roi) > 1
-                error_box('to fix, there is an issue with ROI indexing')
-            elseif ~isempty(roi)
+            real_roi = unique(rois)-1;
+            if ~isempty(real_roi)
+                %% Prepare subplot for the ROI
                 ax = subplot(n_rois,1,roi+1);cla();hold on
                 title(labels{roi+1});hold on
-                v = all_rois(:,1 + (roi*2));
+                
+                %% Select the right column(s)
+                v = all_rois(:,unique(rois)*2 - 1);
+                
+                %% Averages ROIs with the same name
+                if size(v, 2) > 1
+                    v = nanmean(v, 2);
+                end
+                
+                %% Normalize v, get timescale
                 v = (v - min(v)) / (max(v) - min(v));
                 novid = diff(all_rois(:,2));
                 [idx] = find(novid > (median(novid) * 2));
