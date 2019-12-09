@@ -47,7 +47,7 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
 %                 video_type = [video_type, video_idx];
 %                 video_paths = [video_paths, {current_path}];
             catch % empty videos etc...
-                winopen(paths(video_idx).folder)
+                %winopen(current_path)
                 failed_video_loading = [failed_video_loading, {current_path}];
                 fprintf([current_path, ' has an issue\n'])
             end
