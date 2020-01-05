@@ -120,7 +120,10 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
                 axes = [axes, ax]; hold on;
             end
         end
-        linkaxes(axes, 'x'); hold on;
+        
+        if ~isempty(axes) % empty when no ROIs were selected in the Video
+            linkaxes(axes, 'x'); hold on;
+        end
 
         if manual_browsing
             uiwait(f);
