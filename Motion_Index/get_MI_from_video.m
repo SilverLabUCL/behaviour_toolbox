@@ -91,7 +91,7 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
     %% Load data if required
     if ~isnumeric(file_path_or_data) && exist(file_path_or_data, 'file')
         %% If you pass a file path 
-        fprintf(['please wait... loading videofile :',file_path_or_data,'\n'])
+        fprintf(['please wait... loading videofile ',file_path_or_data,'\n'])
         file_path_or_data = mmread_light(file_path_or_data, dump_data);
         fprintf('video loaded \n')
     end

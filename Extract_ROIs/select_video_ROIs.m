@@ -88,30 +88,36 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         %% Add new windows and update motion indexes windows location  
         if roi_change_detected
             for rec = 1:current_experiment.n_rec
-                n_rois = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
-                previous_ids = vertcat(current_experiment.recordings(rec).videos(video_type_idx).ROI_location{:});
-                for roi = 1:numel(current_pos) 
-                    %% Check if it is a new ROI
-                    if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
-                        n_roi = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
-                        current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
-                        current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).name = names{roi};
-                    else    
-                        %% List ROIs to delete
-                        to_pop = [];
-                        for pop = poped
-                            to_pop = [to_pop, find(previous_ids(:,5) == pop)];
-                        end
+                if current_experiment.recordings(rec).n_vid >= video_type_idx
+                    %% QQ We may need to use
+                    % target = experiment.videotypes{video_type_idx};
+                    % local_video_type_idx = find(contains(experiment.recordings(rec).videotypes, target));
+                    
+                    n_rois = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
+                    previous_ids = vertcat(current_experiment.recordings(rec).videos(video_type_idx).ROI_location{:});
+                    for roi = 1:numel(current_pos) 
+                        %% Check if it is a new ROI
+                        if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
+                            n_roi = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
+                            current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
+                            current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).name = names{roi};
+                        else    
+                            %% List ROIs to delete
+                            to_pop = [];
+                            for pop = poped
+                                to_pop = [to_pop, find(previous_ids(:,5) == pop)];
+                            end
 
-                        if isempty(to_pop)
-                            %% Then it's an update (or the same location)
-                            current_experiment.recordings(rec).videos(video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
-                            current_experiment.recordings(rec).videos(video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
-                            current_experiment.recordings(rec).videos(video_type_idx).rois(roi).name = names{roi};
-                        else
-                            %% Then it's a deletion
-                            current_experiment.recordings(rec).videos(video_type_idx).rois(to_pop) = [];
-                            previous_ids = vertcat(current_experiment.recordings(rec).videos(video_type_idx).ROI_location{:});
+                            if isempty(to_pop)
+                                %% Then it's an update (or the same location)
+                                current_experiment.recordings(rec).videos(video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
+                                current_experiment.recordings(rec).videos(video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
+                                current_experiment.recordings(rec).videos(video_type_idx).rois(roi).name = names{roi};
+                            else
+                                %% Then it's a deletion
+                                current_experiment.recordings(rec).videos(video_type_idx).rois(to_pop) = [];
+                                previous_ids = vertcat(current_experiment.recordings(rec).videos(video_type_idx).ROI_location{:});
+                            end
                         end
                     end
                 end

@@ -18,8 +18,8 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
     failed_video_loading = false;
 
 
-    %% Reload previous frame or create new one
-    if ~any(isempty([experiment.global_reference_images{:,video_type_idx}]))% && ~isempty(experiment.reference_images{video_type_idx})
+    %% Reload previous frame or create new one (all empty when never generated. NaN when video not available)
+    if ~any(isempty([experiment.global_reference_images{:,video_type_idx}])) && ~all(isnan([experiment.global_reference_images{:,video_type_idx}]))% && ~isempty(experiment.reference_images{video_type_idx})
         %% If the frame existed, we just get a new one
         reference_frame = experiment.reference_image{video_type_idx};
 %         video_paths = experiment.filenames{video_type_idx};
@@ -32,24 +32,29 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
 %         video_paths = [];
         for rec = 1:experiment.n_rec
 
+            target = experiment.videotypes{video_type_idx};
+            local_video_type_idx = find(contains(experiment.recordings(rec).videotypes, target));
+
             %% We're going to try to get an "average video" for that experiment
             % --> if it is not sharp, you may have moved the camera during
             % the experiment
-            current_path = experiment.recordings(rec).videos(video_type_idx).path;
-            current_path = strrep(current_path,'\','/'); 
-            try
-                if get_preview
-                    video = VideoReader(current_path);                
-                    video.CurrentTime = 1;
-                    vidFrame = readFrame(video);
-                    reference_frame = cat(3, reference_frame, adapthisteq(rgb2gray(vidFrame)));
+            if ~isempty(local_video_type_idx)
+                current_path = experiment.recordings(rec).videos(local_video_type_idx).path;
+                current_path = strrep(current_path,'\','/'); 
+                try
+                    if get_preview
+                        video = VideoReader(current_path);                
+                        video.CurrentTime = 1;
+                        vidFrame = readFrame(video);
+                        reference_frame = cat(3, reference_frame, adapthisteq(rgb2gray(vidFrame)));
+                    end
+    %                 video_type = [video_type, video_idx];
+    %                 video_paths = [video_paths, {current_path}];
+                catch % empty videos etc...
+                    %winopen(current_path)
+                    failed_video_loading = [failed_video_loading, {current_path}];
+                    fprintf([current_path, ' has an issue\n'])
                 end
-%                 video_type = [video_type, video_idx];
-%                 video_paths = [video_paths, {current_path}];
-            catch % empty videos etc...
-                %winopen(current_path)
-                failed_video_loading = [failed_video_loading, {current_path}];
-                fprintf([current_path, ' has an issue\n'])
             end
         end
 

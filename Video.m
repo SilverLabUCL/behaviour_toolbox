@@ -18,6 +18,7 @@ classdef Video
         quality = 5;
         ROI_location
         motion_indexes
+        name
     end
     
     methods

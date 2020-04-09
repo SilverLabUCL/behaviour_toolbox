@@ -67,7 +67,18 @@ classdef Experiment
             %% List all video_types available in the Children
             global_reference_images = {};
             for rec = 1:obj.n_rec
-                global_reference_images = [global_reference_images; obj.recordings(rec).reference_images];
+                try
+                    global_reference_images = [global_reference_images; obj.recordings(rec).reference_images];
+                catch
+                    %% Typically, there's a video missing for that record
+                    % We find which one and fill the others with NaN
+                    current_types = cellfun(@(x) erase(strsplit(x,'/'),'.avi'), obj.recordings(rec).videotypes,'UniformOutput',false);
+                    current_types = current_types{1}{1,end};
+                    
+                    new = cell(1, size(global_reference_images, 2));
+                    new{~ismember(obj.videotypes, current_types)} = NaN;
+                    global_reference_images = [global_reference_images; new]; % when a video is missing, put en empty cell instead
+                end
             end
             
             %% Do some operation here

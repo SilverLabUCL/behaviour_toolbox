@@ -18,7 +18,25 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
     %% Regroup MIs
     %max_MI = max(cellfun(@numel, MIs));
     %keep = max_MI > 1;
-    types = vertcat(recordings.videotypes);
+  %  try
+        types = vertcat(recordings.videotypes);
+   % catch
+%         types = {};
+%         for rec = 1:numel(recordings)
+%             try
+%                 types = [types ; recordings(rec).videotypes];
+%             catch
+%                 %% Typically, there's a video missing for that record
+%                 % We find which one and fill the others with NaN
+%                 current_types = cellfun(@(x) erase(strsplit(x,'/'),'.avi'), recordings(rec).videotypes,'UniformOutput',false);
+%                 current_types = current_types{1}{1,end};
+% 
+%                 new = cell(1, size(types, 2));
+%                 new{~ismember(recordings(rec).videotypes, current_types)} = NaN;
+%                 types = [types; new]; % when a video is missing, put en empty cell instead
+%             end
+%         end
+ %   end
     to_use = cellfun(@(x) contains(x, videotype_filter), types);
     if isempty(videotype_filter)
         %% Get tags
