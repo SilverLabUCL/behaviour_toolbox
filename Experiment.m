@@ -76,7 +76,7 @@ classdef Experiment
                     current_types = current_types{1}{1,end};
                     
                     new = cell(1, size(global_reference_images, 2));
-                    new{~ismember(obj.videotypes, current_types)} = NaN;
+                    new(~ismember(obj.videotypes, current_types)) = {NaN};
                     global_reference_images = [global_reference_images; new]; % when a video is missing, put en empty cell instead
                 end
             end
