@@ -34,6 +34,20 @@ classdef Analysis_Set
             end
         end
         
+        function update_path(obj, old, new)
+            for exp = 1:obj.n_expe    
+                obj.experiments(exp).path = strrep(obj.experiments(exp).path,old,new);
+                for rec = 1:obj.experiments(exp).n_rec
+                    obj.experiments(exp).recordings(rec).path = strrep(obj.experiments(exp).recordings(rec).path,old,new);
+                    for vid = 1:obj.experiments(exp).recordings(rec).n_vid
+                        obj.experiments(exp).recordings(rec).videos(vid).path = strrep(obj.experiments(exp).recordings(rec).videos(vid).path,old,new);
+                        for roi = 1:obj.experiments(exp).recordings(rec).videos(vid).n_roi
+                            obj.experiments(exp).recordings(rec).videos(vid).rois(roi);
+                        end
+                    end
+                end
+            end           
+        end
     end
 end
 
