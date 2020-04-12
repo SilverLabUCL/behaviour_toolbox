@@ -116,7 +116,7 @@ function add_rect(~, src, position, label, color)
   
     if ~isempty(label)
         %% then use label
-    elseif ~isempty(src)
+    elseif ~isempty(src) && isprop(src, 'String')
         label = src.String;
     else
         label = ['Label # ',num2str(numel(current_pos))];
