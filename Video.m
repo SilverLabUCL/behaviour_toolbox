@@ -72,6 +72,12 @@ classdef Video
                 roi_labels{roi} = obj.rois(roi).name;
             end
         end
+        
+
+        function roi_label = get.video_types(obj)
+            %% Return the number of ROI windows
+            [~, roi_label] = fileparts(obj.path);
+        end
     end
 end
 

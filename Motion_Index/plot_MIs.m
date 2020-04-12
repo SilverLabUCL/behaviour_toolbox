@@ -18,34 +18,39 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
     %% Regroup MIs
     %max_MI = max(cellfun(@numel, MIs));
     %keep = max_MI > 1;
-  %  try
-        types = vertcat(recordings.videotypes);
-   % catch
-%         types = {};
-%         for rec = 1:numel(recordings)
-%             try
-%                 types = [types ; recordings(rec).videotypes];
-%             catch
-%                 %% Typically, there's a video missing for that record
-%                 % We find which one and fill the others with NaN
-%                 current_types = cellfun(@(x) erase(strsplit(x,'/'),'.avi'), recordings(rec).videotypes,'UniformOutput',false);
-%                 current_types = current_types{1}{1,end};
-% 
-%                 new = cell(1, size(types, 2));
-%                 new{~ismember(recordings(rec).videotypes, current_types)} = NaN;
-%                 types = [types; new]; % when a video is missing, put en empty cell instead
-%             end
-%         end
- %   end
-    to_use = cellfun(@(x) contains(x, videotype_filter), types);
-    if isempty(videotype_filter)
-        %% Get tags
-        types = recordings.videotypes;
-        types = cellfun(@(x) strsplit(x,'/'), types, 'UniformOutput', false);
-        types = cellfun(@(x) strrep(x{end},'.avi',''), types, 'UniformOutput', false);
-    else
-        types = {videotype_filter};
+    type_list = unique(horzcat(recordings.videotypes));
+    all_types = cell(numel(recordings), numel(type_list));
+    all_MIs   = cell(numel(recordings), numel(type_list));
+    all_labels= cell(numel(recordings), numel(type_list));
+
+    for rec = 1:numel(recordings)
+        for vid = 1:numel(type_list)
+            match = find(ismember(recordings(rec).videotypes, type_list(vid)));
+            if ~isempty(match)
+                all_types(rec, vid) = type_list(vid)                          ;
+                all_MIs(rec, vid)   = recordings(rec).motion_indexes(match)   ;
+                all_labels(rec, vid)= {recordings(rec).videos(vid).roi_labels};
+            else
+                all_types(rec, vid) = {NaN};
+                all_MIs(rec, vid)   = {NaN};
+                all_labels(rec, vid)= {NaN};
+            end
+        end
     end
+
+    to_use = ~cellfun(@(x) all(isnan(x)), all_types);
+    if ~isempty(videotype_filter)
+        to_use = cellfun(@(x) strcmp(x, videotype_filter), all_types) & to_use;
+    end
+    
+%     if isempty(videotype_filter)
+%         %% Get tags
+%         types = recordings.videotypes;
+%         types = cellfun(@(x) strsplit(x,'/'), types, 'UniformOutput', false);
+%         types = cellfun(@(x) strrep(x{end},'.avi',''), types, 'UniformOutput', false);
+%     else
+%         types = {videotype_filter};
+%     end
 %     tags = {};
 %     for rec = 1:numel(recordings)
 %         recording = recordings(rec);
@@ -55,28 +60,23 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
 %         end
 %     end
 %     
-    all_MIs = vertcat(recordings.motion_indexes);
-    labels = recordings.roi_labels;  % a list of all labels
-    all_labels = {};
-    for rec = 1:numel(recordings)
-        for vid = 1:recordings(rec).n_vid
-            all_labels = [all_labels, {recordings(rec).videos(vid).roi_labels}];
-        end
-    end
-    original_shape = size(to_use);
-    to_use = to_use(:);
-    all_MIs = all_MIs(to_use);
-    all_labels = all_labels(to_use);
-    if all(to_use(:)) % not sure why we loose the shape when they are all 1's
-        all_MIs = reshape(all_MIs, original_shape);
-        all_labels = reshape(all_labels, fliplr(original_shape))';
-    end
-    keep = size(all_MIs, 2) > 1;
+    labels          = recordings.roi_labels;  % a list of all labels
+    original_shape  = size(to_use);
+    all_MIs         = all_MIs(to_use);
+    all_labels      = all_labels(to_use);
+    all_MIs(~to_use)    = {[]};
+    all_labels(~to_use) = {[]};
     
-    for videotype_idx = 1:numel(types)
+%     if all(to_use(:)) % not sure why we loose the shape when they are all 1's
+    all_MIs     = reshape(all_MIs   , original_shape)         ;
+    all_labels  = reshape(all_labels, original_shape)         ;
+    %     end
+    %keep            = size(all_MIs, 2) > 1;
+    
+    for videotype_idx = 1:numel(type_list)
         current_MIs = all_MIs(:,videotype_idx);
         current_labels = all_labels(:,videotype_idx);
-        if all(cellfun(@isempty, [current_MIs{:}]))
+        if all(cellfun(@isempty, current_MIs))
             all_rois = [];
         elseif any(cellfun(@isempty, [current_MIs{:}]))
             all_rois = vertcat(current_MIs{:});
@@ -94,9 +94,9 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
         %% Set image to full screen onm screen 2 (if any)
         screens = get(0,'MonitorPositions');
         f = figure(122+videotype_idx); hold on;
-        if ~keep
-            clf();
-        end
+%         if ~keep
+%             clf();
+%         end
         if size(screens, 1) > 1
             set(f, 'Position', screens(2,:));
         end

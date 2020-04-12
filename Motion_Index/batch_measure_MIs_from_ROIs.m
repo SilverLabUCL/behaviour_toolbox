@@ -37,7 +37,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
         for rec = 1:analysis.experiments(exp_idx).n_rec
             for vid = 1:analysis.experiments(exp_idx).recordings(rec).n_vid
                 current_video = analysis.experiments(exp_idx).recordings(rec).videos(vid);
-                if any(cellfun(@isempty, current_video.motion_indexes))  || ismember(exp_idx, force)
+                if any(cellfun(@isempty, current_video.motion_indexes)) || ismember(exp_idx, force)
                     path = strsplit(strrep(current_video.path,'/','\'),'Cam');
                     path = [path{1},'Cam-relative times.txt'];
 
@@ -80,9 +80,9 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
                
         if display
             first_tp_of_exp = analysis.experiments(exp_idx).t_start; 
-            try
-            plot_MIs(analysis.experiments(exp_idx).recordings, first_tp_of_exp, manual_browsing, '', true);
-            end
+            %try
+                plot_MIs(analysis.experiments(exp_idx).recordings, first_tp_of_exp, manual_browsing, '', true);
+            %end
         end
     end
 end

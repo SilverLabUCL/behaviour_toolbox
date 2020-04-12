@@ -90,7 +90,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
             for rec = 1:current_experiment.n_rec
                 if current_experiment.recordings(rec).n_vid >= video_type_idx
                     %% QQ We may need to use
-                    % target = experiment.videotypes{video_type_idx};
+                    % target = experiment.videotypes{video_type_idx}; or current_recording.videos(videotype).path
                     % local_video_type_idx = find(contains(experiment.recordings(rec).videotypes, target));
                     
                     n_rois = current_experiment.recordings(rec).videos(video_type_idx).n_roi;

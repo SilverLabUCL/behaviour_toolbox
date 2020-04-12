@@ -42,7 +42,8 @@ classdef Recording
         
         function videotypes = get.videotypes(obj)
             %% List all video_types available in the Children
-            videotypes = {obj.videos.path};
+            %videotypes = {obj.videos.path};
+            videotypes = {obj.videos.video_types};
         end 
 
         function reference_images = get.reference_images(obj)
