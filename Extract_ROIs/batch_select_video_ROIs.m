@@ -101,7 +101,10 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
             %% Make sure everything is in alphabetical order
             [~, idx] = sort({analysis.experiments(experiment_idx).recordings.path});
             analysis.experiments(experiment_idx).recordings = analysis.experiments(experiment_idx).recordings(idx);
-            
+                
+            %% Make sure there is no empty recording after reordering
+            analysis.experiments(experiment_idx).recordings = analysis.experiments(experiment_idx).recordings(~cellfun(@isempty, {analysis.experiments(experiment_idx).recordings.path}));
+
             %% Now that all recordings were added, we can select ROIs
             close all
             [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle, default_tags);
@@ -111,9 +114,6 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
         end
     end
 
-    %% Empty experiments an be detected here 
-    invalid = arrayfun(@(x) isempty(x.path), analysis.experiments);
-    
     %% Last check, if some folders were removed
     for exp = analysis.n_expe:-1:1
         if ~isdir(analysis.experiments(exp).path)
@@ -122,6 +122,9 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     end   
     [~, idx] = sort({analysis.experiments.path});
     analysis.experiments = analysis.experiments(idx);
+    
+    %% Empty experiments an be detected here 
+    invalid = arrayfun(@(x) isempty(x.path), analysis.experiments);
 end
 
 function [expe_already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, n_recordings_in_expe, current_expe_path, current_recording_path, n_videos_in_recording, recordings_videos)
