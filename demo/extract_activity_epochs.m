@@ -10,7 +10,7 @@ min_length_s = 0.2; %responses shorter than this are ignored
 min_gap_s = 1;% gap shorted tnan this are ignored
 
 
-for exp = 9:numel(analysis.experiments)
+for exp = 1:numel(analysis.experiments)
     current_experiment = analysis.experiments(exp);
 
     Paths = {current_experiment.recordings.path};
@@ -56,7 +56,7 @@ for exp = 9:numel(analysis.experiments)
     tax = 1:numel(temp_data);
     figure(111);cla();plot(tax,temp_data,'k');hold on;plot(tax(temp_data > thr), temp_data(temp_data > thr))
 
-    %%Now go through videos and detect activity epochs
+    %% Now go through videos and detect activity epochs
     for idx = 1:numel(current_subselection)
         MIs = {};
         for vid_type = 1:numel(current_subselection(idx).motion_indexes)
@@ -92,7 +92,7 @@ for exp = 9:numel(analysis.experiments)
             stops = [stops; numel(data)];
         end
 
-        %% identify gaps of less than 500ms and remove them
+        %% Identify gaps of less than 500ms and remove them
         dt = time(2)-time(1);
         gap_to_short = find([starts(2:end) - stops(1:end-1)]*dt < min_gap_s);
         starts(gap_to_short+1) = [];
