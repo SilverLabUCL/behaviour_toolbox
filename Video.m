@@ -17,6 +17,7 @@ classdef Video
         pixel_size
         quality = 5;
         ROI_location
+        video_offset
         motion_indexes
         name
     end
@@ -34,7 +35,6 @@ classdef Video
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);
             obj.rois            = repmat(ROI, 1, n_roi);
-            
         end
 
         function n_roi = get.n_roi(obj)
@@ -46,7 +46,20 @@ classdef Video
             %% Return the number of ROI windows
             ROI_location    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
-                ROI_location{roi} = obj.rois(roi).ROI_location;
+                try
+                	ROI_location{roi} = obj.rois(roi).ROI_location + obj.video_offset;
+                catch
+                    obj.video_offset = [0, 0];
+                    ROI_location{roi} = obj.rois(roi).ROI_location;
+                end
+            end
+        end
+        
+        function video_offset = get.video_offset(obj)
+            if isempty(obj.video_offset)
+                video_offset = [0, 0];
+            else
+                video_offset = obj.video_offset;
             end
         end
 

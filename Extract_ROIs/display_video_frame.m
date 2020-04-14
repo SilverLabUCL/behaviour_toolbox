@@ -7,27 +7,33 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         preset_buttons = '';
     end
 
-    global link
-    link = {};
-    link.name = {};
-    link.id   = [];
-    link.label   = {};
+    clear global current_offset current_pos roi_handles link current_video
+    global link current_video current_pos
+    link            = {};
+    link.name       = {};
+    link.id         = [];
+    link.label      = {};
+    current_video   = 0;
+    current_pos     = {};
 
     list_of_videotypes = current_experiment.videotypes;
     type = list_of_videotypes{video_type_idx};
-    [reference_frame, ~, ~, ~] = get_representative_frame(current_experiment, video_type_idx, type, true);
+    [reference_frame, ~, ~, ~, all_frames] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ ONLY VIDEO 1 USED
-    video_path      = current_experiment.recordings(1).videos(video_type_idx).path;
+    video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)';
+    video_path      = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','-');
     ROI_window      = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
+    ROI_offsets     = arrayfun(@(x) x.videos(video_type_idx).video_offset, [current_experiment.recordings], 'UniformOutput', false)';
     link.existing_MI= current_experiment.recordings(1).videos(video_type_idx).motion_indexes;
-    
+    link.n_vid      = size(all_frames, 3);
+
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
     axis equal; hold on;
-    title({'Close window to validate'; strrep(strrep(video_path,'\','/'),'_','-')})
+    tit = title({'Close window or press Return key to validate'; strrep(strrep(video_path,'\','/'),'_','-')});
     set(gca,'YDir','reverse');hold on ;
-    im = imagesc(reference_frame,'hittest','off'); hold on;
+    im_handle = imagesc(reference_frame,'hittest','off'); hold on;
 
     %% Add callback to add more ROIs
     cmenu = uicontextmenu;
@@ -37,14 +43,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
 
     set(fig_handle,'KeyPressFcn',{@escape_btn ,fig_handle});
     
-    %% Add ROIs
-%     if isempty(ROI_window)
-%         %% If it is the first call, add a first ROI in the middle
-%         id = round(unifrnd(1,10000)); % use this to identify rectangles
-%         position = [position, id];
-%         add_rect('', '', position);
-%     else
     %% If there are preexisting ROIs, display them
+    global current_offset
     for roi_idx = 1:size(ROI_window,2)
         roi_position = ROI_window(1,:); %first video is enough
         roi_position = roi_position{roi_idx};
@@ -59,11 +59,18 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         else
             color = 'g';
         end  
-        add_rect('', '', roi_position, label, color);
+        add_rect('', '', roi_position, label, color, size(all_frames, 3));
+        
+        %% Update the per-video offsets (same offset for all ROIs for now)
+        current_offset{roi_idx} = cell2mat(ROI_offsets);
+            
         %link.name(roi_idx)  = {label};
         %link.label(roi_idx) = {text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
-    end                
-%     end
+    end   
+    
+    %% Update offset if any
+    
+
     
     %% Add preview button
     %MI_test = uicontrol('Style', 'pushbutton', 'String', 'Test', 'Position', [50 50 100 40], 'Callback', @(event, src) MI_preview(event, src, video_path));
@@ -71,8 +78,17 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     for preset = 1:numel(preset_buttons)
         offset = offset + 50;
         position = position(1:4); % no keeping id
-        uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position));
+        uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
     end
+    
+    uicontrol('Style', 'slider',...
+              'Units', 'normalized',...
+              'Position', [0.2,0.05,0.6,0.05],...
+              'Value', 0,...
+              'SliderStep',[1/(size(all_frames, 3)), 1/(size(all_frames, 3))],...
+              'Callback', @(event, src) change_image(event, src, reference_frame, all_frames, im_handle, tit, video_paths),...
+              'min', 0, 'max', size(all_frames, 3));
+
     
     %% Wait until closed     
     if ~display_duration
@@ -95,24 +111,55 @@ function escape_btn(varargin)
     end
 end
 
-function add_rect(~, src, position, label, color)
-    if nargin < 4 
+function change_image(event, src, reference_frame, all_frames, im_handle, tit, video_paths)
+    event.Value = round(event.Value);
+    global current_video current_pos current_offset roi_handles
+    current_video = event.Value; 
+    if event.Value == 0
+        im = reference_frame;
+        tit.String{2} = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','-');
+    else
+        im = all_frames(:,:,event.Value);
+        tit.String{2} = strrep(strrep(video_paths{event.Value},'\','/'),'_','-');
+    end
+    im_handle.CData = im; 
+    
+    for roi = 1:numel(current_pos)
+        if ~isempty(current_offset{roi}) % empty when deleted
+            if current_video
+                all_offsets = current_offset(~cellfun(@isempty, current_offset));
+                offset = mean(cell2mat(cellfun(@(x) x(current_video,:), all_offsets, 'UniformOutput', false)'),1); % force mean offset
+            else
+                offset = [0,0];
+            end  
+            roi_handles(roi).setPosition(current_pos{roi}(1:4) + [offset, 0, 0]);
+        end
+    end
+end
+
+function add_rect(~, src, position, label, color, n_vid)
+    if nargin < 4 || isempty(label)
         label = '';
     end
-    if nargin < 5 
+    if nargin < 5  || isempty(color)
         color = 'r';
     end
-
     %% Add a new ROI
-    global current_pos link
+    global current_pos current_offset link roi_handles
+    if nargin < 6  || isempty(n_vid)
+        n_vid = link.n_vid;
+    end
+    
     if numel(position) == 4
         id = round(unifrnd(1,10000)); % use this to identify rectangles
         position = [position, id];
     else
         id = position(5);
     end
-    current_pos = [current_pos, {position}]; 
-    hrect = imrect(gca, current_pos{end}(1:end-1));hold on;
+    current_pos     = [current_pos, {position}]; 
+    current_offset  = [current_offset, {repmat([0,0],n_vid,1)}];
+    hrect           = imrect(gca, current_pos{end}(1:end-1));hold on;
+    roi_handles     = [roi_handles, hrect];
   
     if ~isempty(label)
         %% then use label
@@ -139,11 +186,25 @@ end
 
 function read(obj, p)
     %% Read current ROI location and size
-    global current_pos link;
+    global current_pos current_offset link current_video roi_handles;
     id = str2num(get(obj,'userdata'));
     idx = find(cellfun(@(x) x(end), current_pos) == id);
-    current_pos{idx} = [p, id(1)];
-    link.label{idx}.Position(1:2) = p(1:2)-5;
+    stackcall = dbstack;
+    if current_video == 0
+        current_pos{idx} = [p, id(1)];
+        link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;
+    elseif ~contains([stackcall.name],'change_image')
+        current_offset{idx}(current_video:end,:) = repmat(p(1:2) - current_pos{idx}(1:2), size(current_offset{idx}(current_video:end,:), 1), 1);
+        link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
+        for roi = 1:numel(current_pos)
+            if ~isempty(current_offset{roi}) % empty when deleted
+                roi_handles(roi).setPosition(current_pos{roi}(1:4) + [current_offset{idx}(current_video,:), 0, 0]);
+            end
+        end
+    else
+        current_offset{idx}(current_video,:) = current_offset{idx}(current_video,:);
+        link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
+    end
     if all(link.label{idx}.Color == [0 1 0])
         link.label{idx}.Color = [1 1 0];
     end
@@ -151,17 +212,19 @@ end
 
 
 
-function delete_rect(src, eventdata,obj)
+function delete_rect(src, eventdata, obj)
     %% Overload the normal delete function.
     % This delete the ROI lines ( what the normal delete function does) but
     % also clear the corresponding fiel in current_pos
     try % fails when you close the wind
-        global current_pos link;
+        global current_pos current_offset link roi_handles;
         id = str2num(get(obj,'userdata'));
         idx = find(cellfun(@(x) x(end), current_pos) == id);
         current_pos{idx} = id;
         link.id(idx)     = NaN;
         link.name(idx)   = {''};
+        roi_handles(idx).delete();
+        current_offset(idx) = {''};
         delete(link.label{idx});
         childrens = get(obj,'Children');
         for el = 1:numel(childrens)

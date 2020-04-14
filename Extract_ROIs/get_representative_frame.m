@@ -1,4 +1,4 @@
-function [reference_frame, video_type, video_paths, failed_video_loading] = get_representative_frame(experiment, video_type_idx, type, get_preview)%paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
+function [reference_frame, video_type, video_paths, failed_video_loading, all_frames] = get_representative_frame(experiment, video_type_idx, type, get_preview)%paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
 % 	if nargin < 6 || isempty(get_preview)
 %         get_preview = true;
 %     end
@@ -65,6 +65,7 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
     end
     
     %% Get some info to help choosing ROIs
+    all_frames = reference_frame;
     if get_preview
         meanimage = mean(double(reference_frame), 3);        
         varimage = var(double(reference_frame), 1, 3);
@@ -76,4 +77,6 @@ function [reference_frame, video_type, video_paths, failed_video_loading] = get_
                               (3*maximage - min(maximage(:))) / (max(maximage(:)) - min(maximage(:))));
         reference_frame(imerode(mask, strel('disk',3))) = 0; % blank saturated regions  
     end
+    
+    
 end
