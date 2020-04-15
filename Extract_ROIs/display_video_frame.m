@@ -30,7 +30,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
 
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
-    axis equal; hold on;
+    axis image; hold on;
+    fig_handle.Color = 'w';
     tit = title({'Close window or press Return key to validate'; strrep(strrep(video_path,'\','/'),'_','-')});
     set(gca,'YDir','reverse');hold on ;
     im_handle = imagesc(reference_frame,'hittest','off'); hold on;

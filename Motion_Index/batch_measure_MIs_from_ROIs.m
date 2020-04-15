@@ -59,7 +59,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
                     current_video.sampling_rate = 1/mean(diff(current_video.absolute_times))*1000;
 
                     %% Get MI
-                    current_video.motion_indexes = get_MI_from_video(current_video.path, current_video.absolute_times, false, current_video.ROI_location, false);
+                    current_video.motion_indexes = get_MI_from_video(current_video.path, current_video.absolute_times, false, current_video.ROI_location, false, '', current_video.video_offset);
 
                     %% Update analysis object
                     analysis.experiments(exp_idx).recordings(rec).videos(vid) = current_video;

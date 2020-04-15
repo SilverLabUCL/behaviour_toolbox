@@ -3,7 +3,8 @@
 % -------------------------------------------------------------------------
 % Model : 
 %   [motion_indexes, video] = get_MI_from_video(file_path, timestamp, 
-%                               rendering, ROI, normalize, dump_data)
+%                               rendering, ROI, normalize, dump_data,
+%                               video_offsets)
 %
 % -------------------------------------------------------------------------
 % Inputs : 
@@ -35,6 +36,10 @@
 %   dump_data(BOOL) - Optional - Default false
 %                       If true, data is stored temporrily on HD to save
 %                       memory, but this slow down loading considerably
+%
+%   video_offsets([INT, INT]) - Optional - Default [0, 0]
+%                       Apply an extra x-y offset to the ROI.
+%
 % -------------------------------------------------------------------------
 % Outputs :
 %   motion_indexes ({1 * N} CELL ARRAY of [2 * T] ARRAY)
@@ -67,7 +72,7 @@
 % See also load_stack
 %
 
-function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestamp, rendering, ROI, normalize, dump_data)
+function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestamp, rendering, ROI, normalize, dump_data, video_offsets)
     
     %% Open stack
     if isnumeric(file_path_or_data)
@@ -86,6 +91,9 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
     end
     if nargin < 6 || isempty(dump_data)
         dump_data = false;
+    end
+    if nargin < 7 || isempty(video_offsets)
+        video_offsets = [0, 0];
     end
     
     %% Load data if required
@@ -122,7 +130,7 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
     end
     
     %% Now collect data, batch by batch
-    offset = 0;
+    time_offset = 0;
     
     for batch_idx = 1:n_src  
         %% Setup current batch
@@ -135,8 +143,8 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
             video = file_path_or_data.video_full(1, batch_idx);
             video = video{1};
             nFrames = size(video, 3);
-            timestamp = ((1:nFrames) + offset)';
-            offset = max(timestamp);
+            timestamp = ((1:nFrames) + time_offset)';
+            time_offset = max(timestamp);
         end
         
         %% Extract MI ROIs to measure, if any
@@ -144,13 +152,16 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
             if iscell(ROI) % If you passed multiple ROIs as a cell array
                 temp = {};
                 for el = 1:numel(ROI)
-                    roi = round(ROI{el});
+                    roi = round(ROI{el}(1:4) + [video_offsets, 0, 0]);
                     temp{el} = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
+                    %figure(el);cla();imagesc(max(temp{el},[],3));axis image
                 end
                 video = temp;
                 clear temp
             else % If you passed a single ROI as a 1 * 4 DOUBLE
-                video = {video(ROI(2):ROI(2)+ROI(4), ROI(1):ROI(1)+ROI(3), :)};
+                roi = round(ROI(1:4) + [video_offsets, 0, 0]);
+                video = {video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :)};
+                
             end
         else % If you didn't pass any ROI, then the whole video is your ROI
             video = {video};
