@@ -1,11 +1,3 @@
----
-typora-copy-images-to: media
----
-
-[Toc]
-
-
-
 # Behaviour toolbox
 
 This toolbox was created to streamline ROI selection for Video acquisition in the SilverLab. The general use case is the following one:
