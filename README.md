@@ -1,6 +1,9 @@
-# behaviour_toolbox
-Toolbox for batch extraction and analysis of ROIs in videos
+# Behaviour Toolbox
 
-This toolbox can be used for faster video curation and ROI selection.
+A toolbox for batch extraction and analysis of ROIs in videos
 
-See documentation [here](docs/Documentation.md).
+![Readme_im1](docs\media\Readme_im1.png)
+
+Use this toolbox for faster video curation and ROI selection. 
+
+[Documentation](docs/Documentation.md).
