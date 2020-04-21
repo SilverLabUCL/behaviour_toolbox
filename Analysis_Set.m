@@ -27,6 +27,8 @@
 %   Analysis_Set.cleanup()
 % -------------------------------------------------------------------------
 % Extra Notes:
+%   For now, Analysis_Set is NOT a handle, which means you have to reassign
+%   the ouput of the object to itself
 % -------------------------------------------------------------------------
 % Examples - How To
 %
@@ -47,6 +49,8 @@
 % 21-04-2020
 %
 % See also Experiment
+
+%% TODO : Convert to handle, but make sure the subset are handled properly
 
 classdef Analysis_Set
     properties
@@ -78,7 +82,7 @@ classdef Analysis_Set
             obj.experiments(expe_number) = [];
         end
         
-        function add_experiment(obj, to_add)
+        function obj = add_experiment(obj, to_add)
             if nargin < 2 || isempty(to_add)
                 to_add = 1;
             end
@@ -86,7 +90,7 @@ classdef Analysis_Set
         end
         
         
-        function cleanup(obj)
+        function obj = cleanup(obj)
             to_remove = [];
             for exp = 1:obj.n_expe    
                 if isempty(obj.experiments(exp).recordings)
@@ -96,7 +100,7 @@ classdef Analysis_Set
             obj.pop(to_remove);
         end
         
-        function update_path(obj, old, new)
+        function obj = update_path(obj, old, new)
             for exp = 1:obj.n_expe    
                 obj.experiments(exp).path = strrep(obj.experiments(exp).path,old,new);
                 for rec = 1:obj.experiments(exp).n_rec

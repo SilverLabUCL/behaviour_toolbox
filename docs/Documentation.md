@@ -71,7 +71,7 @@ General data structure
 
 The data is organized following a hierarchical structure. Each level is defined by a Class, with its own methods and dynamic properties
 
-`Analysis_set`
+[`Analysis_Set`](Analysis_Set.md) : The container for all your experiments
 
 `Experiment`
 
@@ -91,7 +91,7 @@ Initialise the toolbox
 
 Start the GUI by typing
 
-`some_name = Behaviour_analysis();`
+`Behaviour_analysis();`
 
 This will open the GUI.
 
