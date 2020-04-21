@@ -87,7 +87,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
                 %% Check if offsets were updated
                 if ~roi_change_detected
                     former_offsets = cell2mat(arrayfun(@(x) x.videos(video_type_idx).video_offset, [current_experiment.recordings], 'UniformOutput', false)');
-                    roi_change_detected = roi_change_detected || ~all(all(former_offsets == offsets));
+                    roi_change_detected = roi_change_detected || (~isempty(offsets) && ~all(all(former_offsets == offsets)));
                 end
             else
                 break

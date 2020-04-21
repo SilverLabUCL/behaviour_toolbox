@@ -1,28 +1,79 @@
+%% Analysis_Set Class
+% 	This is the top level class for your analysis. 
+%
+%   Type doc Analysis_Set.function_name or Analysis_Set Class.function_name 
+%   to get more details about the methods inputs and outputs.
+% -------------------------------------------------------------------------
+% Model: 
+%   this = Analysis_Set();
+% -------------------------------------------------------------------------
+% Class Generation Inputs: 
+% -------------------------------------------------------------------------
+% Outputs: 
+%   this (Analysis_Set object)
+% -------------------------------------------------------------------------
+% Methods Index (ignoring get()/set() methods):
+%
+% * Remove a specific experiment / set of experiments
+%   Analysis_Set.pop(expe_number) 
+%
+% * Add one / several empty experiment.
+%   Analysis_Set.add_experiment(to_add)   
+%
+% * Update all paths (for example if you change the location of the videos)
+%   Analysis_Set.update_path(old, new)
+%
+% * Remove empty experiments
+%   Analysis_Set.cleanup()
+% -------------------------------------------------------------------------
+% Extra Notes:
+%   For now, Analysis_Set is NOT a handle, which means you have to reassign
+%   the ouput of the object to itself
+% -------------------------------------------------------------------------
+% Examples - How To
+%
+% * Initialise a new Analysis_Set with an empty experiment.
+%   my_analysis = Analysis_Set();
+%
+% * Change the default tags that will be displayed for video extraction
+%   my_analysis.default_tags = [my_analysis.default_tags, {'New Preset'}];
+%
+% * Add 2 empty experiments
+%   my_analysis.add_experiment(2);
+%
+% -------------------------------------------------------------------------
+% Author(s):
+%   Antoine Valera
+% -------------------------------------------------------------------------
+% Revision Date:
+% 21-04-2020
+%
+% See also Analysis_Set, Recording
+
+
+
 classdef Experiment
-    %EXPERIMENT Summary of this class goes here
-    %   Detailed explanation goes here
-    
     properties
-        recordings = Recording;
-        path
-        videotypes
-        roi_labels
-        n_rec = 0;
-        global_reference_images
-        t_start % experiment t_start
-        comment
+        recordings = Recording  ; % Contain individual recordings
+        path                    ; % The path of the experiment
+        videotypes              ; % The names of all videos in this experiment
+        roi_labels              ; % The names of all ROI labels in this experiment
+        n_rec       = 0         ; % The number of recordings in this experiment
+        global_reference_images ; % The global ref image, if generated
+        t_start                 ; % experiment aboslute t_start
+        comment                 ; % User comment
     end
     
     methods
         function obj = Experiment(n_recordings, expe_path)
-            if nargin < 1
-                n_recordings = 0; % Empty recording
+            if nargin < 1 || isempty(n_recordings)
+                n_recordings    = 0;    % Empty recording
             end
             if nargin < 2
-                expe_path = '';   % Empty recording
+                expe_path       = '';   % Empty recording
             end
-            obj.recordings    = repmat(Recording, 1, n_recordings);
-            obj.path          = expe_path;
+            obj.recordings      = repmat(Recording, 1, n_recordings);
+            obj.path            = expe_path;
         end
         
         function n_rec = get.n_rec(obj)
@@ -97,6 +148,72 @@ classdef Experiment
        
             
             %% Do some operation here
+        end 
+        
+        function obj = cleanup(obj)
+            %% Sort alphabetically and remove empty recordings
+            
+            %% Make sure everything is in alphabetical order
+            [~, idx] = sort({obj.recordings.path});
+            obj.recordings = obj.recordings(idx);
+
+            %% Make sure there is no empty recording after reordering
+            obj.recordings = obj.recordings(~cellfun(@isempty, {obj.recordings.path}));
+        end
+
+        
+        function obj = populate(obj, current_expe_path)                        
+            if (nargin < 2 || isempty(current_expe_path)) && isdir(obj.path)
+                current_expe_path = strrep(obj.path,'\','/');
+            elseif isdir(current_expe_path)
+                current_expe_path = strrep(current_expe_path,'\','/');
+            else
+                fprintf([current_expe_path,' is not a valid path\n'])
+            end
+            
+            %% List all recordings
+            recordings_folder = dir([current_expe_path, '/*_*_*']);
+            
+            if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
+                
+                
+%                 [experiment_idx, expe_already_there] = check_if_new_expe(analysis, current_expe_path);              
+%                 if ~expe_already_there
+%                     %% If it is the first time we see this experiment, we create the Experiment object
+%                     current_experiment = Experiment(numel(recordings_folder), current_expe_path);
+%                 else
+%                     current_experiment = analysis.experiments(experiment_idx);
+%                 end
+
+                for recording_idx = 1:numel(recordings_folder)
+
+                    %% Get all videos in the experiment
+                    % Videos are expected to be avi files in a subfolder,
+                    % as provided by the labview export software
+                    current_recording_path  = strrep([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name],'\','/');
+                    recordings_videos       = dir([current_recording_path, '/**/*.avi']);
+
+                    %% QQ Need to be sorted by merging exported files
+                    % This happens for some very big files i think, or when you use the
+                    % wrong codec
+                    if any(any(contains({recordings_videos.name}, '-2.avi')))
+                        id          = contains({recordings_videos.name}, '-2.avi');
+                        splitvideo  = [splitvideo, {recordings_videos(id).folder}];
+                        fprintf([strrep(splitvideo{end},'\','/'),' contains a split video and will not be analyzed\n'])
+                    end
+
+                    %% Update / Create Recording
+                    if ~isempty(recordings_videos) && ~any(contains({recordings_videos.name}, '-2.avi')) %no video files or segmented videos
+                        %% Check if we do a new analysis or an update. 
+                        obj = check_if_new_video(obj, recording_idx, current_recording_path, numel(recordings_videos), recordings_videos);
+                    end
+                end
+                
+                %% Sort alphabetically and remove empty recordings
+                obj = cleanup(obj);
+            else
+                fprintf([current_expe_path,' has no detectable video. Please check path and content\n'])
+            end
         end 
     end
 end

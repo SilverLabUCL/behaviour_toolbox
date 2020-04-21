@@ -70,7 +70,17 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     for experiment_idx = 1:numel(experiment_folders)
         current_expe_path = experiment_folders{experiment_idx};
         recordings_folder = dir([current_expe_path, '/*_*_*']);
+        
+        
         if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
+            [experiment_idx, expe_already_there] = check_if_new_expe(analysis, current_expe_path);              
+            if ~expe_already_there
+                %% If it is the first time we see this experiment, we create the Experiment object
+                current_experiment = Experiment(numel(recordings_folder), current_expe_path);
+            else
+                current_experiment = analysis.experiments(experiment_idx);
+            end
+            
             for recording_idx = 1:numel(recordings_folder)
 
                 %% Get all videos in the experiment
@@ -94,16 +104,16 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
                     % This check if there is already an experiment for these files.
                     % If yes, it will locate and adjust the exp_idx in case it
                     % changed
-                    [already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, numel(recordings_folder), current_expe_path, current_recording_path, numel(recordings_videos), recordings_videos);
+
+                    current_experiment = check_if_new_video(current_experiment, recording_idx, current_recording_path, numel(recordings_videos), recordings_videos);
                 end
+                
+                %% Update or add experiment
+                analysis.experiments(experiment_idx) = current_experiment;
             end
 
-            %% Make sure everything is in alphabetical order
-            [~, idx] = sort({analysis.experiments(experiment_idx).recordings.path});
-            analysis.experiments(experiment_idx).recordings = analysis.experiments(experiment_idx).recordings(idx);
-                
-            %% Make sure there is no empty recording after reordering
-            analysis.experiments(experiment_idx).recordings = analysis.experiments(experiment_idx).recordings(~cellfun(@isempty, {analysis.experiments(experiment_idx).recordings.path}));
+            %% Sort alphabetically and remove empty recordings
+            analysis.experiments(experiment_idx) = analysis.experiments(experiment_idx).cleanup();
 
             %% Now that all recordings were added, we can select ROIs
             close all
@@ -127,70 +137,7 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     invalid = arrayfun(@(x) isempty(x.path), analysis.experiments);
 end
 
-function [expe_already_there, analysis, experiment_idx] = check_if_new_video(analysis, experiment_idx, recording_idx, n_recordings_in_expe, current_expe_path, current_recording_path, n_videos_in_recording, recordings_videos)
-    %% We check if this experiment has already be listed somewhere. If yes, 
-    % we adjust the index to update the video. If not, we create a new
-    % experiment at current index
-    % If the experiment exist, we check if the recording is already 
-    % present. If yes, we carry on, if no, we add a new recording object  
 
-    expe_already_there = false;
-    recording_already_there = false;
-    
-    %% If we find the experiment somewhere, we update the index
-    for el = 1:analysis.n_expe
-        if ~isempty(analysis.experiments(el).path) && strcmp(analysis.experiments(el).path, current_expe_path)
-            %% Adjust exp_idx
-            experiment_idx       = el;
-            expe_already_there   = true;  
-            break
-        end
-    end
-
-    %% If it is the first time we see this experiment, we create the Experiment object
-    if ~expe_already_there
-        %% Add new experiment
-        experiment_idx = analysis.n_expe + 1;
-        analysis.experiments(experiment_idx) = Experiment(n_recordings_in_expe, current_expe_path);
-    end
-    
-    %% If we find the recording somewhere, we update the index
-    for el = 1:analysis.experiments(experiment_idx).n_rec
-        if any([analysis.experiments(experiment_idx).recordings(:).n_vid])
-            if ~isempty(analysis.experiments(experiment_idx).recordings(el).path) && strcmp(analysis.experiments(experiment_idx).recordings(el).path, current_recording_path)
-                %% Update recording_idx
-                recording_idx             = el;
-                recording_already_there   = true;  
-                break
-            end
-        end
-    end
-    
-    %% Check if all videos are in place
-    update_existing = false;
-    if recording_already_there
-        existing = isfile(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.path})); % Find if a listed file is missing
-        update_existing = ~all(existing) || numel(existing) ~= n_videos_in_recording;
-    end
-
-
-    %% If it is the first time we see this recording, we create the Recording object
-    % If there a new video, we need to add it
-    if ~recording_already_there || update_existing
-        %% Add new recording or update exisitng one (when a new video is found)
-        if ~update_existing
-            recording_idx = analysis.experiments(experiment_idx).n_rec + 1;
-            analysis.experiments(experiment_idx).recordings(recording_idx) = Recording(n_videos_in_recording, current_recording_path);
-        end     
-        
-        %% Add any new video (or all new videos)
-        for video = 1:n_videos_in_recording
-            if ~ismember(vertcat({analysis.experiments(experiment_idx).recordings(recording_idx).videos.path}), strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'))
-                analysis.experiments(experiment_idx).recordings(recording_idx).videos(video).path  = strrep([recordings_videos(video).folder,'/',recordings_videos(video).name],'\','/'); 
-            end
-        end
-    end
-end
 
 function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_folders, filter_list)
     %% Remove filtered or absent files/folders
@@ -214,11 +161,11 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
                     experiment = experiment.pop(recording_idx);
                 end
             end
+            analysis.experiments(expe_idx) = experiment;  
         elseif ~isempty(filter_list) || (~isempty(experiment.path) && ~isfolder(experiment.path))
             %% Remove the whole experiment
             analysis = analysis.pop(expe_idx);
-        end
-        analysis.experiments(expe_idx) = experiment;        
+        end  
     end
     
     %% Filter video folders accordingly
