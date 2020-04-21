@@ -32,7 +32,8 @@ function [reference_frame, video_type, video_paths, failed_video_loading, all_fr
 %         video_paths = [];
         for rec = 1:experiment.n_rec
 
-
+            target = experiment.videotypes{video_type_idx};
+            local_video_type_idx = find(contains(experiment.recordings(rec).videotypes, target));
             
             %% We're going to try to get an "average video" for that experiment
             % --> if it is not sharp, you may have moved the camera during

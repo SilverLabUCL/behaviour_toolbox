@@ -95,7 +95,12 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         end
       
         %% Add new windows and update motion indexes windows location  
-        if roi_change_detected || (isempty(current_pos) && current_experiment.recordings(rec).videos(video_type_idx).n_roi > 0)
+        try
+        	roi_available = isfield(current_experiment.recordings(rec).videos(video_type_idx),'n_roi');
+        catch
+        	roi_available = false;    
+        end
+        if roi_change_detected || (isempty(current_pos) && roi_available && current_experiment.recordings(rec).videos(video_type_idx).n_roi > 0)
             for rec = 1:current_experiment.n_rec
                 if current_experiment.recordings(rec).n_vid >= video_type_idx
                     %% QQ We may need to use

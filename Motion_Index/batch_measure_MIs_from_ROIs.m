@@ -26,7 +26,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
     
     %% Setup a safety backup
     analysis.experiments = analysis.experiments(~arrayfun(@isempty, analysis.experiments));
-    assignin('base', 'analysis', analysis);
+    assignin('base', 'analysis_temp_backup', analysis);
 %     global analysis_complete
 %     analysis_complete = false;
 %     cleanupObj = onCleanup(@() cleanMeUp());
@@ -73,7 +73,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
                     end
 
                     %% Safety backup after each video export
-                    assignin('base', 'analysis', analysis);
+                    assignin('base', 'analysis_temp_backup', analysis);
                 end
             end 
         end

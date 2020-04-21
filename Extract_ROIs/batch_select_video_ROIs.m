@@ -45,7 +45,7 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     
     %% Add Video folder field
     analysis.video_folder = strrep([video_folder_path, '/'],'\','/');
-    assignin('base', 'analysis', analysis); %% Setup a safety backup
+    assignin('base', 'analysis_temp_backup', analysis); %% Setup a safety backup
     splitvideo = {}; % that will indicates problematic split videos
     failed_video_loading = {};
 
@@ -110,7 +110,7 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
             [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle, default_tags);
             
             %% Safety backup after each video export
-            assignin('base', 'analysis', analysis);
+            assignin('base', 'analysis_temp_backup', analysis);
         end
     end
 

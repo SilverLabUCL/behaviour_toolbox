@@ -31,10 +31,10 @@ for exp = 1:numel(analysis.experiments)
     desired_fig_size = [figure_size(1) figure_size(2) table_extent(3)+15 table_extent(4)+65];
     set(f,'outerposition', desired_fig_size);
     uiwait(f);
-    selection = evalin('base','temp');
+    temp_subset_expe_idx = evalin('base','temp_subset_expe_idx');
     
     %% Select recordings 7 to 11
-    current_subselection = current_experiment.recordings(selection);
+    current_subselection = current_experiment.recordings(temp_subset_expe_idx);
     
     %% First, identify thresholds for all videos
     temp_data = [];
@@ -122,8 +122,8 @@ end
 function close_mini_gui(src, event)
     data = src.Children.Data;
     tmp = data(:, 1);  % Get the state of our checkboxes
-    selection = [tmp{:}];  % Denest the logicals from the cell array
-    assignin('base','temp',selection);
+    temp_subset_expe_idx = [tmp{:}];  % Denest the logicals from the cell array
+    assignin('base','temp_subset_expe_idx',temp_subset_expe_idx);
     closereq();
 end
 
