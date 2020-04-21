@@ -69,11 +69,11 @@ Each LabVIEW video folder (*/YYMMDD_HH_mm_ss VidRec/* folder ) is expected to co
 General data structure
 ----------------------
 
-The data is organized following a hierarchical structure. Each level is defined by a Class, with its own methods and dynamic properties
+The data is organized following a hierarchical structure. Each level is defined by a Class, with its own methods and dynamic properties. Click on the classes to see more details about properties and methods.
 
-[`Analysis_Set`](Analysis_Set.md) : The container for all your experiments
+[`Analysis_Set`](Analysis_Set.md) 		: The container for all your experiments
 
-`Experiment`
+[`Experiment`](Experiment.md) 			: Each Experiment contains multiple recordings
 
 `Recording`
 

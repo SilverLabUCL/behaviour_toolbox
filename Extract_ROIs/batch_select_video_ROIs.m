@@ -137,8 +137,6 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     invalid = arrayfun(@(x) isempty(x.path), analysis.experiments);
 end
 
-
-
 function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_folders, filter_list)
     %% Remove filtered or absent files/folders
     for expe_idx = analysis.n_expe:-1:1     

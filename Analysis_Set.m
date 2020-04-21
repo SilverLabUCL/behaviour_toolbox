@@ -15,16 +15,16 @@
 % Methods Index (ignoring get()/set() methods):
 %
 % * Remove a specific experiment / set of experiments
-%   Analysis_Set.pop(expe_number) 
+%   Analysis_Set = Analysis_Set.pop(expe_number) 
 %
 % * Add one / several empty experiment.
-%   Analysis_Set.add_experiment(to_add)   
+%   Analysis_Set = Analysis_Set.add_experiment(to_add)   
 %
 % * Update all paths (for example if you change the location of the videos)
-%   Analysis_Set.update_path(old, new)
+%   Analysis_Set = Analysis_Set.update_path(old, new)
 %
 % * Remove empty experiments
-%   Analysis_Set.cleanup()
+%   Analysis_Set = Analysis_Set.cleanup()
 % -------------------------------------------------------------------------
 % Extra Notes:
 %   For now, Analysis_Set is NOT a handle, which means you have to reassign
@@ -54,7 +54,7 @@
 
 classdef Analysis_Set
     properties
-        experiments  = Experiment   ; % Contain individual experiments
+        experiments  = []           ; % Contain individual experiments
         video_folder = ''           ; % Top video folder where experiments are located
         n_expe       = 0            ; % Return number of experiments
         default_tags = {'Whisker'   ,...
@@ -70,8 +70,7 @@ classdef Analysis_Set
     end
 
     methods
-        function obj = Analysis_Set()
-            
+        function obj = Analysis_Set()   
         end
         
         function n_expe = get.n_expe(obj)
@@ -86,9 +85,19 @@ classdef Analysis_Set
             if nargin < 2 || isempty(to_add)
                 to_add = 1;
             end
-            obj.experiments(end:end + to_add) = Experiment;
+            if isnumeric(to_add)
+                if isempty(obj.experiments)
+                    obj.experiments = repmat(Experiment,1,to_add);
+                else
+                    obj.experiments(end + 1:end + to_add) = Experiment;
+                end
+            elseif ischar(to_add)
+                obj.experiments(end + 1)    = Experiment;
+                obj.experiments(end)        = obj.experiments(end).populate(to_add);
+            else
+                % TODO : add cell array char support
+            end
         end
-        
         
         function obj = cleanup(obj)
             to_remove = [];
@@ -97,7 +106,7 @@ classdef Analysis_Set
                     to_remove = [to_remove, exp]; 
                 end
             end 
-            obj.pop(to_remove);
+            obj = obj.pop(to_remove);
         end
         
         function obj = update_path(obj, old, new)

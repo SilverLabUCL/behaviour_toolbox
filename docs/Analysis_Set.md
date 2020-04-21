@@ -11,7 +11,7 @@ my_analysis = Analysis_Set();
 %% Add a new preset name for ROIs to the default one
 my_analysis.default_tags = [my_analysis.default_tags, {'New Preset'}];
 
-%% Add 4 empty experiments
+%% Add 4 empty experiments (you can populate them later, see Experiment())
 my_analysis = my_analysis.add_experiment(4);
 
 %% Delete experiments 1 and 3
