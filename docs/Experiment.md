@@ -4,6 +4,10 @@ The Experiment class contains all the recordings contained in an "experiment" fo
 
 As a rule of thumb, if you can use the same ROIs throughout the experiment, you can consider it an unique "experiment". Small camera movements can be handled using some offsets.
 
+## Hierarchy
+
+Analysis_Set < Experiment
+
 ## Add/Delete and Populate experiments
 
 ```matlab
@@ -30,6 +34,18 @@ my_analysis = my_analysis.pop(2);
 ## Manipulate Recordings in an experiment
 
 ```matlab
+%% Select a set of recordings in one experiment
+my_set = my_analysis.experiments(1).recordings([2,6,9]);
+
+%% Select Recording in several experiments
+my_set = {my_analysis.experiments([2,4]).recordings};
+
+%% Select a scalar property in the first recording of several experiments
+my_set = arrayfun(@(x) x.recordings(1).n_vid, analysis.experiments([2,4]));
+
+%% Select a non-scalar in the first recording of several experiments
+my_set = arrayfun(@(x) x.recordings(1).path, {analysis.experiments([2,4])}, 'UniformOutput', false)';
+
 %% Remove empty recordings and sort recordings alphabetically
 my_analysis.experiments(1) = my_analysis.experiments(1).cleanup();
 

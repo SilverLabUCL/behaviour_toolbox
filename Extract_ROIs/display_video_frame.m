@@ -19,28 +19,24 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     current_pos     = {};
 
     list_of_videotypes = current_experiment.videotypes;
-    type = list_of_videotypes{video_type_idx};
+    type = list_of_videotypes{video_type_idx}; % cellfun(@(x) contains(type, x), [current_experiment.recordings(1).default_video_types])
     [reference_frame, ~, ~, ~, all_frames] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ using video_type_idx instead of name. could cause issue with video failures
     video_paths     = cell(current_experiment.n_rec, 1);
+    ROI_offsets     = cell(current_experiment.n_rec, 1);
     for rec = 1:numel(current_experiment.recordings) % cannot use video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)'; if there are missing videos
-        if numel(current_experiment.recordings(rec).videos) >= video_type_idx
-            video_paths{rec} = current_experiment.recordings(rec).videos(video_type_idx).path;
+        correct = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
+        if ~isempty(correct)
+            video_paths{rec} = current_experiment.recordings(rec).videos(correct).path;
+            ROI_offsets{rec} = current_experiment.recordings(rec).videos(correct).video_offset;
         else
             video_paths{rec} = '';
+            ROI_offsets{rec} = [NaN, NaN];
         end
     end
     video_path      = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','-');
     ROI_window      = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
-    ROI_offsets     = cell(current_experiment.n_rec, 1);
-    for rec = 1:numel(current_experiment.recordings) % cannot use video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)'; if there are missing videos
-        if numel(current_experiment.recordings(rec).videos) >= video_type_idx
-            video_paths{rec} = current_experiment.recordings(rec).videos(video_type_idx).video_offset;
-        else
-            video_paths{rec} = '';
-        end
-    end 
     link.existing_MI= current_experiment.recordings(1).videos(video_type_idx).motion_indexes;
     link.n_vid      = size(all_frames, 3);
 

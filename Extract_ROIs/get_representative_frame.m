@@ -55,6 +55,8 @@ function [reference_frame, video_type, video_paths, failed_video_loading, all_fr
                     failed_video_loading = [failed_video_loading, {current_path}];
                     fprintf([current_path, ' has an issue\n'])
                 end
+            else
+                reference_frame = cat(3, reference_frame, zeros(size(reference_frame, 1),size(reference_frame, 2)));
             end
         end
 

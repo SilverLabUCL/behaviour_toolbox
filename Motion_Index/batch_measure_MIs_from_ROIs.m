@@ -85,6 +85,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
             %end
         end
     end
+    
 end
 % 
 % function cleanMeUp()

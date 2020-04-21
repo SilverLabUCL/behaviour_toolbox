@@ -1,30 +1,76 @@
+%% Recording Class
+% 	This the class container for all the Video of an recording
+%
+%   Type doc Experiment.function_name or Experiment Class.function_name 
+%   to get more details about the methods inputs and outputs.
+% -------------------------------------------------------------------------
+% Model: 
+%   this = Recording();
+% -------------------------------------------------------------------------
+% Class Generation Inputs: 
+% -------------------------------------------------------------------------
+% Outputs: 
+%   this (Recording object)
+% -------------------------------------------------------------------------
+% Methods Index (ignoring get()/set() methods):
+%
+% * Update video list if you chenged in in the recording
+%   Recording.update()
+%
+% * Remove a specific video / set of videos
+%   Recording.pop(vid_number)
+% -------------------------------------------------------------------------
+% Extra Notes:
+%   For now, Recording is NOT a handle, which means you have to reassign
+%   the ouput of the object to itself
+% -------------------------------------------------------------------------
+% Examples - How To
+%
+% * Refresh video list if you deleted a recording
+%   s = Analysis_Set();
+%   s.experiments(1) = s.experiments(1).populate(experiment_path);
+%   s.experiments(1).recordings(1) = s.experiments(1).recordings(1).update
+%
+% * Remove one video in a specific recording
+%   s.experiments(1).recordings(2) = s.experiments(1).recordings(2).pop(1)
+% -------------------------------------------------------------------------
+% Author(s):
+%   Antoine Valera
+% -------------------------------------------------------------------------
+% Revision Date:
+% 21-04-2020
+%
+% See also Experiment, Video
+
+
 classdef Recording
-    %EXPERIMENT Summary of this class goes here
-    %   Detailed explanation goes here
-    
+   
     properties
-        n_vid = 0;
-        path
-        videos
-        videotypes
-        roi_labels
-        reference_images
-        name
-        duration
-        t_start
-        t_stop
-        comment
-        trial_number
-        motion_indexes
+        videos              ; % List of Video objects in this recording
+        n_vid = 0           ; % Number of videos in the recording
+        path                ; % Path of the recording
+        videotypes          ; % List the types of videos in this recording
+        roi_labels          ; % List of the ROI labels per Video
+        reference_images 	; % Reference image per Video
+        name                ; % User-defined recording name
+        duration            ; % recording duration
+        t_start             ; % recording t start
+        t_stop              ; % recording t stop
+        trial_number        ; % number of trials in the recording
+        motion_indexes      ; % MI per video per ROI
+        comment             ; % User comment
+        default_video_types = {'EyeCam'           ,...
+                               'BodyCam'          ,...
+                               'WhiskerCam'}      ; % Default camera names
     end
     
     methods
         function obj = Recording(n_video, recording_path)
             if nargin < 1
-                n_video = 0; % Empty recording
+                n_video         = 0; % Empty recording
             end
             if nargin < 2
-                recording_path = '';   % Empty recording
+                recording_path  = '';   % Empty recording
             end
             obj.videos          = repmat(Video, 1, n_video);
             obj.path            = recording_path;
@@ -33,6 +79,10 @@ classdef Recording
         function n_vid = get.n_vid(obj)
             %% Return the number of video available
             n_vid = numel(obj.videos);
+        end
+        
+        function obj = update(obj)
+            obj = update_recording(obj, dir([obj.path, '/**/*.avi']));
         end
         
         function obj = pop(obj, video_type_idx)

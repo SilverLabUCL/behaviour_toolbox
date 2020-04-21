@@ -76,9 +76,10 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
             [experiment_idx, expe_already_there] = check_if_new_expe(analysis, current_expe_path);              
             if ~expe_already_there
                 %% If it is the first time we see this experiment, we create the Experiment object
-                current_experiment = Experiment(numel(recordings_folder), current_expe_path);
+                analysis            = analysis.add_experiment(1);
+                current_experiment  = Experiment(numel(recordings_folder), current_expe_path);
             else
-                current_experiment = analysis.experiments(experiment_idx);
+                current_experiment  = analysis.experiments(experiment_idx);
             end
             
             for recording_idx = 1:numel(recordings_folder)
@@ -87,7 +88,7 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
                 % Videos are expected to be avi files in a subfolder. This is the
                 % structure provided by the export software
                 current_recording_path = strrep([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name],'\','/');
-                recordings_videos = dir([current_recording_path, '/**/*.avi']);
+                recordings_videos   = dir([current_recording_path, '/**/*.avi']);
 
                 %% QQ Need to be sorted by merging exported files
                 % This happens for some very big files i think, or when you use the
@@ -104,8 +105,15 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
                     % This check if there is already an experiment for these files.
                     % If yes, it will locate and adjust the exp_idx in case it
                     % changed
-
-                    current_experiment = check_if_new_video(current_experiment, recording_idx, current_recording_path, numel(recordings_videos), recordings_videos);
+                    
+                    [recording_idx, rec_already_there] = check_if_new_rec(current_experiment, current_recording_path);
+                    if ~rec_already_there
+                        %% If it is the first time we see this experiment, we create the Experiment object
+                        current_recording = Recording(numel(recordings_videos), current_recording_path);
+                    else
+                        current_recording = current_experiment.recordings(recording_idx);
+                    end
+                    current_experiment.recordings(recording_idx) = update_recording(current_recording, recordings_videos);
                 end
                 
                 %% Update or add experiment
@@ -150,8 +158,12 @@ function [analysis, video_folders] = check_or_fix_path_issues(analysis, video_fo
                         %% Check if file has not been deleted
                         if ~isfile(video.path)
                             %% Remove the whole video object
-                            fprintf(['Could no find ', experiment.recordings(recording_idx).videos(video_type_idx).path,'\n'])
-                            experiment.recordings(recording_idx) = experiment.recordings(recording_idx).pop(video_type_idx);                        
+                            fprintf(['Could no find ', experiment.recordings(recording_idx).videos(video_type_idx).path,'\n']);
+                            if experiment.recordings(recording_idx).n_vid > 0
+                                experiment.recordings(recording_idx).videos(video_type_idx) = [];  
+                            else
+                                experiment.recordings(recording_idx) = experiment.recordings.pop(recording_idx);  
+                            end
                         end
                     end
                 else

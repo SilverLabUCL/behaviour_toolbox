@@ -182,6 +182,8 @@ Existing analysis will be kept, new files will be added (in alphabetical order) 
 
 > Note : This process will take as long as the initial listing, which can last seconds to minutes depending on the location and number of the files.
 
+In the rare case where you (re)-add videos in an experiment where ROIs were already selected, you need to regenerate Motion Indices for all recordings by clicking on the [Select/Browse ROIs] Button again. The Missing MIs will be calculated next tie you click on the [Show/Analyze] button. 
+
 Select ROIs
 ===========
 

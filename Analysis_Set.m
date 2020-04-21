@@ -92,7 +92,11 @@ classdef Analysis_Set
                     obj.experiments(end + 1:end + to_add) = Experiment;
                 end
             elseif ischar(to_add)
-                obj.experiments(end + 1)    = Experiment;
+                if isempty(obj.experiments)
+                    obj.experiments             = Experiment;
+                else
+                    obj.experiments(end + 1)    = Experiment;
+                end
                 obj.experiments(end)        = obj.experiments(end).populate(to_add);
             else
                 % TODO : add cell array char support

@@ -98,7 +98,7 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
 %             clf();
 %         end
         if size(screens, 1) > 1
-            set(f, 'Position', screens(2,:));
+            set(f, 'Position', screens(2,:)/1.1);
         end
 
         %% Create subplot

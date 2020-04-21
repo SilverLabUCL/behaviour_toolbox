@@ -15,10 +15,9 @@ function [experiment_idx, expe_already_there] = check_if_new_expe(analysis, curr
         end
     end
 
-    %% If it is the first time we see this experiment, we create the Experiment object
+    %% If it is the first time we see this experiment, we'll have to create a new one, so we return a undused index
     if ~expe_already_there
         %% Add new experiment
         experiment_idx = analysis.n_expe + 1;
-        analysis.experiments(experiment_idx) = Experiment('', current_expe_path);
     end
 end
