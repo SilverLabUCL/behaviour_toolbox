@@ -67,10 +67,15 @@ classdef Analysis_Set
                         'Trunk'     ,...
                         'Tail'      ,...
                         'Eye'}      ; % Default ROI names
+        folder_exclusion = {' unidentified'} ; % path containing elements in this list are ignored
     end
 
     methods
-        function obj = Analysis_Set()   
+        function obj = Analysis_Set(video_folder)   
+            if nargin == 1
+                obj.video_folder = video_folder;
+                fprintf('video_folder added. call Analysis_Set.update() to add all containing experiments.\n')
+            end
         end
         
         function n_expe = get.n_expe(obj)
@@ -79,6 +84,11 @@ classdef Analysis_Set
         
         function obj = pop(obj, expe_number)
             obj.experiments(expe_number) = [];
+        end
+        
+        function video_folder = get.video_folder(obj)
+            video_folder = strrep([obj.video_folder, '/'],'\','/');
+            video_folder = strrep(video_folder,'//','/');
         end
         
         function [obj, experiment_idx, is_split] = add_experiment(obj, to_add)
@@ -117,6 +127,7 @@ classdef Analysis_Set
         end
         
         function obj = cleanup(obj)
+            %% Remove experiments with no recordings
             to_remove = [];
             for exp = 1:obj.n_expe    
                 if isempty(obj.experiments(exp).recordings)
@@ -124,21 +135,57 @@ classdef Analysis_Set
                 end
             end 
             obj = obj.pop(to_remove);
-        end
-        
-        function obj = update(obj)
-            experiment_folders = dir([obj.video_folder, '/*-*-*/experiment_*']); 
-            obj.video_folder = strrep([obj.video_folder, '/'],'\','/');
-            experiment_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], experiment_folders, 'UniformOutput', false);   
+            
+            %% Sort alphabetically
+            [~, idx] = sort({obj.experiments.path});
+            obj.experiments = obj.experiments(idx); 
 
-            
-            
-            
-            
+            %% Empty experiments can be detected here 
+            %invalid = arrayfun(@(x) isempty(x.path), obj.experiments);
         end
         
-        
-        
+        function obj = update(obj, filter_list)
+            if nargin < 2 || isempty(filter_list)
+                filter_list = {};
+            end
+            
+            %% Get all experiments in the video folder
+            experiment_folders = dir([obj.video_folder, '/*-*-*/experiment_*']); 
+            if isempty(obj.video_folder) || ~isdir(obj.video_folder) || isempty(experiment_folders)
+                error('You must set a valid video_folder path in your Experiment Set')
+            end
+            
+            %% Print selected folders. Filter excluded sets.
+            for el = numel(experiment_folders):-1:1
+                current_expe_path = [strrep(experiment_folders(el).folder,'\', '/'),'/',experiment_folders(el).name, '/'];
+                if contains(current_expe_path, obj.folder_exclusion) || ~isdir(current_expe_path)
+                    experiment_folders(el) = [];
+                else
+                    fprintf([current_expe_path, '\n'])
+                end
+            end
+
+            %% Use this function to edit the fname field or check for modified files
+            [obj, experiment_folders] = check_or_fix_path_issues(obj, experiment_folders, filter_list);
+
+            %% Go through all experiment folder. Add experiments if missing
+            splitvideo              = {}; % that will indicates problematic split videos
+            %subset                  = []; 
+            for experiment_idx = 1:numel(experiment_folders)
+                current_expe_path                   = experiment_folders{experiment_idx};
+                [obj, experiment_idx]               = obj.add_experiment(current_expe_path); %% add or update experiment
+                splitvideo                          = [splitvideo, obj.experiments(experiment_idx).splitvideos]; % if any
+                %subset                              = [subset, experiment_idx]; % store correct indexes
+
+                %% Sort alphabetically and remove empty experiments
+                obj.experiments(experiment_idx)     = obj.experiments(experiment_idx).cleanup();
+            end
+            %obj.experiments         = obj.experiments(subset); % in case you filtered the input, we filter the ouput
+
+            %% final adjustements
+            obj = obj.cleanup();
+        end
+
         function obj = update_children_paths(obj, old, new)
             for exp = 1:obj.n_expe    
                 obj.experiments(exp).path = strrep(obj.experiments(exp).path,old,new);

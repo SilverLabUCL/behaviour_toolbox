@@ -121,15 +121,16 @@ classdef Experiment
         function obj = populate(obj, current_expe_path)  
             %% To prevent creating duplicates, see analysis.add_experiment();
             if (nargin < 2 || isempty(current_expe_path)) && isdir(obj.path)
-                current_expe_path = strrep(obj.path,'\','/');
+                obj.path = strrep(obj.path,'\','/');
             elseif isdir(current_expe_path)
-                current_expe_path = strrep(current_expe_path,'\','/');
+                obj.path = strrep(current_expe_path,'\','/');
             else
-                fprintf([current_expe_path,' is not a valid path\n'])
+                fprintf([current_expe_path,' is not a valid path\n']);
+                return
             end
             
             %% List all recordings
-            recordings_folder = dir([current_expe_path, '/*_*_*']);
+            recordings_folder = dir([obj.path, '/*_*_*']);
 
             obj.splitvideos = {};
             if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
@@ -160,7 +161,7 @@ classdef Experiment
                 %% Sort alphabetically and remove empty/missing recordings
                 obj = obj.cleanup(true);
             else
-                fprintf([current_expe_path,' has no detectable video. Please check path and content\n'])
+                fprintf([obj.path,' has no detectable video. Please check path and content\n'])
             end
         end 
         
