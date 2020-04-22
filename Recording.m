@@ -75,11 +75,7 @@ classdef Recording
             obj.videos          = repmat(Video, 1, n_video);
             obj.path            = recording_path;
         end
-        
-        function n_vid = get.n_vid(obj)
-            %% Return the number of video available
-            n_vid = numel(obj.videos);
-        end
+
         
         function obj = update(obj)
             obj = update_recording(obj, dir([obj.path, '/**/*.avi']));
@@ -88,6 +84,11 @@ classdef Recording
         function obj = pop(obj, video_type_idx)
             %% Remove a specific video objct based on the video index
             obj.videos(video_type_idx) = [];
+        end
+
+        function n_vid = get.n_vid(obj)
+            %% Return the number of video available
+            n_vid = numel(obj.videos);
         end
         
         function videotypes = get.videotypes(obj)
@@ -122,7 +123,7 @@ classdef Recording
                 1
             end            
         end 
-
+        
         function t_start = get.t_start(obj)
             t_start = [];
             for vid = 1:obj.n_vid

@@ -165,6 +165,9 @@ classdef Experiment
             end
         end 
         
+        function obj = analyze(obj)
+            % To add. For now see Recording.analyze
+        end
 
         function videotypes = get.videotypes(obj)
             %% List all video_types available in the Children

@@ -2,8 +2,8 @@
 % This version can load the avi and crop ROIs on the fly
 % -------------------------------------------------------------------------
 % Model : 
-%   [motion_indexes, video] = get_MI_from_video(file_path, timestamp, 
-%                               rendering, ROI, normalize, dump_data,
+%   [motion_indexes, video] = get_MI_from_video(file_path, ROI, timestamp, 
+%                               rendering, normalize, dump_data,
 %                               video_offsets)
 %
 % -------------------------------------------------------------------------
@@ -15,11 +15,6 @@
 %                         - A video as a X * Y * T matrix. dump_data is
 %                         automatically set to false in that case
 %
-%   timestamp(1 * T ARRAY) - Optional - Default 1:Npoints of loaded file
-%
-%   rendering(BOOL) - Optional - Default true
-%                       If true, final result is shown
-%
 %   ROI(1 * 4 INT or Cell array of {1 * 4} INT) - Optional - Default ''
 %                       If specified, the video is cropped and this ROI is
 %                       used to calculate the M.
@@ -29,6 +24,11 @@
 %                       once.
 %                       If empty, the whole image is used (in case you
 %                       cropped the video beforehand)
+%
+%   timestamp(1 * T ARRAY) - Optional - Default 1:Npoints of loaded file
+%
+%   rendering(BOOL) - Optional - Default true
+%                       If true, final result is shown
 %
 %   normalize(BOOL) - Optional - Default true
 %                       If true, motion index is normalized
@@ -72,7 +72,7 @@
 % See also load_stack
 %
 
-function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestamp, rendering, ROI, normalize, dump_data, video_offsets)
+function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, timestamp, rendering, normalize, dump_data, video_offsets)
     
     %% Open stack
     if isnumeric(file_path_or_data)
@@ -83,16 +83,19 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
     else
         error('source not identified. Pass a .avi/.tif path, or a [X * Y * T] Matrix \n') 
     end
-    if nargin < 3 || isempty(rendering)
-        rendering = true;
+    if nargin < 2 || isempty(ROI)
+        ROI       = [];
     end
-    if nargin < 5 || isempty(normalize)
+    if nargin < 5 || isempty(rendering)
+        rendering = false;
+    end
+    if nargin < 6 || isempty(normalize)
         normalize = true;
     end
-    if nargin < 6 || isempty(dump_data)
+    if nargin < 7 || isempty(dump_data)
         dump_data = false;
     end
-    if nargin < 7 || isempty(video_offsets)
+    if nargin < 8 || isempty(video_offsets)
         video_offsets = [0, 0];
     end
     
@@ -106,27 +109,30 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
         
     %% Preparation for ROI collection
     if ~isempty(ROI)
-        motion_indexes = cell(1, numel(ROI));
-        interbatch_holder = cell(1, numel(ROI));
+        if ~iscell(ROI)
+            ROI = {ROI};
+        end
+        motion_indexes      = cell(1, numel(ROI));
+        interbatch_holder   = cell(1, numel(ROI));
     else
-        motion_indexes = cell(1, 1);
-        interbatch_holder = cell(1, 1);
+        motion_indexes      = cell(1, 1);
+        interbatch_holder   = cell(1, 1);
     end
     
     %% Set some useful variables
     if ~dump_data
         %% When video data is available at once (fastest)
-        nFrames = size(file_path_or_data, 3);
-        file_path_or_data = {file_path_or_data};
+        nFrames             = size(file_path_or_data, 3);
+        file_path_or_data   = {file_path_or_data};
         n_src = 1; % When not dumping data, batch size is 1;
-        if nargin < 2 || isempty(timestamp)
-            timestamp = (1:nFrames)';
+        if nargin < 3 || isempty(timestamp)
+            timestamp       = (1:nFrames)';
         end
     else
         %% When video data is available by batch (memory saving)
-        [~, n_src] = size(file_path_or_data,'video_full');
-        timestamp = [];
-        nFrames = [];
+        [~, n_src]          = size(file_path_or_data,'video_full');
+        timestamp           = [];
+        nFrames             = [];
     end
     
     %% Now collect data, batch by batch
@@ -140,27 +146,27 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, timestam
             clear file_path_or_data;
         else
             %% Current batch
-            video = file_path_or_data.video_full(1, batch_idx);
-            video = video{1};
-            nFrames = size(video, 3);
-            timestamp = ((1:nFrames) + time_offset)';
+            video       = file_path_or_data.video_full(1, batch_idx);
+            video       = video{1};
+            nFrames     = size(video, 3);
+            timestamp   = ((1:nFrames) + time_offset)';
             time_offset = max(timestamp);
         end
         
         %% Extract MI ROIs to measure, if any
-        if nargin >= 4 && ~isempty(ROI)
+        if nargin >= 1 && ~isempty(ROI)
             if iscell(ROI) % If you passed multiple ROIs as a cell array
                 temp = {};
                 for el = 1:numel(ROI)
-                    roi = round(ROI{el}(1:4) + [video_offsets, 0, 0]);
-                    temp{el} = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
+                    roi         = round(ROI{el}(1:4) + [video_offsets, 0, 0]);
+                    temp{el}    = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
                     %figure(el);cla();imagesc(max(temp{el},[],3));axis image
                 end
-                video = temp;
+                video   = temp;
                 clear temp
             else % If you passed a single ROI as a 1 * 4 DOUBLE
-                roi = round(ROI(1:4) + [video_offsets, 0, 0]);
-                video = {video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :)};
+                roi             = round(ROI(1:4) + [video_offsets, 0, 0]);
+                video           = {video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :)};
                 
             end
         else % If you didn't pass any ROI, then the whole video is your ROI
