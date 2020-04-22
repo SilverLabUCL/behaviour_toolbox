@@ -336,18 +336,84 @@ If you extracted the same ROI in different videos, they will be displayed in the
 Scripted analysis
 =================
 
-At any time, the database can be accessed and used for measurements. The most up-to-date version of the database is in
+## Setting up a database and extracting ROIs
 
-behaviour\_GUI.Experiment\_set
+> Perquisite : you must have arranged your data as explained [here](#Video-Folder-Pre-processing)
 
-Example in the demo folder (used for extracting licking bouts in the MC
-paper)
+```matlab
+%% Create database
+my_analysis = Analysis_Set('C:\Users\vanto\Desktop\Video for Toolbox testing\');
+my_analysis = my_analysis.update(); % list all experiments
 
-[...]
+%% Look at a few properties of experiment # 6
+my_analysis.experiments(6).videotypes
+>> ans =
+      1×2 cell array
+        {'BodyCam-1'}    {'EyeCam-1'}
+        
+my_analysis.experiments(6).n_rec
+>> ans =
+      3
+
+%% Select ROIs for experiment # 6
+% There are 2 videos types in this experiment,
+% - We set 2 ROIs around whiskers in video 1
+% - We set 1 ROIs around whiskers in video 2
+my_analysis.experiments(6) = select_video_ROIs(my_analysis.experiments(6));
+
+%% Look at a few properties of the ROIs we just selected
+expe = my_analysis.experiments(6); % for display
+
+%% We can look at the ROIs of recording # 2;
+% First video has 2 ROIs
+% Second video has 1 ROI
+ROIS = {expe.recordings(2).videos.rois}
+>> ROIS =
+  1×2 cell array
+    {1×2 ROI}    {1×1 ROI}
+
+%% We can look at the propeties of the first ROI of video 1
+roi = expe.recordings(2).videos(1).rois(1)
+>> roi = 
+     ROI with properties:
+               n_ROI: []
+        ROI_location: [585.0909 174.5455 20 20 7513]
+        motion_index: {}
+                name: 'Label # 1'
+
+% ROI_location  
+round(roi.ROI_location)
+>> ans =
+         [585, 175, 20, 20, 7513]; % xstart, ystart, width, height, id
+% The id is identifying an ROI in case it has the same name.
+% for example  
+	expe.recordings(1).videos(1).rois(2).ROI_location(5)
+ == expe.recordings(3).videos(1).rois(2).ROI_location(5)
+>> ans =
+  logical
+   		1
+
+% but, although they have the same name in this case, we can distinguish ROIs across recordings
+	expe.recordings(1).videos(1).rois(1).ROI_location(5)
+ == expe.recordings(1).videos(2).rois(1).ROI_location(5)
+>> ans =
+  logical
+   		0
+
+
+% Look at selected motion indices (one per ROI) for recording 2:
+% First video has 2 MIs (because there were 2 ROIs)
+% Second video has 1 MI (because there was 1 ROIs)
+expe.recordings(2).motion_indexes
+>> ans =
+     1×2 cell array
+        {1×2 cell}    {1×1 cell} 
+        
+```
 
 
 
-TODO : 
 
-- Script
-- Classes and Properties
+
+
+

@@ -1,5 +1,10 @@
 function [current_experiment, failed_video_loading] = select_video_ROIs(current_experiment, select_ROIs, display_duration, fig_handle, default_tags)
-   
+    if nargin < 2 || isempty(select_ROIs)
+        select_ROIs = true;
+    end
+    if nargin < 3 || isempty(display_duration)
+        display_duration = 0;
+    end    
     if nargin < 4 || isempty(fig_handle)
         fig_handle = '';
     end
