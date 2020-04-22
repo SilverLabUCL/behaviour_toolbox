@@ -75,7 +75,7 @@ The data is organized following a hierarchical structure. Each level is defined 
 
 [`Experiment`](Experiment.md) 			: Each Experiment contains multiple recordings
 
-`Recording`
+[`Recording`](Recording.md)               : Each Recording contains multiple videos
 
 `Video`
 
@@ -100,6 +100,8 @@ This will open the GUI.
 Start a new analysis:
 ---------------------
 
+Click on the [Start New Analysis] button. This would clear any existing dataset.
+
 ![](./media/image2.png)
 Select the folder containing all your video ("Top\_folder"), as described before. All valid videos in this folder will be listed. This may take some time, in particular if the videos are on a remote server. After this step, a local copy of the folder path is stored, which speed up data manipulation. If you change the content of the video folder, you will need to refresh this list. See [Updating Source]().
 
@@ -113,12 +115,12 @@ Once finished, you should see an updated GUI.
 Backup Analysis
 ===============
 
-
-
 Manual backup
 -------------
 
-As some steps can be extremely time consuming, it is recommended to do some regular backup of your analysis database. To do so, click on the [Save Analysis] Button.![](./media/image3.png)
+As some steps can be extremely time consuming, it is recommended to do some regular backup of your analysis database. To do so, click on the [Save Analysis] Button.
+
+![](./media/image3.png)
 An automated filename with a timestamp is proposed, but you can edit it.
 
 Manual Reload
@@ -130,14 +132,16 @@ Recover from interrupted analysis
 ---------------------------------
 
 When extracting motion indices, you may interrupt your MI extraction. An error could also emerge from a server connection issue, or a corrupted recording. If this happens, you can restore to the last valid state by
-clicking on ![](./media/image5.png)
+clicking on the [Recover interrupted analysis] button:
+
+ ![](./media/image5.png)
 
 > Note : After doing this, you should immediately backup the database.
 
 Auto saving
 -----------
 
-Temporarily disabled.
+Temporarily disabled. See Recover from interrupted analysis.
 
 Browse Data and Database
 ========================
@@ -319,7 +323,7 @@ Display extracted MIs
 
 If you extracted all Motion indices, you should see a figure like this
 
-![](./media/image32.png)
+![](media/image32.png)
 
 For each MI, a plot of the whole experiment is displayed (time in seconds). Grey areas indicate gaps between recordings.
 
