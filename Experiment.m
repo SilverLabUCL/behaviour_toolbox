@@ -62,6 +62,7 @@ classdef Experiment
         global_reference_images ; % The global ref image, if generated
         t_start                 ; % experiment aboslute t_start
         comment                 ; % User comment
+        splitvideos = {}        ; % A list of split videos
     end
     
     methods
@@ -86,8 +87,7 @@ classdef Experiment
                 % TODO : add cell array char support
             end
         end
-        
-   
+
         function obj = pop(obj, recording_idx)
             %% Remove a specific recording objct based on the video index
             obj.recordings(recording_idx) = [];
@@ -118,7 +118,8 @@ classdef Experiment
             end
         end
  
-        function obj = populate(obj, current_expe_path)                        
+        function obj = populate(obj, current_expe_path)  
+            %% To prevent creating duplicates, see analysis.add_experiment();
             if (nargin < 2 || isempty(current_expe_path)) && isdir(obj.path)
                 current_expe_path = strrep(obj.path,'\','/');
             elseif isdir(current_expe_path)
@@ -129,40 +130,31 @@ classdef Experiment
             
             %% List all recordings
             recordings_folder = dir([current_expe_path, '/*_*_*']);
-            
+
+            obj.splitvideos = {};
             if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
-                
-                
-                % [experiment_idx, expe_already_there] = check_if_new_expe(analysis, current_expe_path);              
-                % if ~expe_already_there
-                %     %% If it is the first time we see this experiment, we create the Experiment object
-                %     current_experiment = Experiment(numel(recordings_folder), current_expe_path);
-                % else
-                %     current_experiment = analysis.experiments(experiment_idx);
-                % end
-
                 for recording_idx = 1:numel(recordings_folder)
-
                     %% Get all videos in the experiment
-                    % Videos are expected to be avi files in a subfolder,
-                    % as provided by the labview export software
+                    % Videos are expected to be avi files in a subfolder,as provided by the labview export software
                     current_recording_path  = strrep([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name],'\','/');
                     recordings_videos       = dir([current_recording_path, '/**/*.avi']);
 
-                    %% QQ Need to be sorted by merging exported files
-                    % This happens for some very big files i think, or when you use the
-                    % wrong codec
+                    %% Code doesn't handle the *-2.avi videos
                     if any(any(contains({recordings_videos.name}, '-2.avi')))
-                        id          = contains({recordings_videos.name}, '-2.avi');
-                        splitvideo  = [splitvideo, {recordings_videos(id).folder}];
-                        fprintf([strrep(splitvideo{end},'\','/'),' contains a split video and will not be analyzed\n'])
+                        % QQ Need to be sorted by merging exported files. This happens for some very big files i think, or when you use the
+                        obj.splitvideo{recording_idx} = current_recording_path;
+                        fprintf([strrep(current_recording_path,'\','/'),' contains a split video and will not be analyzed\n'])
                     end
 
-                    %% Update / Create Recording
-                    if ~isempty(recordings_videos) && ~any(contains({recordings_videos.name}, '-2.avi')) %no video files or segmented videos
-                        %% Check if we do a new analysis or an update. 
-                        obj = check_if_new_video(obj, recording_idx, current_recording_path, numel(recordings_videos), recordings_videos);
+                    %% Check if recording is new or if it's an update
+                    [recording_idx, rec_already_there] = check_if_new_rec(obj, current_recording_path);
+                    if ~rec_already_there
+                        %% If it is the first time we see this experiment, we create the Experiment object
+                        current_recording = Recording(numel(recordings_videos), current_recording_path);
+                    else
+                        current_recording = obj.recordings(recording_idx);
                     end
+                    obj.recordings(recording_idx) = update_recording(current_recording, recordings_videos);
                 end
                 
                 %% Sort alphabetically and remove empty/missing recordings

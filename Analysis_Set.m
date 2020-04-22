@@ -81,24 +81,37 @@ classdef Analysis_Set
             obj.experiments(expe_number) = [];
         end
         
-        function obj = add_experiment(obj, to_add)
+        function [obj, experiment_idx, is_split] = add_experiment(obj, to_add)
             if nargin < 2 || isempty(to_add)
                 to_add = 1;
             end
-            if isnumeric(to_add)
+            
+            is_split = NaN;
+            
+            if isnumeric(to_add)  
+                %% Add one/several empty experiments
                 if isempty(obj.experiments)
+                    experiment_idx  = 1:to_add;
                     obj.experiments = repmat(Experiment,1,to_add);
                 else
+                    experiment_idx  = (numel(obj.experiments) + 1):(numel(obj.experiments)+ to_add);
                     obj.experiments(end + 1:end + to_add) = Experiment;
                 end
+                
             elseif ischar(to_add)
+                %% Add/Update experiments using path 
+                [experiment_idx, expe_already_there]    = obj.check_if_new_expe(to_add);
                 if isempty(obj.experiments)
-                    obj.experiments             = Experiment;
+                    obj.experiments                         = Experiment;
+                    experiment_idx                          = 1         ;
+                elseif ~expe_already_there
+                    obj.experiments(experiment_idx)         = Experiment;
                 else
-                    obj.experiments(end + 1)    = Experiment;
+                    %% Then it's an update
                 end
-                obj.experiments(end)        = obj.experiments(end).populate(to_add);
+                obj.experiments(experiment_idx)         = obj.experiments(experiment_idx).populate(to_add);
             else
+                error('must pass INT or CHAR')
                 % TODO : add cell array char support
             end
         end
@@ -113,7 +126,20 @@ classdef Analysis_Set
             obj = obj.pop(to_remove);
         end
         
-        function obj = update_path(obj, old, new)
+        function obj = update(obj)
+            experiment_folders = dir([obj.video_folder, '/*-*-*/experiment_*']); 
+            obj.video_folder = strrep([obj.video_folder, '/'],'\','/');
+            experiment_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], experiment_folders, 'UniformOutput', false);   
+
+            
+            
+            
+            
+        end
+        
+        
+        
+        function obj = update_children_paths(obj, old, new)
             for exp = 1:obj.n_expe    
                 obj.experiments(exp).path = strrep(obj.experiments(exp).path,old,new);
                 for rec = 1:obj.experiments(exp).n_rec
@@ -126,6 +152,30 @@ classdef Analysis_Set
                     end
                 end
             end           
+        end
+        
+        function [experiment_idx, expe_already_there] = check_if_new_expe(obj, expe_path)
+            %% Check if this experiment has already be listed somewhere.
+            % If yes, return the correct index
+            % If not, return a new, unused index
+            expe_path = strrep([expe_path,'/'], '\', '/'); expe_path = strrep(expe_path, '//', '/');
+            expe_already_there      = false;
+
+            %% If we find the experiment somewhere, we update the index
+            for el = 1:obj.n_expe
+                if ~isempty(obj.experiments(el).path) && strcmp(obj.experiments(el).path, expe_path)
+                    %% Adjust exp_idx
+                    experiment_idx       = el;
+                    expe_already_there   = true;  
+                    break
+                end
+            end
+
+            %% If it is the first time we see this experiment, we'll have to create a new one, so we return a undused index
+            if ~expe_already_there
+                %% Add new experiment
+                experiment_idx = obj.n_expe + 1;
+            end
         end
     end
 end

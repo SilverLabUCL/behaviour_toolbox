@@ -116,7 +116,11 @@ classdef Recording
                 roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
             end
             roi_labels = [roi_labels{:}];
-            roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));
+            try
+                roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));
+            catch
+                1
+            end            
         end 
 
         function t_start = get.t_start(obj)

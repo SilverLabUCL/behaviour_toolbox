@@ -46,8 +46,6 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     %% Add Video folder field
     analysis.video_folder = strrep([video_folder_path, '/'],'\','/');
     assignin('base', 'analysis_temp_backup', analysis); %% Setup a safety backup
-    splitvideo = {}; % that will indicates problematic split videos
-    failed_video_loading = {};
 
     %% Print selected folders. Filter rogue sets. 
     % This section could be used for further filtering
@@ -65,71 +63,23 @@ function [analysis, failed_video_loading, splitvideo, invalid] = batch_select_vi
     [analysis, experiment_folders] = check_or_fix_path_issues(analysis, experiment_folders, filter_list);
 
     %% Analyse each experiment (i.e, with the camera pointing at the same mouse)
-    % Go through all experiment folder
-    skipped = []; %% When updating dynamically index, we make sure that we don't leave non-existing videos behind
+    % Go through all experiment folder. Add experiments if missing
+    splitvideo              = {}; % that will indicates problematic split videos
+    failed_video_loading    = {};
     for experiment_idx = 1:numel(experiment_folders)
-        current_expe_path = experiment_folders{experiment_idx};
-        recordings_folder = dir([current_expe_path, '/*_*_*']);
-        
-        
-        if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
-            [experiment_idx, expe_already_there] = check_if_new_expe(analysis, current_expe_path);              
-            if ~expe_already_there
-                %% If it is the first time we see this experiment, we create the Experiment object
-                analysis            = analysis.add_experiment(1);
-                current_experiment  = Experiment(numel(recordings_folder), current_expe_path);
-            else
-                current_experiment  = analysis.experiments(experiment_idx);
-            end
-            
-            for recording_idx = 1:numel(recordings_folder)
+        current_expe_path                   = experiment_folders{experiment_idx};
+        [analysis, experiment_idx]          = analysis.add_experiment(current_expe_path); %% add or update experiment
+        splitvideo                          = [splitvideo, analysis.experiments(experiment_idx).splitvideos]; % if any
 
-                %% Get all videos in the experiment
-                % Videos are expected to be avi files in a subfolder. This is the
-                % structure provided by the export software
-                current_recording_path = strrep([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name],'\','/');
-                recordings_videos   = dir([current_recording_path, '/**/*.avi']);
+        %% Sort alphabetically and remove empty experiments
+        analysis.experiments(experiment_idx)= analysis.experiments(experiment_idx).cleanup();
 
-                %% QQ Need to be sorted by merging exported files
-                % This happens for some very big files i think, or when you use the
-                % wrong codec
-                if any(any(contains({recordings_videos.name}, '-2.avi')))
-                    id = contains({recordings_videos.name}, '-2.avi');
-                    splitvideo = [splitvideo, {recordings_videos(id).folder}];
-                    fprintf([strrep(splitvideo{end},'\','/'),' contains a split video and will not be analyzed\n'])
-                end
+        %% Now that all recordings were added, we can select ROIs
+        close all;
+        [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle, default_tags);
 
-                %% For valid videos, reload any existing ROI and let the user do some editing (if display_duration = 0)
-                if ~isempty(recordings_videos) && ~any(contains({recordings_videos.name}, '-2.avi')) %no video files or segmented videos
-                    %% Check if we do a new analysis or an update. 
-                    % This check if there is already an experiment for these files.
-                    % If yes, it will locate and adjust the exp_idx in case it
-                    % changed
-                    
-                    [recording_idx, rec_already_there] = check_if_new_rec(current_experiment, current_recording_path);
-                    if ~rec_already_there
-                        %% If it is the first time we see this experiment, we create the Experiment object
-                        current_recording = Recording(numel(recordings_videos), current_recording_path);
-                    else
-                        current_recording = current_experiment.recordings(recording_idx);
-                    end
-                    current_experiment.recordings(recording_idx) = update_recording(current_recording, recordings_videos);
-                end
-                
-                %% Update or add experiment
-                analysis.experiments(experiment_idx) = current_experiment;
-            end
-
-            %% Sort alphabetically and remove empty recordings
-            analysis.experiments(experiment_idx) = analysis.experiments(experiment_idx).cleanup();
-
-            %% Now that all recordings were added, we can select ROIs
-            close all
-            [analysis.experiments(experiment_idx), failed_video_loading{experiment_idx}] = select_video_ROIs(analysis.experiments(experiment_idx), select_ROIs, display_duration, fig_handle, default_tags);
-            
-            %% Safety backup after each video export
-            assignin('base', 'analysis_temp_backup', analysis);
-        end
+        %% Safety backup after each video export
+        assignin('base', 'analysis_temp_backup', analysis);
     end
 
     %% Last check, if some folders were removed

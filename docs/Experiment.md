@@ -12,16 +12,20 @@ Analysis_Set < Experiment
 
 ```matlab
 %% Populate the first experiment of your Analysis_Set
-my_analysis = Analysis_Set();
-
-% Method 1 : populate an experiment at a known index
+my_analysis 	= Analysis_Set();
 experiment_path = '/Some/top/folder/2020-01-01/experiment_1/';
+
+% Method 1 (recommended) : Add/Update an experiment and auto-populate
+% idx returns the experiment number.
+% If the experiment already exists, it is updated
+% If the experiment is new, we create a new one at index end+1
+[my_analysis, idx] = my_analysis.add_experiment(experiment_path)
+
+% Method 2 : populate an experiment at a known index
 my_analysis.experiments(1) = my_analysis.experiments(1).populate(experiment_path); %
 
-% Method 2 : Append a new experiment at the end, and auto-populate
-my_analysis = my_analysis.add_experiment(experiment_path)
-
 % Method 3 : Append a new experiment at the end and populate manually
+% Note, With this method you can create a duplicated experiment
 my_analysis.experiments(my_analysis.n_expe+1) = Experiment('', experiment_path);
 my_analysis.experiments(end) = my_analysis.experiments(end).populate();
 
