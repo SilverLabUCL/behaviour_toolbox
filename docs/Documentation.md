@@ -1,3 +1,9 @@
+
+
+
+
+
+
 # Behaviour toolbox
 
 This toolbox was created to streamline ROI selection for Video acquisition in the SilverLab. The general use case is the following one:
@@ -340,6 +346,8 @@ Scripted analysis
 
 > Perquisite : you must have arranged your data as explained [here](#Video-Folder-Pre-processing)
 
+### Initial set up
+
 ```matlab
 %% Create database
 my_analysis = Analysis_Set('C:\Users\vanto\Desktop\Video for Toolbox testing\');
@@ -355,6 +363,11 @@ my_analysis.experiments(6).n_rec
 >> ans =
       3
 
+```
+
+### Select some ROIs
+
+```matlab
 %% Select ROIs for experiment # 6
 % There are 2 videos types in this experiment,
 % - We set 2 ROIs around whiskers in video 1
@@ -411,9 +424,34 @@ expe.recordings(2).motion_indexes
         
 ```
 
+### Extract Motion index
+
+```matlab
+%% To extract MI for a specific video
+vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
+vid = vid.analyze();
+
+%% Plot MI for ROI # 2
+figure();plot(vid.motion_indexes{2}(:,2), vid.motion_indexes{2}(:,1));
+xlabel('time (ms)')
+```
 
 
 
+## Other use case for ROIs
 
+You can extract the content of ROIs for other purposes, such as pupil tracking, or DeepLabCut.
 
+For this example, we are starting from the video defined in the [previous section](#Extract-Motion-index) :
 
+```matlab
+%% Script 1 # 
+function im = get_mean_proj(file_path_or_data, ROI)
+    [~, video] = get_MI_from_video(file_path_or_data, '', '', ROI);
+    im = nanmean(video{1}, 3);
+end
+
+vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
+[~, im] = vid.analyze(@(~,~) get_mean_proj(vid.path, vid.ROI_location{1}));
+figure();imagesc(im);axis image
+```
