@@ -325,12 +325,18 @@ end
 
 function MI_preview(~, ~, im_handle)
     %% For a given frame, display a quick preview of the current ROIs
-    global current_pos current_offsets current_video
+    global current_pos current_offsets current_video link
     if current_video
         video_path = get(im_handle.Parent, 'title');
         video_path = video_path.String{2};
         video_path = strrep(video_path, '\_', '_');
-        get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) 
+        MIs = get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) ;
+        t = MIs{1}(:, 2);
+        MIs = cell2mat(cellfun(@(x) x(:, 1), MIs, 'UniformOutput', false));
+        figure();plot(t, MIs + ones(size(MIs)).*(1:numel(link.name)).*-1 + numel(link.name)); hold on;
+        legend(link.name)
+    else
+        error_box('MI preview only works for individual recordings',1)
     end
     
 %     data = single(squeeze(load_stack(video_path, '', '', 20))); % one every 20 frames
