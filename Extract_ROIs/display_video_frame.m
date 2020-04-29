@@ -15,6 +15,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     link.name       = {};
     link.id         = [];
     link.label      = {};
+    link.preset_buttons_handles = {};
     current_video   = 0;
     current_pos     = {};
 
@@ -82,16 +83,14 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     end   
     
     %% Update offset if any
-    
 
-    
     %% Add preview button
     %MI_test = uicontrol('Style', 'pushbutton', 'String', 'Test', 'Position', [50 50 100 40], 'Callback', @(event, src) MI_preview(event, src, video_path));
     offset = 0;
     for preset = 1:numel(preset_buttons)
         offset = offset + 50;
         position = position(1:4); % no keeping id
-        uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
+        link.preset_buttons_handles{preset} = uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
     end
     
     uicontrol('Style', 'pushbutton', 'String', 'Clear offset', 'BackgroundColor', [1,0.5,0.5], 'Units','normalized','Position',[0.9 0.1 0.08 0.04], 'Callback', @(event, src) clear_offsets(src, event));
@@ -130,6 +129,7 @@ function change_image(event, src, reference_frame, all_frames, im_handle, tit, v
     event.Value = round(event.Value);
     global current_video
     current_video = event.Value; 
+    enable_disable_buttons(current_video == 0);
     if event.Value == 0
         im = reference_frame;
         tit.String{2} = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','-');
@@ -140,6 +140,30 @@ function change_image(event, src, reference_frame, all_frames, im_handle, tit, v
     im_handle.CData = im; 
     
     refresh_rois();
+end
+
+function enable_disable_buttons(status)
+    global link roi_handles
+    
+    %% Allow deletion only from first video
+    for roi = 1:numel(roi_handles)
+        if isvalid(roi_handles(roi))
+            roi_handles(roi).Deletable = status;            
+            roi_handles(roi).setResizable(status);            
+        end
+    end
+    
+    %% Convert status to string
+    if status
+        status = 'on';
+    else
+        status = 'off';
+    end
+    
+    %% Prevent addition of new preset ROIs
+    for but = 1:numel(link.preset_buttons_handles)
+        link.preset_buttons_handles{but}.Enable = status;
+    end
 end
 
 function refresh_rois()
@@ -191,10 +215,16 @@ function add_rect(~, src, position, label, color, n_vid)
     if nargin < 5  || isempty(color)
         color = 'r';
     end
+    
     %% Add a new ROI
-    global current_pos current_offset link roi_handles
+    global current_pos current_offset link roi_handles current_video
     if nargin < 6  || isempty(n_vid)
         n_vid = link.n_vid;
+    end
+    
+    if current_video
+        error_box('New ROIs must be added from the reference image',1)
+        return
     end
     
     if numel(position) == 4
@@ -241,6 +271,9 @@ function read(obj, p)
         current_pos{idx} = [p, id(1)];
         link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;
     elseif ~contains([stackcall.name],'change_image')
+        if ~all(current_pos{idx}(3:4) == p(3:4)) % don't reshape ROIs if you are not on the ref
+            return
+        end
         current_offset{idx}(current_video:end,:) = repmat(p(1:2) - current_pos{idx}(1:2), size(current_offset{idx}(current_video:end,:), 1), 1);
         link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
         for roi = 1:numel(current_pos)
