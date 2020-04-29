@@ -94,6 +94,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
     end
     
+    uicontrol('Style', 'pushbutton', 'String', 'Clear offset', 'BackgroundColor', [1,0.5,0.5], 'Units','normalized','Position',[0.9 0.1 0.08 0.04], 'Callback', @(event, src) clear_offsets(src, event));
+
     uicontrol('Style', 'slider',...
               'Units', 'normalized',...
               'Position', [0.2,0.05,0.6,0.05],...
@@ -126,7 +128,7 @@ end
 
 function change_image(event, src, reference_frame, all_frames, im_handle, tit, video_paths)
     event.Value = round(event.Value);
-    global current_video current_pos current_offset roi_handles
+    global current_video
     current_video = event.Value; 
     if event.Value == 0
         im = reference_frame;
@@ -137,6 +139,13 @@ function change_image(event, src, reference_frame, all_frames, im_handle, tit, v
     end
     im_handle.CData = im; 
     
+    refresh_rois();
+end
+
+function refresh_rois()
+    %% Reposition ROIs for current video
+
+    global current_video current_pos current_offset roi_handles
     for roi = 1:numel(current_pos)
         if ~isempty(current_offset{roi}) % empty when deleted
             if current_video
@@ -147,6 +156,31 @@ function change_image(event, src, reference_frame, all_frames, im_handle, tit, v
             end  
             roi_handles(roi).setPosition(current_pos{roi}(1:4) + [offset, 0, 0]);
         end
+    end
+end
+
+function clear_offsets(~, ~)
+    global current_video current_offset link roi_handles
+    vid_idx = current_video;
+    
+    % Could be used for ROI by ROI precision
+    %to_clear = listdlg('PromptString', {'Select the ROIs where you want the offsets to be cleared','This will be applied to this recording and the following ones'},'ListString',link.name);
+    
+    if vid_idx == 0
+        answer = questdlg('Clear offset of all recordings?');
+        vid_idx = 1;
+    else
+        answer = questdlg('Clear offset of all following recordings?');
+    end
+    
+    if strcmp(answer, 'Yes')
+        %% Clear offsets
+        for roi = 1:numel(roi_handles) %to_clear
+            current_offset{roi}(vid_idx:end,:) = 0;
+        end 
+        
+        %% Update ROI position
+        refresh_rois();
     end
 end
 
