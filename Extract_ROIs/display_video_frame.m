@@ -85,8 +85,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     
     %% Update offset if any
 
-    %% Add preview button
-    %MI_test = uicontrol('Style', 'pushbutton', 'String', 'Test', 'Position', [50 50 100 40], 'Callback', @(event, src) MI_preview(event, src, video_path));
+    %% Add preset button
     offset = 0;
     for preset = 1:numel(preset_buttons)
         offset = offset + 50;
@@ -94,6 +93,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         link.preset_buttons_handles{preset} = uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
     end
     
+    %% Add extra button
+    uicontrol('Style', 'pushbutton', 'String', 'Measure MIs', 'Units','normalized','Position',[0.9 0.2 0.08 0.04], 'Callback', @(event, src) MI_preview(event, src, im_handle));
     uicontrol('Style', 'pushbutton', 'String', 'Clear offset', 'BackgroundColor', [1,0.5,0.5], 'Units','normalized','Position',[0.9 0.1 0.08 0.04], 'Callback', @(event, src) clear_offsets(src, event));
 
     uicontrol('Style', 'slider',...
@@ -133,10 +134,10 @@ function change_image(event, src, reference_frame, all_frames, im_handle, tit, v
     enable_disable_buttons(current_video == 0);
     if event.Value == 0
         im = reference_frame;
-        tit.String{2} = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','-');
+        tit.String{2} = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','\_');
     else
         im = all_frames(:,:,event.Value);
-        tit.String{2} = strrep(strrep(video_paths{event.Value},'\','/'),'_','-');
+        tit.String{2} = strrep(strrep(video_paths{event.Value},'\','/'),'_','\_');
     end
     im_handle.CData = im; 
     
@@ -322,9 +323,16 @@ function delete_rect(src, eventdata, obj)
     end
 end
 
-function MI_preview(~, ~, video_path)
+function MI_preview(~, ~, im_handle)
     %% For a given frame, display a quick preview of the current ROIs
-    global current_pos;
-    data = single(squeeze(load_stack(video_path, '', '', 20))); % one every 20 frames
-    multiple_motion_indexes(data, '', true, current_pos);
+    global current_pos current_offsets current_video
+    if current_video
+        video_path = get(im_handle.Parent, 'title');
+        video_path = video_path.String{2};
+        video_path = strrep(video_path, '\_', '_');
+        get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) 
+    end
+    
+%     data = single(squeeze(load_stack(video_path, '', '', 20))); % one every 20 frames
+%     multiple_motion_indexes(data, '', true, current_pos);
 end
