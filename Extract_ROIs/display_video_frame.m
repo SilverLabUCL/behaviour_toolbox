@@ -10,7 +10,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     end
 
     clear global current_offset current_pos roi_handles link current_video
-    global link current_video current_pos
+    global link current_video current_pos busy
     link            = {};
     link.name       = {};
     link.id         = [];
@@ -18,6 +18,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     link.preset_buttons_handles = {};
     current_video   = 0;
     current_pos     = {};
+    busy            = false;
 
     list_of_videotypes = current_experiment.videotypes;
     type = list_of_videotypes{video_type_idx}; % cellfun(@(x) contains(type, x), [current_experiment.recordings(1).default_video_types])
@@ -262,31 +263,39 @@ function add_rect(~, src, position, label, color, n_vid)
 end
 
 function read(obj, p)
-    %% Read current ROI location and size
-    global current_pos current_offset link current_video roi_handles;
-    id = str2num(get(obj,'userdata'));
-    idx = find(cellfun(@(x) x(end), current_pos) == id);
     stackcall = dbstack;
-    if current_video == 0
-        current_pos{idx} = [p, id(1)];
-        link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;
-    elseif ~contains([stackcall.name],'change_image')
-        if ~all(current_pos{idx}(3:4) == p(3:4)) % don't reshape ROIs if you are not on the ref
-            return
-        end
-        current_offset{idx}(current_video:end,:) = repmat(p(1:2) - current_pos{idx}(1:2), size(current_offset{idx}(current_video:end,:), 1), 1);
-        link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
-        for roi = 1:numel(current_pos)
-            if ~isempty(current_offset{roi}) % empty when deleted
-                roi_handles(roi).setPosition(current_pos{roi}(1:4) + [current_offset{idx}(current_video,:), 0, 0]);
+    
+    %% Prevent multiple read calls to stcak
+    if sum(contains({stackcall.name},'imrectAPI/setPosition')) <= 2
+
+        %% Read current ROI location and size
+        global current_pos current_offset link current_video roi_handles
+
+        id = str2num(get(obj,'userdata'));
+        idx = find(cellfun(@(x) x(end), current_pos) == id);
+
+        if current_video == 0
+            current_pos{idx} = [p, id(1)];
+            link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;
+        elseif ~contains([stackcall.name],'change_image')
+            if ~all(current_pos{idx}(3:4) == p(3:4)) % don't reshape ROIs if you are not on the ref
+                return
             end
+
+            current_offset{idx}(current_video:end,:) = repmat(p(1:2) - current_pos{idx}(1:2), size(current_offset{idx}(current_video:end,:), 1), 1);
+            link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
+            for roi = 1:numel(current_pos)
+                if ~isempty(current_offset{roi}) % empty when deleted
+                    roi_handles(roi).setPosition(current_pos{roi}(1:4) + [current_offset{idx}(current_video,:), 0, 0]);
+                end
+            end
+        else
+            current_offset{idx}(current_video,:) = current_offset{idx}(current_video,:);
+            link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
         end
-    else
-        current_offset{idx}(current_video,:) = current_offset{idx}(current_video,:);
-        link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
-    end
-    if all(link.label{idx}.Color == [0 1 0])
-        link.label{idx}.Color = [1 1 0];
+        if all(link.label{idx}.Color == [0 1 0])
+            link.label{idx}.Color = [1 1 0];
+        end
     end
 end
 
