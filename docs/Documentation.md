@@ -297,23 +297,23 @@ During an experiment, you may have camera movement. You have the possibility to 
 
 To correct for camera displacement, you must first specify ROI location in the consensus frame. When the camera moves, the consensus frame may be blurry or show multiple ghost images, due to a camera offset. The ROIs should be correct for the beginning of the experiment.
 
-![](C:\Users\vanto\Desktop\Behaviour_toolbox doc\media\image27-1587374845677.png)
+![](./media/image27-1587374845677.png)
 
 You can use the slider at the bottom of the figure to move across the recordings. The first position of the slider corresponds to the consensus frame, while the following ones correspond to each video of the recording.
 
-![](C:\Users\vanto\Desktop\Behaviour_toolbox doc\media\image28-1587374845677.png)
+![](media/Documentation/image28-1587374845677.png)
 
 For example, the ROIs were selected correctly for the first recording :
 
-![](C:\Users\vanto\Desktop\Behaviour_toolbox doc\media\image29-1587374845678.png)
+![](media/Documentation/image29-1587374845678.png)
 
 However, a later video displays an offset:
 
-![](C:\Users\vanto\Desktop\Behaviour_toolbox doc\media\image30-1587374845678.png)
+![](media/Documentation/image30-1587374845678.png)
 
 You can drag the ROIs (which will move together) to the correct location.
 
-![](C:\Users\vanto\Desktop\Behaviour_toolbox doc\media\image31-1587374845678.png)
+![](media/Documentation/image31-1587374845678.png)
 
 Note: The offset is automatically applied to all the following recordings, although you can set a second different offset on a later video (which will, in turn, be applied to all the subsequent video. See example below. In **bold**, we indicate the only video that actually needed a manual intervention.
 
@@ -323,9 +323,25 @@ Note: The offset is automatically applied to all the following recordings, altho
 
 > Note : Offsets are applied relative to the first frame (Mean Frame). Similarly, ROI size are defined in the Mean Frame. DO NOT add/remove/resize ROIs in the other frames (here, in rec1 to rec_N). You should only adjust for offsets in those.
 
+You can clear all offset (if you are on the reference frame), or all offsets starting from the current recording (if you are on any other frame than the reference one) by clicking on the [Clear Offsets] button
 
-Display extracted MIs
+![image-20200430102810160](media/Documentation/image-20200430102810160.png)
+
+
+
+
+Display MIs
 ---------------------
+
+### For the current recording
+
+When selecting the ROIs, you can have a preview of the signal obtained from the current ROIs by clicking on the [Measure MIs] button
+
+![image-20200430102958106](media/Documentation/image-20200430102958106.png)
+
+Note than Motion indexes are not saved to the database when using preview. They will be extracted only when clicking on the [Show/Analyze] button.
+
+### For the whole experiment, after extraction
 
 If you extracted all Motion indices, you should see a figure like this
 
@@ -337,7 +353,14 @@ If you extracted multiple ROIs, you will see multiple subplot.
 
 ![](./media/image33.png)
 
-If you extracted the same ROI in different videos, they will be displayed in the same subplot, one color per camera
+> Note : if you want to pause the display between each Camera, tick the [Pause for each experiment] checkbox
+>
+
+![image-20200430101637948](media/Documentation/image-20200430101637948.png)
+
+Videos that were not extracted will still be analysed, so it is recommended to use this option only when all MIs were extracted, otherwise you may have to wait a long time when hitting an non-extracted recording.
+
+
 
 Scripted analysis
 =================
