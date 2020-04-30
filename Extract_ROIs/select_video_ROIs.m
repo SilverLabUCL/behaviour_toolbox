@@ -101,29 +101,27 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
       
         %% Add new windows and update motion indexes windows location  
         try
-        	roi_available = isfield(current_experiment.recordings(rec).videos(video_type_idx),'n_roi');
+        	roi_available = isprop(current_experiment.recordings(rec).videos(video_type_idx),'n_roi');
         catch
         	roi_available = false;    
         end
         if roi_change_detected || (isempty(current_pos) && roi_available && current_experiment.recordings(rec).videos(video_type_idx).n_roi > 0)
             for rec = 1:current_experiment.n_rec
-                if current_experiment.recordings(rec).n_vid >= video_type_idx
-                    %% QQ We may need to use
-                    % target = experiment.videotypes{video_type_idx}; or current_recording.videos(videotype).path
-                    % local_video_type_idx = find(contains(experiment.recordings(rec).videotypes, target));
-                    
-                    n_rois = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
-                    previous_ids = vertcat(current_experiment.recordings(rec).videos(video_type_idx).ROI_location{:});
-                    current_experiment.recordings(rec).videos(video_type_idx).video_offset = mean(cell2mat(cellfun(@(x) x(rec,:), current_offset, 'UniformOutput', false)'),1); % only store mean displacement
+                target = current_experiment.videotypes{video_type_idx};
+                local_video_type_idx = find(contains(current_experiment.recordings(rec).videotypes, target));
+                if ~isempty(local_video_type_idx) % empty if video is missing
+                    n_rois = current_experiment.recordings(rec).videos(local_video_type_idx).n_roi;
+                    previous_ids = vertcat(current_experiment.recordings(rec).videos(local_video_type_idx).ROI_location{:});
+                    current_experiment.recordings(rec).videos(local_video_type_idx).video_offset = mean(cell2mat(cellfun(@(x) x(rec,:), current_offset, 'UniformOutput', false)'),1); % only store mean displacement
                     if isempty(current_pos) % Because you deleted everything !
-                        current_experiment.recordings(rec).videos(video_type_idx).rois = repmat(ROI, 1, 0);
+                        current_experiment.recordings(rec).videos(local_video_type_idx).rois = repmat(ROI, 1, 0);
                     else
                         for roi = 1:numel(current_pos) 
                             %% Check if it is a new ROI
                             if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
-                                n_roi = current_experiment.recordings(rec).videos(video_type_idx).n_roi;
-                                current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
-                                current_experiment.recordings(rec).videos(video_type_idx).rois(n_roi + 1).name = names{roi};
+                                n_roi = current_experiment.recordings(rec).videos(local_video_type_idx).n_roi;
+                                current_experiment.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
+                                current_experiment.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).name = names{roi};
                             else    
                                 %% List ROIs to delete
                                 to_pop = [];
@@ -133,13 +131,13 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
 
                                 if isempty(to_pop)
                                     %% Then it's an update (or the same location)
-                                    current_experiment.recordings(rec).videos(video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
-                                    current_experiment.recordings(rec).videos(video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
-                                    current_experiment.recordings(rec).videos(video_type_idx).rois(roi).name = names{roi};
+                                    current_experiment.recordings(rec).videos(local_video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
+                                    current_experiment.recordings(rec).videos(local_video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
+                                    current_experiment.recordings(rec).videos(local_video_type_idx).rois(roi).name = names{roi};
                                 else
                                     %% Then it's a deletion
-                                    current_experiment.recordings(rec).videos(video_type_idx).rois(to_pop) = [];
-                                    previous_ids = vertcat(current_experiment.recordings(rec).videos(video_type_idx).ROI_location{:});
+                                    current_experiment.recordings(rec).videos(local_video_type_idx).rois(to_pop) = [];
+                                    previous_ids = vertcat(current_experiment.recordings(rec).videos(local_video_type_idx).ROI_location{:});
                                 end
                             end
                         end
