@@ -84,8 +84,13 @@ classdef Video
                 fprintf(['timestamps not found for video ',obj.path,' \n']);
             end
         end
-            
         
+        function plot_MIs(obj)
+            temp = cell2mat(obj.motion_indexes);
+            temp = temp - prctile(temp,1);
+            temp = temp ./ max(temp);
+            figure(123);clf();plot(temp(:,1:2:end)); drawnow
+        end
 
         function n_roi = get.n_roi(obj)
             %% Return the number of ROI windows

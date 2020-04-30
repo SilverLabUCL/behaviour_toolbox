@@ -42,37 +42,14 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
     if ~isempty(videotype_filter)
         to_use = cellfun(@(x) strcmp(x, videotype_filter), all_types) & to_use;
     end
-    
-%     if isempty(videotype_filter)
-%         %% Get tags
-%         types = recordings.videotypes;
-%         types = cellfun(@(x) strsplit(x,'/'), types, 'UniformOutput', false);
-%         types = cellfun(@(x) strrep(x{end},'.avi',''), types, 'UniformOutput', false);
-%     else
-%         types = {videotype_filter};
-%     end
-%     tags = {};
-%     for rec = 1:numel(recordings)
-%         recording = recordings(rec);
-%         for video = recordings.n_vid
-%             video = recording.videos(video);
-%             
-%         end
-%     end
-%     
+
     labels          = recordings.roi_labels;  % a list of all labels
     original_shape  = size(to_use);
-    all_MIs         = all_MIs(to_use);
-    all_labels      = all_labels(to_use);
-    all_MIs(~to_use)    = {[]};
-    all_labels(~to_use) = {[]};
-    
-%     if all(to_use(:)) % not sure why we loose the shape when they are all 1's
-    all_MIs     = reshape(all_MIs   , original_shape)         ;
-    all_labels  = reshape(all_labels, original_shape)         ;
-    %     end
-    %keep            = size(all_MIs, 2) > 1;
-    
+    all_MIs(~to_use)    = {{[]}}; % clear content for ignored MI's
+    all_labels(~to_use) = {{[]}}; % clear content for ignored MI's 
+    all_MIs         = reshape(all_MIs   , original_shape);
+    all_labels      = reshape(all_labels, original_shape);
+
     for videotype_idx = 1:numel(type_list)
         current_MIs = all_MIs(:,videotype_idx);
         current_labels = all_labels(:,videotype_idx);

@@ -43,10 +43,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
 
                     %% Store results
                     if display
-                        temp = cell2mat(current_video.motion_indexes);
-                        temp = temp - prctile(temp,1);
-                        temp = temp ./ max(temp);
-                        figure(123);cla();plot(temp(:,1:2:end)); drawnow
+                        analysis.experiments(exp_idx).recordings(rec).videos(vid).plot_MIs();
                     end
 
                     %% Safety backup after each video export
