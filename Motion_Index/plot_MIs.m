@@ -74,7 +74,7 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
 
         %% Set image to full screen onm screen 2 (if any)
         screens = get(0,'MonitorPositions');
-        f = figure(122+videotype_idx); hold on;
+        f = figure(122+videotype_idx);clf(); hold on;
 %         if ~keep
 %             clf();
 %         end
