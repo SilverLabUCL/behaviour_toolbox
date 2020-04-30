@@ -85,6 +85,11 @@ classdef Recording
             %% Remove a specific video objct based on the video index
             obj.videos(video_type_idx) = [];
         end
+        
+%         function plot_MIs(obj)
+%             %% TO IMPLEMENT FROM PLOT_MIs function
+%         end
+        
 
         function n_vid = get.n_vid(obj)
             %% Return the number of video available
@@ -117,11 +122,7 @@ classdef Recording
                 roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
             end
             roi_labels = [roi_labels{:}];
-            try
-                roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));
-            catch
-                1
-            end            
+            roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));         
         end 
         
         function t_start = get.t_start(obj)

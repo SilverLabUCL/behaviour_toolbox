@@ -29,24 +29,28 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
             if ~isempty(match)
                 all_types(rec, vid) = type_list(vid)                          ;
                 all_MIs(rec, vid)   = recordings(rec).motion_indexes(match)   ;
-                all_labels(rec, vid)= {recordings(rec).videos(vid).roi_labels};
+                all_labels(rec, vid)= {recordings(rec).videos(match).roi_labels};
             else
                 all_types(rec, vid) = {NaN};
-                all_MIs(rec, vid)   = {NaN};
-                all_labels(rec, vid)= {NaN};
+                all_MIs(rec, vid)   = {cell(1,0)};
+                all_labels(rec, vid)= {cell(1,0)};
             end
         end
     end
 
+    
+    all_MIs(cellfun(@(x) isempty(x), all_MIs)) = {[]};
     to_use = ~cellfun(@(x) all(isnan(x)), all_types);
+    
+    
     if ~isempty(videotype_filter)
         to_use = cellfun(@(x) strcmp(x, videotype_filter), all_types) & to_use;
     end
 
     labels          = recordings.roi_labels;  % a list of all labels
     original_shape  = size(to_use);
-    all_MIs(~to_use)    = {{[]}}; % clear content for ignored MI's
-    all_labels(~to_use) = {{[]}}; % clear content for ignored MI's 
+    all_MIs(~to_use)    = {[]}; % clear content for ignored MI's
+    all_labels(~to_use) = {[]}; % clear content for ignored MI's 
     all_MIs         = reshape(all_MIs   , original_shape);
     all_labels      = reshape(all_labels, original_shape);
 

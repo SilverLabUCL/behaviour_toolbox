@@ -200,23 +200,18 @@ classdef Experiment
         function global_reference_images = get.global_reference_images(obj)
             %% List all video_types available in the Children
             % [N x M] Cell orray, of N recordings and M videos
-            global_reference_images = {};
+            videotypes = obj.videotypes;
+            global_reference_images = cell(obj.n_rec, numel(videotypes));
             for rec = 1:obj.n_rec
-                try
-                    global_reference_images = [global_reference_images; obj.recordings(rec).reference_images];
-                catch
-                    %% Typically, there's a video missing for that record
-                    % We find which one and fill the others with NaN
-                    current_types = cellfun(@(x) erase(strsplit(x,'/'),'.avi'), obj.recordings(rec).videotypes,'UniformOutput',false);
-                    current_types = current_types{1}{1,end};
-                    
-                    new = cell(1, size(global_reference_images, 2));
-                    new(~ismember(obj.videotypes, current_types)) = {NaN};
-                    global_reference_images = [global_reference_images; new]; % when a video is missing, put en empty cell instead
+                for vid = 1:numel(videotypes)
+                    real_idx = find(contains({obj.recordings(rec).videos.path}, obj.videotypes{vid}));
+                    if ~isempty(real_idx)
+                        global_reference_images{rec, vid} = obj.recordings(rec).reference_images{real_idx};
+                    else
+                        global_reference_images{rec, vid} = NaN;
+                    end
                 end
             end
-            
-            %% Do some operation here
         end 
 
         function t_start = get.t_start(obj)

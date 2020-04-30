@@ -120,6 +120,11 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
                             %% Check if it is a new ROI
                             if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
                                 n_roi = current_experiment.recordings(rec).videos(local_video_type_idx).n_roi;
+                                if n_roi == 0 %% QQ NEED TO CREATE AMETHOD FOR THAT
+                                    current_experiment.recordings(rec).videos(local_video_type_idx).rois = ROI;
+                                else
+                                    current_experiment.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1) = ROI;
+                                end
                                 current_experiment.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
                                 current_experiment.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).name = names{roi};
                             else    

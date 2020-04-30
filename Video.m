@@ -86,7 +86,11 @@ classdef Video
         end
         
         function plot_MIs(obj)
+            try
             temp = cell2mat(obj.motion_indexes);
+            catch
+                temp = [NaN]
+            end
             temp = temp - prctile(temp,1);
             temp = temp ./ max(temp);
             figure(123);clf();plot(temp(:,1:2:end)); drawnow
@@ -120,9 +124,23 @@ classdef Video
 
         function obj = set.motion_indexes(obj, motion_indexes)
             %% Return the number of ROI windows
-            for roi = 1:obj.n_roi
-                obj.rois(roi).motion_index = motion_indexes{roi};
+            if numel(motion_indexes) == 1 && isempty(motion_indexes)
+                obj = obj.clear_MIs();
+            else
+                for roi = 1:obj.n_roi
+                    obj.rois(roi).motion_index = motion_indexes{roi};
+                end
             end
+        end
+        
+        function obj = clear_MIs(obj)            
+            for roi = 1:obj.n_roi
+                obj.rois(roi).motion_index = {};
+            end
+        end
+        
+        function obj = clear_ROIs(obj)
+            obj.ROIs = {};
         end
 
         function motion_indexes = get.motion_indexes(obj)

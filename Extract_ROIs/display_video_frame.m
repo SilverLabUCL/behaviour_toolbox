@@ -28,18 +28,22 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     video_paths     = cell(current_experiment.n_rec, 1);
     ROI_offsets     = cell(current_experiment.n_rec, 1);
     for rec = 1:numel(current_experiment.recordings) % cannot use video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)'; if there are missing videos
-        correct = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
-        if ~isempty(correct)
-            video_paths{rec} = current_experiment.recordings(rec).videos(correct).path;
-            ROI_offsets{rec} = current_experiment.recordings(rec).videos(correct).video_offset;
+        real_idx = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
+        if ~isempty(real_idx)
+            idx_to_use = real_idx;
+            video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
+            ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
         else
             video_paths{rec} = '';
             ROI_offsets{rec} = [NaN, NaN];
         end
     end
-    video_path      = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','-');
-    ROI_window      = current_experiment.recordings(1).videos(video_type_idx).ROI_location;
-    link.existing_MI= current_experiment.recordings(1).videos(video_type_idx).motion_indexes;
+    
+    last_valid_videorec = find(~strcmp(video_paths, ''), 1, 'last');
+    video_path      = strrep(strrep(fileparts(fileparts(fileparts(video_paths{last_valid_videorec}))),'\','/'),'_','-');
+    
+    ROI_window      = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
+    link.existing_MI= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).motion_indexes;
     link.n_vid      = size(all_frames, 3);
 
     %% Preview figure
@@ -64,12 +68,12 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         roi_position = ROI_window(1,:); %first video is enough
         roi_position = roi_position{roi_idx};
 
-        if isempty(current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name)     
+        if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name)     
             label = ['Label # ',num2str(roi_idx)];
         else
-            label = current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).name;
+            label = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name;
         end
-        if isempty(current_experiment.recordings(1).videos(video_type_idx).rois(roi_idx).motion_index)
+        if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).motion_index)
             color = 'y';
         else
             color = 'g';
