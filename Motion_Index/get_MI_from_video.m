@@ -158,8 +158,32 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
             if iscell(ROI) % If you passed multiple ROIs as a cell array
                 temp = {};
                 for el = 1:numel(ROI)
-                    roi         = round(ROI{el}(1:4) + [video_offsets, 0, 0]);
-                    temp{el}    = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
+                    roi                 = round(ROI{el}(1:4) + [video_offsets, 0, 0]);
+                    max_allowed_start   = [size(video, 2), size(video, 1)];
+                    
+                    %% Make sure ROI is not completely out of frame
+                    if roi(1) > max_allowed_start(1) || roi(2) > max_allowed_start(2)
+                        roi = [];
+                    elseif (roi(1)+roi(3)) < 0 || (roi(2)+roi(4)) < 0
+                        roi = [];
+                    end
+                    
+                    %% If partially out of frame, clip ROI size
+                    max_allowed_size = [0, 0, max_allowed_start - roi(1:2)];
+                    for ax = 3:4
+                        if (roi(ax) - max_allowed_size(ax)) > 0 % clip axis if too big
+                            roi(ax) = max_allowed_size(ax); %stop at end of frame
+                        elseif roi(ax-2) < 0
+                            roi(ax)   = roi(ax) - roi(ax-2); % reduce size to start at 1
+                            roi(ax-2) = 1;                   % start at 1
+                        end
+                    end
+
+                    try
+                        temp{el}    = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
+                    catch
+                        1
+                    end
                     %figure(el);cla();imagesc(max(temp{el},[],3));axis image
                 end
                 video   = temp;
