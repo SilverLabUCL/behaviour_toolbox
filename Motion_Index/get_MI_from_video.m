@@ -61,6 +61,10 @@
 % Adapted from Harsha's code. For a more complete version including loading
 % from substack and gif, see
 % https://github.com/SilverLabUCL/Harsha-old-code/tree/master/Behaviour_analysis
+%
+% If a ROI is set out of the video frame (because of it's initial
+% coordinate, or because the offset put it there), MI values will be set to
+% NaN
 % -------------------------------------------------------------------------
 % Author(s):
 %   Harsha Gurnani, Frederic Lanore, Antoine Valera
@@ -169,22 +173,22 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
                     end
                     
                     %% If partially out of frame, clip ROI size
-                    max_allowed_size = [0, 0, max_allowed_start - roi(1:2)];
-                    for ax = 3:4
-                        if (roi(ax) - max_allowed_size(ax)) > 0 % clip axis if too big
-                            roi(ax) = max_allowed_size(ax); %stop at end of frame
-                        elseif roi(ax-2) < 0
-                            roi(ax)   = roi(ax) - roi(ax-2); % reduce size to start at 1
-                            roi(ax-2) = 1;                   % start at 1
+                    if ~isempty(roi)
+                        max_allowed_size = [0, 0, max_allowed_start - roi(1:2)];
+                        for ax = 3:4
+                            if (roi(ax) - max_allowed_size(ax)) > 0 % clip axis if too big
+                                roi(ax) = max_allowed_size(ax); %stop at end of frame
+                            elseif roi(ax-2) < 0
+                                roi(ax)   = roi(ax) - roi(ax-2); % reduce size to start at 1
+                                roi(ax-2) = 1;                   % start at 1
+                            end
                         end
-                    end
 
-                    try
                         temp{el}    = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
-                    catch
-                        1
+                        %figure(el);cla();imagesc(max(temp{el},[],3));axis image
+                    else
+                        temp{el} = [];
                     end
-                    %figure(el);cla();imagesc(max(temp{el},[],3));axis image
                 end
                 video   = temp;
                 clear temp
@@ -200,40 +204,44 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
         %% Now get MI for each ROI of the current batch
         for MI_idx = 1:numel(video)
             local_data = video{MI_idx};
-
-            %% Preallocate output
-            MI = nan(nFrames, 2);  
-
-            %% Compute motion index for first point (for batch_idx > 1)
-            if nFrames > 1 && dump_data && batch_idx > 1 
-                X  = interbatch_holder{MI_idx};
-                X1 = local_data(:,:,1);
-                FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
-                MI(1,1) = (sum(sum(FrameDiff.*FrameDiff)));
-            end
-            %% Compute motion index for the rest
-            for i = 2:nFrames
-                X  = local_data(:,:,i-1);
-                X1 = local_data(:,:,i);
-                FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
-                MI(i,1) = (sum(sum(FrameDiff.*FrameDiff)));            
-                % FrameDiff = diff(local_data(:,:,i-1:i),1,3).^2;
-                % MI(i,1) = sum(FrameDiff(:));
-            end
-            interbatch_holder{MI_idx} = local_data(:,:,end);
-
             
-            %% Normalize
-            if normalize
-                m = prctile(MI(:,1),5);
-                M = max(MI(:,1));
-                MI(:,1) = (MI(:,1)-m) ./ (M-m); 
-            end
+            %% Preallocate output
+            MI = nan(nFrames, 2);
+            
+            if ~isempty(local_data) % normal case
 
-            MI(:,2) = timestamp(1:nFrames,end); %setup time axis
+                %% Compute motion index for first point (for batch_idx > 1)
+                if nFrames > 1 && dump_data && batch_idx > 1 
+                    X  = interbatch_holder{MI_idx};
+                    X1 = local_data(:,:,1);
+                    FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
+                    MI(1,1) = (sum(sum(FrameDiff.*FrameDiff)));
+                end
+                %% Compute motion index for the rest
+                for i = 2:nFrames
+                    X  = local_data(:,:,i-1);
+                    X1 = local_data(:,:,i);
+                    FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
+                    MI(i,1) = (sum(sum(FrameDiff.*FrameDiff)));            
+                    % FrameDiff = diff(local_data(:,:,i-1:i),1,3).^2;
+                    % MI(i,1) = sum(FrameDiff(:));
+                end
+                interbatch_holder{MI_idx} = local_data(:,:,end);
+
+
+                %% Normalize
+                if normalize
+                    m = prctile(MI(:,1),5);
+                    M = max(MI(:,1));
+                    MI(:,1) = (MI(:,1)-m) ./ (M-m); 
+                end
+            end
+            
+            %% Set time axis
+            MI(:,2) = timestamp(1:nFrames,end); 
             %MI = MI(2:end,:); 
 
-            %% Stitch to any previous batch
+            %% Stitch to any previous batch. If ROI was invalid, we'll have NaNs
             motion_indexes{MI_idx} = cat(1, motion_indexes{MI_idx}, MI);
         end
     end
