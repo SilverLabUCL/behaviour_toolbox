@@ -1,3 +1,8 @@
+%% Function to load a avi video
+%
+% Model :
+% video_full = mmread_light(full_file_path)
+
 function video_full = mmread_light(filename, dump_data)
     if nargin < 2 || isempty(dump_data)
         dump_data = false;
