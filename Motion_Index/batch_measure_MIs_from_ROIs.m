@@ -48,6 +48,8 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
 
                     %% Safety backup after each video export
                     assignin('base', 'analysis_temp_backup', analysis);
+                else
+                    fprintf(['No analysis required for ',current_video.path,'. Skipping extraction\n'])
                 end
             end 
         end
@@ -58,8 +60,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
             plot_MIs(analysis.experiments(exp_idx).recordings, first_tp_of_exp, manual_browsing, '', true);
             %end
         end
-    end
-    
+    end    
 end
 % 
 % function cleanMeUp()
