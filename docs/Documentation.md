@@ -365,17 +365,38 @@ Videos that were not extracted will still be analysed, so it is recommended to u
 Scripted analysis
 =================
 
-## Setting up a database and extracting ROIs
+> Requirements : you must have arranged your data as explained [here](#Video-Folder-Pre-processing)
 
-> Perquisite : you must have arranged your data as explained [here](#Video-Folder-Pre-processing)
+## Initial set up
 
-### Initial set up
+### Using an existing Database for Analysis
+
+If you did the initial part of the pipeline using the GUI, you can then use it for scripted analysis. 
+
+The initial step is to isolate the Analysis_Set object. You can do this by extracting it from the GUI handle, or by reloaded a backup analysis
+
+```matlab
+%% Get the Analysis set from the GUI
+analysis = behaviour_GUI.Experiment_set;
+
+%% Get the Analysis set from a backup
+load('some_backup.mat');
+```
+
+### Creating a new database
+
+The other option is to create a whole database from scratch. For more details, see the [Analysis_Set](Analysis_Set.md),[Experiment](Experiment.md) and [Recording](Recording.md) Classes documentation.
 
 ```matlab
 %% Create database
 my_analysis = Analysis_Set('C:\Users\vanto\Desktop\Video for Toolbox testing\');
 my_analysis = my_analysis.update(); % list all experiments
+```
+## Browse Data Properties
 
+### Select Experiments
+
+```matlab
 %% Look at a few properties of experiment # 6
 my_analysis.experiments(6).videotypes
 >> ans =
@@ -388,7 +409,7 @@ my_analysis.experiments(6).n_rec
 
 ```
 
-### Select some ROIs
+### Select ROIs
 
 ```matlab
 %% Select ROIs for experiment # 6
