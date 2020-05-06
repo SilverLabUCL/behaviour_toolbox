@@ -1,5 +1,4 @@
-%% Modified version of Fred and Harsha's motion index code for batch processing
-% This version can load the avi and crop ROIs on the fly
+%% Load Video and measure Motion index from selected ROIs
 % -------------------------------------------------------------------------
 % Model : 
 %   [motion_indexes, video] = get_MI_from_video(file_path, ROI, timestamp, 
@@ -42,8 +41,8 @@
 %
 % -------------------------------------------------------------------------
 % Outputs :
-%   motion_indexes ({1 * N} CELL ARRAY of [2 * T] ARRAY)
-%                       For each ROI input, we get one motion index
+%   motion_indexes ({1 * N} CELL ARRAY of [Tx2] ARRAY)
+%                       For each of N ROI input, we get one motion index
 %                       measurment. For each cell :
 %                       First column is motion index (between 0 and 1).
 %                       Second column are timestamps copied from given 

@@ -1,7 +1,35 @@
-%% Function to load a avi video
+%% Optimised avi loader
+% -------------------------------------------------------------------------
+% Model : 
+%   video_full = mmread_light(filename, dump_data)
+% -------------------------------------------------------------------------
+% Inputs : 
+%   filename(STR PATH):
+%                                   Full path the the avi file
 %
-% Model :
-% video_full = mmread_light(full_file_path)
+%   dump_data(BOOL) - Optional - Default is false:
+%                                   If true, video is loaded by batches of
+%                                   500 frames and saved temporarily in a
+%                                   temp_video.mat file. Use if you have
+%                                   little ressources or if videos are too
+%                                   large
+% -------------------------------------------------------------------------
+% Outputs :
+%  video_full([X x Y x T] UINT8 or MATFILE pointer) 
+%                                   The loaded video, or the matfile object
+%                                   if dump_data == true
+% -------------------------------------------------------------------------
+% Extra Notes:
+%
+% * adapted from mmread, see license.txt file
+% -------------------------------------------------------------------------
+% Author(s):
+%   Micah Richert, Antoine Valera
+% -------------------------------------------------------------------------
+% Revision Date:
+%   06-05-2020
+%
+% See also 
 
 function video_full = mmread_light(filename, dump_data)
     if nargin < 2 || isempty(dump_data)

@@ -85,15 +85,40 @@ classdef Video
             end
         end
         
-        function plot_MIs(obj)
-            try
-            temp = cell2mat(obj.motion_indexes);
-            catch
-                temp = [NaN]
+        function plot_MIs(obj, fig_number, use_subplots, use_norm)
+            if nargin < 2 || isempty(fig_number)
+                fig_number = [];
             end
-            temp = temp - prctile(temp,1);
-            temp = temp ./ max(temp);
-            figure(123);clf();plot(temp(:,1:2:end)); drawnow
+            if nargin < 3 || isempty(use_subplots)
+                use_subplots = false;
+            end
+            if nargin < 4 || isempty(use_norm)
+                use_norm = false;
+            end
+              
+            %% Prepare figure handle to plot MIs
+            if use_subplots && ~isempty(fig_number)
+               fig_number = figure(fig_number);
+            else
+               fig_number = figure(figure);
+            end
+            
+            %% Load and Plot data
+            for el = 1:obj.n_roi
+                if use_subplots
+                    sz = 0.9/(obj.n_roi);
+                    fig_number = subplot('Position',[0.1, 0.95 - sz*el, 0.85, sz - 0.01]);
+                    fig_number.XAxis.Visible = 'off';
+                end
+                fig_number = obj.rois(el).plot_MI(fig_number, use_norm);
+            end
+            
+            %% When using subplot, link x axes
+            if use_subplots
+                fig_number.XAxis.Visible = 'on';
+                xlabel('Frames');
+                linkaxes(fig_number.Parent.Children, 'x');
+            end
         end
 
         function n_roi = get.n_roi(obj)

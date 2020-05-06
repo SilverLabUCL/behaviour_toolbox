@@ -1,6 +1,6 @@
 %% Popup error/information message
 % Popup window displaying a message. It can be used to catch an error or
-% for any message. Chose a value for carry on to sue different symbols
+% for any message. Chose a value for carry on to use different symbols
 %
 % -------------------------------------------------------------------------
 % Model : 

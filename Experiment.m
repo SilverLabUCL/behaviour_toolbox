@@ -50,8 +50,6 @@
 %
 % See also Analysis_Set, Recording
 
-
-
 classdef Experiment
     properties
         recordings = Recording  ; % Contain individual recordings
