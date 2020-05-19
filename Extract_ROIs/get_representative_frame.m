@@ -1,4 +1,4 @@
-function [reference_frame, video_type, video_paths, failed_video_loading, all_frames] = get_representative_frame(experiment, video_type_idx, type, get_preview)%paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
+function [reference_frame, video_type, video_paths, failed_video_loading, all_frames, offsets] = get_representative_frame(experiment, video_type_idx, type, get_preview)%paths, video_type_idx, video_types_location, failed_video_loading, get_preview)
 % 	if nargin < 6 || isempty(get_preview)
 %         get_preview = true;
 %     end
@@ -66,6 +66,14 @@ function [reference_frame, video_type, video_paths, failed_video_loading, all_fr
     
     %% Get some info to help choosing ROIs
     all_frames = reference_frame;
+    offsets = {[0, 0]};
+    for frame = 2:size(all_frames, 3)
+        offsets{frame} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,frame), 100);
+        offsets{frame} = offsets{frame}([4,3])*-1;
+    end
+    offsets = offsets';
+    
+    
     if get_preview
         meanimage = nanmean(reference_frame, 3);        
         varimage = nanvar(reference_frame, 1, 3);

@@ -22,7 +22,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
 
     list_of_videotypes = current_experiment.videotypes;
     type = list_of_videotypes{video_type_idx}; % cellfun(@(x) contains(type, x), [current_experiment.recordings(1).default_video_types])
-    [reference_frame, ~, ~, ~, all_frames] = get_representative_frame(current_experiment, video_type_idx, type, true);
+    [reference_frame, ~, ~, ~, all_frames, auto_offsets] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ using video_type_idx instead of name. could cause issue with video failures
     video_paths     = cell(current_experiment.n_rec, 1);
@@ -32,7 +32,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         if ~isempty(real_idx)
             idx_to_use = real_idx;
             video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
-            ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
+            %ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
+            ROI_offsets{rec} = auto_offsets{rec};
         else
             video_paths{rec} = '';
             ROI_offsets{rec} = [NaN, NaN];
