@@ -46,13 +46,14 @@ classdef Video
             end
             
             %% Set timing info if missing
-            if isempty(obj.timestamps)
+            if isempty(obj.timestamps) || default
                 obj = set_timestamps(obj);
             end
 
             %% Get MI (or other function handle)
-            if default
-                obj.motion_indexes = get_MI_from_video(obj.path, obj.ROI_location, obj.absolute_times, false, false, '', obj.video_offset);
+            if default    
+                t = obj.timestamps + posixtime(obj.absolute_times(1)) + rem(second(obj.absolute_times(1)),1); % posixtime in seconds
+                obj.motion_indexes = get_MI_from_video(obj.path, obj.ROI_location, t, false, false, '', obj.video_offset);
                 out = obj.motion_indexes;
             else
                 out = func();
@@ -73,13 +74,11 @@ classdef Video
                 fclose(fileID);
 
                 %% Get real time
-                time                = cellfun(@(timepoint) strsplit(timepoint, ';'), timescale{3}, 'UniformOutput', false); % separate day from time
-                time                = cellfun(@(timepoint) cellfun(@str2num, (strsplit(timepoint{2},':'))), time, 'UniformOutput', false); % separte hr, min, s
-                obj.absolute_times  = cell2mat((cellfun(@(timepoint) sum(timepoint .* [3600000, 60000, 1000]), time, 'UniformOutput', false))); % convert all to ms
+                obj.absolute_times  = datetime(timescale{3},'Format','dd-MM-yyyy;HH:mm:ss.SSSS');
 
                 %% Get camera timestamps
                 obj.timestamps      = timescale{2}/1000;
-                obj.sampling_rate   = 1/mean(diff(obj.absolute_times))*1000;
+                obj.sampling_rate   = 1/mean(diff(obj.timestamps));
             else
                 fprintf(['timestamps not found for video ',obj.path,' \n']);
             end
@@ -87,7 +86,7 @@ classdef Video
         
         function plot_MIs(obj, fig_number, use_subplots, use_norm)
             if nargin < 2 || isempty(fig_number)
-                fig_number = [];
+                fig_number = cell(1,numel(obj));
             end
             if nargin < 3 || isempty(use_subplots)
                 use_subplots = false;
@@ -100,24 +99,28 @@ classdef Video
             if use_subplots && ~isempty(fig_number)
                fig_number = figure(fig_number);
             else
-               fig_number = figure(figure);
+            	for vid = 1:numel(obj)
+                	fig_number{vid} = figure(figure);
+            	end
             end
             
             %% Load and Plot data
-            for el = 1:obj.n_roi
-                if use_subplots
-                    sz = 0.9/(obj.n_roi);
-                    fig_number = subplot('Position',[0.1, 0.95 - sz*el, 0.85, sz - 0.01]);
-                    fig_number.XAxis.Visible = 'off';
+            for vid = 1:numel(obj) % usually 1 but can be more
+                for el = 1:obj(vid).n_roi
+                    if use_subplots
+                        sz = 0.9/(obj(vid).n_roi);
+                        fig_number{vid} = subplot('Position',[0.1, 0.95 - sz*el, 0.85, sz - 0.01]);
+                        fig_number{vid}.XAxis.Visible = 'off';
+                    end
+                    fig_number{vid} = obj(vid).rois(el).plot_MI(fig_number{vid}, use_norm);
                 end
-                fig_number = obj.rois(el).plot_MI(fig_number, use_norm);
-            end
-            
-            %% When using subplot, link x axes
-            if use_subplots
-                fig_number.XAxis.Visible = 'on';
-                xlabel('Frames');
-                linkaxes(fig_number.Parent.Children, 'x');
+
+                %% When using subplot, link x axes
+                if use_subplots
+                    fig_number{vid}.XAxis.Visible = 'on';
+                    xlabel('Frames');
+                    linkaxes(fig_number{vid}.Parent.Children, 'x');
+                end
             end
         end
 

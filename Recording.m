@@ -128,7 +128,8 @@ classdef Recording
         function t_start = get.t_start(obj)
             t_start = [];
             for vid = 1:obj.n_vid
-                t_start = [t_start, t_start, nanmin(obj.videos(vid).absolute_times)];
+                t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
+                t_start = [t_start, t_start, t];
             end
             t_start = nanmin(t_start);
         end

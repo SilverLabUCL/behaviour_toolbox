@@ -1,8 +1,8 @@
 %% For a given list of MIs, plot them, one per subplot
 
-function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filter_laser)
-    if nargin < 2 || isempty(t_offset)
-        t_offset = 0;
+function plot_MIs(recordings, zero_t, manual_browsing, videotype_filter, filter_laser)
+    if nargin < 2 || isempty(zero_t)
+        zero_t = true;
     end
     if nargin < 3 || isempty(manual_browsing)
         manual_browsing = false;
@@ -54,6 +54,12 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
     all_MIs         = reshape(all_MIs   , original_shape);
     all_labels      = reshape(all_labels, original_shape);
 
+    if zero_t
+        t_offset = min([recordings.t_start]); % t start in posix-time ms
+    else
+        t_offset = 0;
+    end
+    
     for videotype_idx = 1:numel(type_list)
         current_MIs = all_MIs(:,videotype_idx);
         current_labels = all_labels(:,videotype_idx);
@@ -111,7 +117,7 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
                 v = (v - min(v)) / (max(v) - min(v));
                 novid = diff(all_rois(:,2));
                 [idx] = find(novid > (median(novid) * 2));
-                taxis = (all_rois(:,2)- t_offset)/1000;
+                taxis = (all_rois(:,2)- t_offset);
                 if filter_laser
                     v = movmin(v, 3);
                 end
