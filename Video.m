@@ -96,7 +96,7 @@ classdef Video
               
             %% Prepare figure handle to plot MIs
             if use_subplots && ~isempty(fig_number) && (~iscell(fig_number) || ~any(cellfun(@isempty, fig_number)))
-               fig_number = figure(fig_number);
+            	fig_number = figure(fig_number);
             else
             	for vid = 1:numel(obj)
                 	fig_number{vid} = figure(figure);

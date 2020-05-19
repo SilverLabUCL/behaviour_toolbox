@@ -166,6 +166,28 @@ classdef Experiment
         function obj = analyze(obj)
             % To add. For now see Recording.analyze
         end
+        
+        function plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)
+            if nargin < 2 || isempty(fig_number)
+                fig_number = 1:numel(obj);
+            end
+            if nargin < 3 || isempty(zero_t)
+                zero_t = true;
+            end
+            if nargin < 4 || isempty(manual_browsing)
+                manual_browsing = false;
+            end
+            if nargin < 5 || isempty(videotype_filter)
+                videotype_filter = unique([obj.videotypes]);
+            end
+            if nargin < 6 || isempty(filter)
+                filter = false;
+            end
+
+            for exp = 1:numel(obj) % usually 1 but can be more
+                obj(exp).recordings.plot_MIs(fig_number(exp), zero_t, manual_browsing, videotype_filter, filter);
+            end
+        end
 
         function videotypes = get.videotypes(obj)
             %% List all video_types available in the Children

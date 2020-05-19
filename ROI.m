@@ -28,15 +28,23 @@ classdef ROI
         function f = plot_MI(obj, fig_number, use_norm) 
             %% Selet RAW or norm data
             if nargin < 3 || isempty(use_norm)
-                MI = obj.motion_index(:,1);
-                optimal_y_lim = [min(MI) - range(MI)/20, max(MI) + range(MI)/20];
+                if numel(obj) == 1
+                    MI = obj.motion_index(:,1);
+                else
+                    MI = cell2mat(arrayfun(@(x) x.motion_index(:,1),obj,'UniformOutput', false));
+                end
+                optimal_y_lim = [min(MI(:)) - range(MI(:))/20, max(MI(:)) + range(MI(:))/20];
             else
-                MI = obj.motion_index_norm(:,1);
+                if numel(obj) == 1
+                    MI = obj.motion_index_norm(:,1);
+                else
+                    MI = cell2mat(arrayfun(@(x) x.motion_index_norm(:,1),obj,'UniformOutput', false));
+                end
                 optimal_y_lim = [-0.05,1.05];
             end
             
             %% Set correct figure handle
-            if ~isempty(obj.motion_index)
+            if ~all(arrayfun(@isempty ,obj))
                 if nargin < 2 || isempty(fig_number)
                     %% New figure
                     f = figure();hold on;plot(MI);
@@ -54,7 +62,7 @@ classdef ROI
                 %% Add info
                 if type == 1
                     n_plot = numel(f.Children(end).Children);
-                    if n_plot == 1
+                    if n_plot == numel(obj)
                         ylabel('Motion Index (A.U.)')
                         xlabel('Frames');
                         legend(obj.name)

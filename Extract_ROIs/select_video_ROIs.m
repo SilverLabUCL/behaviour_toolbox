@@ -42,7 +42,7 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
 
         if all(existing_motion_indexes) && select_ROIs
             manual_browsing = false;
-            plot_MIs(current_experiment.recordings, true, manual_browsing, list_of_videotypes{video_type_idx});
+            current_experiment.recordings.plot_MIs(123, true, manual_browsing, list_of_videotypes{video_type_idx});
         end
 
         %% Print videos infos
