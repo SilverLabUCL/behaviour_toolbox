@@ -167,9 +167,9 @@ classdef Experiment
             % To add. For now see Recording.analyze
         end
         
-        function plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)
+        function [all_data, all_t_axes] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)
             if nargin < 2 || isempty(fig_number)
-                fig_number = 1:numel(obj);
+            	fig_number = 1:numel(obj);
             end
             if nargin < 3 || isempty(zero_t)
                 zero_t = true;
@@ -184,8 +184,10 @@ classdef Experiment
                 filter = false;
             end
 
+            all_data    = {};
+            all_t_axes  = {};
             for exp = 1:numel(obj) % usually 1 but can be more
-                obj(exp).recordings.plot_MIs(fig_number(exp), zero_t, manual_browsing, videotype_filter, filter);
+                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number(exp), zero_t, manual_browsing, videotype_filter, filter);
             end
         end
 

@@ -87,10 +87,7 @@ classdef Recording
         end
         
            
-        function plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)
-            if nargin < 2 || isempty(fig_number)
-                fig_number = '';
-            end
+        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)
             if nargin < 3 || isempty(zero_t)
                 zero_t = true;
             end
@@ -141,8 +138,16 @@ classdef Recording
 
             %% Now generate plot
             ROI_names           = obj.roi_labels;  % a list of all labels
+            if nargin < 2 || isempty(fig_number) || numel(fig_number) < numel(unique(all_types))
+            	fig_number = 1:numel(unique(all_types)); 
+            end
+            
+            all_data          = {};
+            all_taxis         = {};
             for videotype_idx = 1:numel(type_list)
                 if contains(type_list(videotype_idx), videotype_filter) % ignore filters videos
+                    all_data{videotype_idx} = [];
+                    all_taxis{videotype_idx} = [];
                     current_MIs     = all_MIs(:,videotype_idx);
                     current_labels  = all_labels(:,videotype_idx);
                     if all(cellfun(@isempty, current_MIs)) %% If all MI are missing, we set all_rois to [];
@@ -165,7 +170,7 @@ classdef Recording
 
                     %% Set image to full screen onm screen 2 (if any)
                     screens = get(0,'MonitorPositions');
-                    f = figure(fig_number);clf(); hold on;                    
+                    f = figure(fig_number(videotype_idx));clf(); hold on;                    
                     set(f,'Color','w');hold on;                    
                     if size(screens, 1) > 1
                         set(f, 'Position', screens(2,:)/1.1);
@@ -211,11 +216,13 @@ classdef Recording
                                 patch(x, y, [0.8,0.8,0.8], 'EdgeColor', 'none'); hold on;
                             end
                             axes = [axes, ax]; hold on;
+                            all_data{videotype_idx} = [all_data{videotype_idx}, mi_data];
                         end
                     end
 
                     if ~isempty(axes) % empty when no ROIs were selected in the Video
                         ax.XAxis.Visible = 'on';
+                        all_taxis{videotype_idx} = taxis;
                         linkaxes(axes, 'x'); hold on;
                     end
 
