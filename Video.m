@@ -95,7 +95,7 @@ classdef Video
             end
               
             %% Prepare figure handle to plot MIs
-            if use_subplots && ~isempty(fig_number)
+            if use_subplots && ~isempty(fig_number) && (~iscell(fig_number) || ~any(cellfun(@isempty, fig_number)))
                fig_number = figure(fig_number);
             else
             	for vid = 1:numel(obj)
@@ -105,6 +105,7 @@ classdef Video
             
             %% Load and Plot data
             for vid = 1:numel(obj) % usually 1 but can be more
+                figure(fig_number{vid});
                 for el = 1:obj(vid).n_roi
                     if use_subplots
                         sz = 0.9/(obj(vid).n_roi);
