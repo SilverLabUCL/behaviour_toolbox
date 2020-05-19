@@ -62,9 +62,14 @@ function plot_MIs(recordings, t_offset, manual_browsing, videotype_filter, filte
         elseif any(cellfun(@isempty, [current_MIs{:}]))
             all_rois = vertcat(current_MIs{:});
             to_fix = cellfun(@isempty, all_rois);
-            template = all_rois(~to_fix);
-            for missing_MI = 1:size(template, 1)
-                all_rois(missing_MI, to_fix(missing_MI, :)) = {NaN(size(template{missing_MI, 1}))};
+            
+            %% If MI is missing, we set a NaN array of the same size instead
+            if any(to_fix(:))
+                [~, ref] = max(~to_fix, [], 2);
+                for rec = 1:size(all_rois, 1)
+                    tp = size(all_rois{rec, ref(rec)},1);
+                    all_rois(rec, to_fix(rec,:)) = {NaN(tp, 2)};
+                end
             end
             all_rois = cell2mat(all_rois);
         else
