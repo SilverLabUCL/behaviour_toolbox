@@ -68,6 +68,7 @@ classdef Analysis_Set
                         'Tail'      ,...
                         'Eye'}      ; % Default ROI names
         folder_exclusion = {' unidentified'} ; % path containing elements in this list are ignored
+        videotypes = {}             ; % List all existing videos types
     end
 
     methods
@@ -89,6 +90,10 @@ classdef Analysis_Set
         function video_folder = get.video_folder(obj)
             video_folder = strrep([obj.video_folder, '/'],'\','/');
             video_folder = strrep(video_folder,'//','/');
+        end
+        
+        function videotypes = get.videotypes(obj)
+            videotypes = unique([obj.experiments.videotypes]);
         end
         
         function [obj, experiment_idx, is_split] = add_experiment(obj, to_add)

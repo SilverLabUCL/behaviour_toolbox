@@ -61,13 +61,12 @@ classdef Video
         end
         
         function obj = set_timestamps(obj)
-            timepstamp_path     = strsplit(strrep(obj.path,'/','\'),'Cam');
-            timepstamp_path     = [timepstamp_path{1},'Cam-relative times.txt'];
+            [timepstamp_path, file] = fileparts(obj.path);
+            file                    = erase(file, '-1');
+            timepstamp_path         = fileparts(timepstamp_path); % To use the parent folder instead (because it has absolute timestamps)
+            timepstamp_path         = [timepstamp_path,'/',file,'-relative times.txt'];
 
-            %% To use the parent folder instead (because it has absolute timestamps)
-            timepstamp_path     = strsplit(timepstamp_path,'\');
-            timepstamp_path     = strjoin(timepstamp_path([1:end-2,end]),'\');
-
+            %% Now read data
             if isfile(timepstamp_path)
                 fileID = fopen(timepstamp_path,'r');
                 timescale = textscan(fileID, '%f%f%s%[^\n\r]', 'Delimiter', '\t', 'TextType', 'string', 'EmptyValue', NaN,  'ReturnOnError', false);
