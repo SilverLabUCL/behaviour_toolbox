@@ -22,7 +22,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
 
     list_of_videotypes = current_experiment.videotypes;
     type = list_of_videotypes{video_type_idx}; % cellfun(@(x) contains(type, x), [current_experiment.recordings(1).default_video_types])
-    [reference_frame, ~, ~, ~, all_frames, auto_offsets] = get_representative_frame(current_experiment, video_type_idx, type, true);
+    [reference_frame, ~, ~, ~, all_frames] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ using video_type_idx instead of name. could cause issue with video failures
     video_paths     = cell(current_experiment.n_rec, 1);
@@ -32,8 +32,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         if ~isempty(real_idx)
             idx_to_use = real_idx;
             video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
-            %ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
-            ROI_offsets{rec} = auto_offsets{rec};
+            ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
+            %ROI_offsets{rec} = auto_offsets{rec};
         else
             video_paths{rec} = '';
             ROI_offsets{rec} = [NaN, NaN];
@@ -88,7 +88,8 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         %link.label(roi_idx) = {text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
     end   
     
-    %% Update offset if any
+    %% Add initial auto offset estimate
+    %autoestimate_offsets(~, ~, all_frames)
 
     %% Add preset button
     offset = 0;
@@ -101,6 +102,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     %% Add extra button
     uicontrol('Style', 'pushbutton', 'String', 'Measure MIs', 'Units','normalized','Position',[0.9 0.2 0.08 0.04], 'Callback', @(event, src) MI_preview(event, src, im_handle));
     uicontrol('Style', 'pushbutton', 'String', 'Clear offset', 'BackgroundColor', [1,0.5,0.5], 'Units','normalized','Position',[0.9 0.1 0.08 0.04], 'Callback', @(event, src) clear_offsets(src, event));
+    uicontrol('Style', 'pushbutton', 'String', 'Auto-estimate offset', 'Units','normalized','Position',[0.9 0.3 0.08 0.04], 'Callback', @(event, src) autoestimate_offsets(src, event, all_frames));
 
     uicontrol('Style', 'slider',...
               'Units', 'normalized',...
@@ -215,6 +217,21 @@ function clear_offsets(~, ~)
     end
 end
 
+function autoestimate_offsets(~, ~, all_frames)
+    global current_offset
+
+    %% Get some info to help choosing ROIs
+    offsets = {[0, 0]};
+    for frame = 2:size(all_frames, 3)
+        offsets{frame} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,frame), 100);
+        offsets{frame} = offsets{frame}([4,3])*-1;
+    end
+    current_offset = repmat({cell2mat(offsets')}, size(current_offset));
+    
+    %% Update ROI position
+    refresh_rois();
+end
+
 function add_rect(~, src, position, label, color, n_vid)
     if nargin < 4 || isempty(label)
         label = '';
@@ -283,6 +300,9 @@ function read(obj, p)
         if current_video == 0
             current_pos{idx} = [p, id(1)];
             link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;
+            if all(link.label{idx}.Color == [0 1 0])
+                link.label{idx}.Color = [1 1 0];
+            end
         elseif ~contains([stackcall.name],'change_image')
             if ~all(current_pos{idx}(3:4) == p(3:4)) % don't reshape ROIs if you are not on the ref
                 return
@@ -295,12 +315,12 @@ function read(obj, p)
                     roi_handles(roi).setPosition(current_pos{roi}(1:4) + [current_offset{idx}(current_video,:), 0, 0]);
                 end
             end
+            if all(link.label{idx}.Color == [0 1 0])
+                link.label{idx}.Color = [1 1 0];
+            end
         else
             current_offset{idx}(current_video,:) = current_offset{idx}(current_video,:);
             link.label{idx}.Position(1:2) = current_pos{idx}(1:2)+current_offset{idx}(current_video,:)-5;
-        end
-        if all(link.label{idx}.Color == [0 1 0])
-            link.label{idx}.Color = [1 1 0];
         end
     end
 end
