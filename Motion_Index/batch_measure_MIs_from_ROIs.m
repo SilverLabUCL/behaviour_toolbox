@@ -55,7 +55,7 @@ function [analysis, failed_analysis] = batch_measure_MIs_from_ROIs(analysis, for
         end
                
         if display
-            analysis.experiments(exp_idx).recordings.plot_MIs(123, true, manual_browsing, '', true);
+            analysis.experiments(exp_idx).recordings.plot_MIs(123, '', '', '', '', manual_browsing);
         end
     end    
 end

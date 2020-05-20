@@ -187,7 +187,7 @@ classdef Experiment
             all_data    = {};
             all_t_axes  = {};
             for exp = 1:numel(obj) % usually 1 but can be more
-                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number(exp), zero_t, manual_browsing, videotype_filter, filter);
+                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number(exp), zero_t, videotype_filter, filter, '', manual_browsing);
             end
         end
 

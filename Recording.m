@@ -58,6 +58,7 @@ classdef Recording
         t_stop              ; % recording t stop
         trial_number        ; % number of trials in the recording
         motion_indexes      ; % MI per video per ROI
+        motion_index_norm   ; % Normalized MI per video per ROI
         comment             ; % User comment
         default_video_types = {'EyeCam'           ,...
                                'BodyCam'          ,...
@@ -87,18 +88,30 @@ classdef Recording
         end
         
            
-        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)
+        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, videotype_filter, filter, normalize, manual_browsing, regroup, ROI_filter)
+            if nargin < 2 || isempty(fig_number)
+            	fig_number = '';
+            end
             if nargin < 3 || isempty(zero_t)
-                zero_t = true;
+            	zero_t = true;
             end
-            if nargin < 4 || isempty(manual_browsing)
-                manual_browsing = false;
-            end
-            if nargin < 5 || isempty(videotype_filter)
+            if nargin < 4 || isempty(videotype_filter)
                 videotype_filter = unique([obj.videotypes]);
             end
-            if nargin < 6 || isempty(filter)
-                filter = false;
+            if nargin < 5 || isempty(filter)
+                filter = false; % eg : @(x) movmin(x, 3)
+            end
+            if nargin < 6 || isempty(normalize)
+                normalize = 'global';
+            end
+            if nargin < 7 || isempty(manual_browsing)
+                manual_browsing = false;
+            end
+            if nargin < 8 || isempty(regroup)
+                regroup = true;
+            end
+            if nargin < 9 || isempty(ROI_filter)
+                ROI_filter = unique([obj.roi_labels]);
             end
 
             %% Regroup MIs in a matrix and fill missing cells
@@ -110,8 +123,12 @@ classdef Recording
                 for vid = 1:numel(type_list)
                     match = find(ismember(obj(rec).videotypes, type_list(vid)));
                     if ~isempty(match)
-                        all_types(rec, vid) = type_list(vid)                          ;
-                        all_MIs(rec, vid)   = obj(rec).motion_indexes(match)   ;
+                        all_types(rec, vid) = type_list(vid)                       ;
+                        if strcmp(normalize, 'local')
+                            all_MIs(rec, vid)   = obj(rec).motion_index_norm(match);
+                        else
+                            all_MIs(rec, vid)   = obj(rec).motion_indexes(match)   ;
+                        end
                         all_labels(rec, vid)= {obj(rec).videos(match).roi_labels};
                     else
                         all_types(rec, vid) = {NaN};
@@ -138,7 +155,7 @@ classdef Recording
 
             %% Now generate plot
             ROI_names           = obj.roi_labels;  % a list of all labels
-            if nargin < 2 || isempty(fig_number) || numel(fig_number) < numel(unique(all_types))
+            if isempty(fig_number) || numel(fig_number) ~= numel(unique(all_types))
             	fig_number = 1:numel(unique(all_types)); 
             end
             
@@ -177,45 +194,57 @@ classdef Recording
                     end
 
                     %% Create subplot
-                    axes    = [];
-                    n_rois  = numel(ROI_names);                    
-                    sz = 0.9/(numel(unique([current_labels{:}])));
-                    roi_count = 0;
-                    for roi = 0:n_rois-1
-                        rois = cell2mat(cellfun(@(x) find(strcmp(x, ROI_names{roi+1})) , current_labels, 'UniformOutput', false));
-                        real_roi = unique(rois)-1;
-                        if ~isempty(real_roi)
-                            roi_count = roi_count + 1;
+                    axes            = [];
+                    if regroup
+                        n_rois      = sum(ismember(unique(current_labels{1}), ROI_filter)); 
+                    else
+                        n_rois      = sum(ismember(current_labels{1}, ROI_filter)); 
+                        ROI_names   = current_labels{1};
+                    end   
+                    sz              = 0.9/n_rois; % use (numel(unique([ROI_names{:}]))) instead to insert gaps and match locations across videos
+                    roi_count       = 0;
+                    for roi = 0:numel(ROI_names)-1
+                        if regroup
+                            rois        = unique(cell2mat(cellfun(@(x) find(strcmp(x, ROI_names{roi+1})), current_labels, 'UniformOutput', false)));
+                            real_roi    = rois-1;
+                        else
+                            rois        = roi+1;
+                            real_roi    = rois;
+                        end   
+                        if ~isempty(real_roi) && contains(ROI_names{roi+1},ROI_filter)
+                            roi_count   = roi_count + 1; % use real_roi instead to insert gaps and match locations across videos
                             
                             %% Prepare subplot for the ROI
-                            ax = subplot('Position',[0.1, 0.95 - sz*roi_count, 0.85, sz - 0.01]);
+                            ax          = subplot('Position',[0.1, 0.95 - sz*roi_count, 0.85, sz - 0.01]);
                             if roi_count == 1; title([type_list{videotype_idx},' ; ', strrep(fileparts(obj(1).path),'_','\_')]);hold on; end
                             ax.XAxis.Visible = 'off';
                             ylabel(ROI_names{roi+1});hold on
 
                             %% Select the right column(s)
-                            mi_data = all_rois(:,unique(rois)*2 - 1);
+                            mi_data     = all_rois(:,rois*2 - 1);
 
                             %% Averages ROIs with the same name
                             if size(mi_data, 2) > 1
                                 mi_data = nanmean(mi_data, 2);
                             end
 
-                            %% Normalize v, get timescale
-                            mi_data = (mi_data - min(mi_data)) / (max(mi_data) - min(mi_data));
-                            novid = diff(all_rois(:,2));
-                            [idx] = find(novid > (median(novid) * 2));
-                            taxis = (all_rois(:,2)- t_offset);
-                            if filter
-                                mi_data = movmin(mi_data, 3);
+                            %% Normalize mi_data, get timescale
+                            if strcmp(normalize, 'global')
+                                mi_data = (mi_data - min(mi_data)) / (range(mi_data));
+                            end
+                            novid       = diff(all_rois(:,2));
+                            [idx]       = find(novid > (median(novid) * 2));
+                            taxis       = (all_rois(:,2)- t_offset);
+                            if isa(filter,'function_handle')
+                                mi_data = filter(mi_data);
                             end
                             plot(taxis, mi_data); hold on;
                             for p = 1:numel(idx)
-                                x = [taxis(idx(p)), taxis(idx(p)+1), taxis(idx(p)+1), taxis(idx(p))];
-                                y = [max(mi_data), max(mi_data), min(mi_data), min(mi_data)];
+                                x       = [taxis(idx(p)), taxis(idx(p)+1), taxis(idx(p)+1), taxis(idx(p))];
+                                y       = [max(mi_data), max(mi_data), min(mi_data), min(mi_data)];
                                 patch(x, y, [0.8,0.8,0.8], 'EdgeColor', 'none'); hold on;
                             end
-                            axes = [axes, ax]; hold on;
+                            axes        = [axes, ax]; hold on;
                             all_data{videotype_idx} = [all_data{videotype_idx}, mi_data];
                         end
                     end
@@ -250,10 +279,18 @@ classdef Recording
         end 
 
         function motion_indexes = get.motion_indexes(obj)
-            %% Get 
+            %% Get MIs for each video
             motion_indexes = {};
             for vid = 1:obj.n_vid
                 motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
+            end
+        end
+        
+        function motion_index_norm = get.motion_index_norm(obj)
+            %% Get normalized MIs for each video
+            motion_index_norm = {};
+            for vid = 1:obj.n_vid
+                motion_index_norm = [motion_index_norm, {obj.videos(vid).motion_index_norm}];
             end
         end
 
