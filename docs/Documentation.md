@@ -97,11 +97,15 @@ Initialise the toolbox
 
 Start the GUI by typing
 
-`Behaviour_analysis();`
+```matlab
+Behaviour_analysis();
+```
 
 This will open the GUI.
 
 ![](./media/image1.png)
+
+> If you want to resume from a previous analysis, see the [backup section](#Manual-Reload)
 
 Start a new analysis:
 ---------------------
@@ -127,12 +131,25 @@ Manual backup
 As some steps can be extremely time consuming, it is recommended to do some regular backup of your analysis database. To do so, click on the [Save Analysis] Button.
 
 ![](./media/image3.png)
+
 An automated filename with a timestamp is proposed, but you can edit it.
 
 Manual Reload
 -------------
 
-If you resume a previous analysis, or if something went wrong and you want to return to a previous stage, you can use the [Load Existing Analysis] button and reload one of the '.mat' file used for backup.![](./media/image4.png)
+If you resume a previous analysis, or if something went wrong and you want to return to a previous stage, you can use the [Load Existing Analysis] button and reload one of the '.mat' file used for backup.
+
+![](./media/image4.png)
+
+If you want to directly start the GUI using a previous backup, use:
+
+```matlab
+Behaviour_analysis('saved_analysis 19-May-2020 16_47_15.mat')
+```
+
+If the Top folder field is red, it indicates that the video_path used last time has changed, either because you moved your videos or because you changed computer / Hard drive. You can edit the field if you need to extract/position new ROIs data. 
+
+![image-20200520185839674](media/image-20200520185839674.png)
 
 Recover from interrupted analysis
 ---------------------------------
@@ -210,7 +227,7 @@ Quick Selection
 
 ![](./media/image12.png)
 
-Preset names are displayed on the left. The list is extracted from the propertiy `behaviour_GUI.Experiment_set.default_tags`. You can edit this list to add/remove quick tags.
+Preset names are displayed on the left. The list is extracted from the property `behaviour_GUI.Experiment_set.default_tags`. You can edit this list to add/remove quick tags.
 
 Manual Addition
 ---------------
@@ -301,19 +318,19 @@ To correct for camera displacement, you must first specify ROI location in the c
 
 You can use the slider at the bottom of the figure to move across the recordings. The first position of the slider corresponds to the consensus frame, while the following ones correspond to each video of the recording.
 
-![](media/Documentation/image28-1587374845677.png)
+![](media/image28-1587374845677.png)
 
 For example, the ROIs were selected correctly for the first recording :
 
-![](media/Documentation/image29-1587374845678.png)
+![](media/image29-1587374845678.png)
 
 However, a later video displays an offset:
 
-![](media/Documentation/image30-1587374845678.png)
+![](media/image30-1587374845678.png)
 
 You can drag the ROIs (which will move together) to the correct location.
 
-![](media/Documentation/image31-1587374845678.png)
+![](media/image31-1587374845678.png)
 
 Note: The offset is automatically applied to all the following recordings, although you can set a second different offset on a later video (which will, in turn, be applied to all the subsequent video. See example below. In **bold**, we indicate the only video that actually needed a manual intervention.
 
@@ -325,7 +342,7 @@ Note: The offset is automatically applied to all the following recordings, altho
 
 You can clear all offset (if you are on the reference frame), or all offsets starting from the current recording (if you are on any other frame than the reference one) by clicking on the [Clear Offsets] button
 
-![image-20200430102810160](media/Documentation/image-20200430102810160.png)
+![image-20200430102810160](media/image-20200430102810160.png)
 
 
 
@@ -337,7 +354,7 @@ Display MIs
 
 When selecting the ROIs, you can have a preview of the signal obtained from the current ROIs by clicking on the [Measure MIs] button
 
-![image-20200430102958106](media/Documentation/image-20200430102958106.png)
+![image-20200430102958106](media/image-20200430102958106.png)
 
 Note than Motion indexes are not saved to the database when using preview. They will be extracted only when clicking on the [Show/Analyze] button.
 
@@ -356,7 +373,7 @@ If you extracted multiple ROIs, you will see multiple subplot.
 > Note : if you want to pause the display between each Camera, tick the [Pause for each experiment] checkbox
 >
 
-![image-20200430101637948](media/Documentation/image-20200430101637948.png)
+![image-20200430101637948](media/image-20200430101637948.png)
 
 Videos that were not extracted will still be analysed, so it is recommended to use this option only when all MIs were extracted, otherwise you may have to wait a long time when hitting an non-extracted recording.
 
