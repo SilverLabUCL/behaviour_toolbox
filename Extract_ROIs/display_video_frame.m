@@ -33,7 +33,6 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
             idx_to_use = real_idx;
             video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
             ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
-            %ROI_offsets{rec} = auto_offsets{rec};
         else
             video_paths{rec} = '';
             ROI_offsets{rec} = [NaN, NaN];
@@ -46,21 +45,21 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     ROI_window      = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
     link.existing_MI= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).motion_indexes;
     link.n_vid      = size(all_frames, 3);
+    link.auto_offsets = autoestimate_offsets('', '', all_frames);
 
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
     axis image; hold on;
-    fig_handle.Color = 'w';
-    tit = title({'Close window or press Return key to validate'; strrep(strrep(video_path,'\','/'),'_','-')});
+    fig_handle.Color= 'w';
+    tit             = title({'Close window or press Return key to validate'; strrep(strrep(video_path,'\','/'),'_','-')});
     set(gca,'YDir','reverse');hold on ;
-    im_handle = imagesc(reference_frame,'hittest','off'); hold on;
+    im_handle       = imagesc(reference_frame,'hittest','off'); hold on;
 
     %% Add callback to add more ROIs
-    cmenu = uicontextmenu;
-    position = [floor(size(reference_frame, 2)/2), floor(size(reference_frame, 1)/2), 20, 20]; %default pos
-    bgmenu = uimenu(cmenu,'label','Add ROI','Callback',@(src,eventdata) add_rect(src, eventdata, position));
+    cmenu           = uicontextmenu;
+    position        = [floor(size(reference_frame, 2)/2), floor(size(reference_frame, 1)/2), 20, 20]; %default pos
+    bgmenu          = uimenu(cmenu,'label','Add ROI','Callback',@(src,eventdata) add_rect(src, eventdata, position));
     set(gca, 'uicontextmenu', cmenu)
-
     set(fig_handle,'KeyPressFcn',{@escape_btn ,fig_handle});
     
     %% If there are preexisting ROIs, display them
@@ -82,20 +81,16 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         add_rect('', '', roi_position, label, color, size(all_frames, 3));
         
         %% Update the per-video offsets (same offset for all ROIs for now)
-        current_offset{roi_idx} = cell2mat(ROI_offsets);
-            
+        current_offset{roi_idx} = cell2mat(ROI_offsets);            
         %link.name(roi_idx)  = {label};
         %link.label(roi_idx) = {text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
-    end   
-    
-    %% Add initial auto offset estimate
-    %autoestimate_offsets(~, ~, all_frames)
+    end 
 
     %% Add preset button
     offset = 0;
-    for preset = 1:numel(preset_buttons)
-        offset = offset + 50;
-        position = position(1:4); % no keeping id
+    for preset      = 1:numel(preset_buttons)
+        offset      = offset + 50;
+        position    = position(1:4); % no keeping id
         link.preset_buttons_handles{preset} = uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
     end
     
@@ -112,7 +107,6 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
               'Callback', @(event, src) change_image(event, src, reference_frame, all_frames, im_handle, tit, video_paths),...
               'min', 0, 'max', size(all_frames, 3));
 
-    
     %% Wait until closed     
     if ~display_duration
         uiwait(fig_handle);
@@ -120,17 +114,17 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         pause(display_duration);
     end
 
-    names = link.name;
+    names       = link.name;
     close all
 end
 
 function escape_btn(varargin)
     if any(strcmp(varargin{1,2}.Key,{'escape','return'}))
         close(varargin{1});
-%     elseif strcmp(varargin{1,2}.Key, 'add')
-%         add_rect('', '', current_pos);
-%     elseif strcmp(varargin{1,2}.Key, 'subtract')
-%         delete_rect(src, eventdata,obj);
+    %     elseif strcmp(varargin{1,2}.Key, 'add')
+    %         add_rect('', '', current_pos);
+    %     elseif strcmp(varargin{1,2}.Key, 'subtract')
+    %         delete_rect(src, eventdata,obj);
     end
 end
 
@@ -193,7 +187,7 @@ function refresh_rois()
 end
 
 function clear_offsets(~, ~)
-    global current_video current_offset link roi_handles
+    global current_video current_offset roi_handles
     vid_idx = current_video;
     
     % Could be used for ROI by ROI precision
@@ -217,19 +211,23 @@ function clear_offsets(~, ~)
     end
 end
 
-function autoestimate_offsets(~, ~, all_frames)
-    global current_offset
-
+function offsets = autoestimate_offsets(~, ~, all_frames)
     %% Get some info to help choosing ROIs
     offsets = {[0, 0]};
     for frame = 2:size(all_frames, 3)
         offsets{frame} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,frame), 100);
         offsets{frame} = offsets{frame}([4,3])*-1;
     end
-    current_offset = repmat({cell2mat(offsets')}, size(current_offset));
-    
-    %% Update ROI position
-    refresh_rois();
+
+    %% Update ROI position, or return values
+    global current_offset
+    if ~nargout
+        not_deleted = ~cellfun(@isempty, current_offset);
+        current_offset(not_deleted) = repmat({cell2mat(offsets')},1 , sum(not_deleted));
+        refresh_rois();
+    else
+        offsets = {cell2mat(offsets')};
+    end
 end
 
 function add_rect(~, src, position, label, color, n_vid)
@@ -250,15 +248,25 @@ function add_rect(~, src, position, label, color, n_vid)
         error_box('New ROIs must be added from the reference image',1)
         return
     end
-    
+
     if numel(position) == 4
         id = round(unifrnd(1,10000)); % use this to identify rectangles
         position = [position, id];
     else
         id = position(5);
     end
-    current_pos     = [current_pos, {position}]; 
-    current_offset  = [current_offset, {repmat([0,0],n_vid,1)}];
+    current_pos     = [current_pos, {position}];
+    
+    if (~iscell(current_offset) && isempty(current_offset))
+        %% Initial ROI get auto-estimate values
+        current_offset  = link.auto_offsets; %% Add initial auto offset estimate
+    elseif iscell(current_offset) && all(cellfun(@isempty, current_offset))
+        %% When all ROIs were deleted, everything is empty, but you need to keep empty cells
+        current_offset  = [current_offset, link.auto_offset];
+    else
+        %% In most cases, you add a new ROI, so you just replicate last valid offset
+        current_offset  = [current_offset, current_offset{find(~cellfun(@isempty, current_offset),1,'last')}];%{repmat([0,0],n_vid,1)}];
+    end
     hrect           = imrect(gca, current_pos{end}(1:end-1));hold on;
     roi_handles     = [roi_handles, hrect];
   
@@ -280,9 +288,9 @@ function add_rect(~, src, position, label, color, n_vid)
     hrect.addNewPositionCallback(@(p) read(hrect,p));hold on;
     
     %% Force ROI as square 
-%     fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));hold on;
-%     setPositionConstraintFcn(hrect,fcn); hold on;
-%     setFixedAspectRatioMode(hrect,1);hold on;
+    %     fcn = makeConstrainToRectFcn('imrect',get(gca,'XLim'),get(gca,'YLim'));hold on;
+    %     setPositionConstraintFcn(hrect,fcn); hold on;
+    %     setFixedAspectRatioMode(hrect,1);hold on;
 end
 
 function read(obj, p)
@@ -325,8 +333,6 @@ function read(obj, p)
     end
 end
 
-
-
 function delete_rect(src, eventdata, obj)
     %% Overload the normal delete function.
     % This delete the ROI lines ( what the normal delete function does) but
@@ -363,7 +369,6 @@ function MI_preview(~, ~, im_handle)
     else
         error_box('MI preview only works for individual recordings',1)
     end
-    
-%     data = single(squeeze(load_stack(video_path, '', '', 20))); % one every 20 frames
-%     multiple_motion_indexes(data, '', true, current_pos);
+    %     data = single(squeeze(load_stack(video_path, '', '', 20))); % one every 20 frames
+    %     multiple_motion_indexes(data, '', true, current_pos);
 end
