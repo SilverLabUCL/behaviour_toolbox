@@ -19,6 +19,7 @@ classdef Video
         ROI_location
         video_offset
         motion_indexes
+        motion_index_norm
         name
     end
     
@@ -172,15 +173,23 @@ classdef Video
         end
 
         function motion_indexes = get.motion_indexes(obj)
-            %% Return the number of ROI windows
+            %% Return MI for each ROI
             motion_indexes    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
                 motion_indexes{roi} = obj.rois(roi).motion_index;
             end
         end
+        
+        function motion_index_norm = get.motion_index_norm(obj)
+            %% Return normalized MI for each ROI
+            motion_index_norm    = cell(1, obj.n_roi);
+            for roi = 1:obj.n_roi
+                motion_index_norm{roi} = obj.rois(roi).motion_index_norm;
+            end
+        end
 
         function roi_labels = get.roi_labels(obj)
-            %% Return the number of ROI windows
+            %% Return label for each ROI
             roi_labels    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
                 roi_labels{roi} = obj.rois(roi).name;
