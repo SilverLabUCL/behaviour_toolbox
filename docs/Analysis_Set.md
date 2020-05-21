@@ -38,7 +38,7 @@ my_analysis = my_analysis.pop({'2018-12-04'});
 my_analysis = my_analysis.update({'2018-12-04'});
 
 %% Remove empty experiments and experiment with wrong path
-% Note : Be careful if you moved the data on another drive/computer, as it may be detected as an incorrect path and removed. If you change computer see update_children_paths()
+% Note : Be careful if you moved the data on another drive/computer, as it may be detected as an incorrect path and removed. If you change computer see update_all_paths()
 my_analysis = my_analysis.cleanup();
 ```
 

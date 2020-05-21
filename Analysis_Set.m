@@ -142,7 +142,7 @@ classdef Analysis_Set
             %   Analysis_Set = Analysis_Set.update(filter_list)
             % -------------------------------------------------------------
             % Inputs:
-            %   filter_list(Cell of STR) - Optional - default is '';
+            %   filter_list(STR or Cell of STR) - Optional - default is '';
             %       if non empty, only path that contains elements in the
             %       filter list will be updated
             % -------------------------------------------------------------
@@ -166,6 +166,8 @@ classdef Analysis_Set
             
             if nargin < 2 || isempty(filter_list)
                 filter_list = {};
+            elseif ischar(filter_list)
+                filter_list = {filter_list};
             end
             
             %% Get all experiments in the video folder
@@ -372,11 +374,11 @@ classdef Analysis_Set
             %invalid = arrayfun(@(x) isempty(x.path), obj.experiments);
         end
 
-        function obj = update_children_paths(obj, old, new)
+        function obj = update_all_paths(obj, old, new)
             %% Set a new video_folder. If possible, update path in Childrens
             % -------------------------------------------------------------
             % Syntax: 
-            %   Analysis_Set = Analysis_Set.update_children_paths(old, new)
+            %   Analysis_Set = Analysis_Set.update_all_paths(old, new)
             % -------------------------------------------------------------
             % Inputs:
             %   old (STR PATH)
@@ -391,7 +393,7 @@ classdef Analysis_Set
             % Examples:
             %
             % * Changed HD where video are located
-            %   my_analysis = my_analysis.update_children_paths('C:/','D:/')
+            %   my_analysis = my_analysis.update_all_paths('C:/','D:/')
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -399,20 +401,18 @@ classdef Analysis_Set
             % Revision Date:
             %   20-05-2020
             %
-            % See also: Analysis_Set.update_children_paths
+            % See also: Analysis_Set.update_all_paths
             
-            for exp = 1:obj.n_expe    
+            for exp = 1:obj.n_expe                 
                 obj.experiments(exp).path = strrep(obj.experiments(exp).path, old, new);
                 for rec = 1:obj.experiments(exp).n_rec
                     obj.experiments(exp).recordings(rec).path = strrep(obj.experiments(exp).recordings(rec).path,old,new);
                     for vid = 1:obj.experiments(exp).recordings(rec).n_vid
                         obj.experiments(exp).recordings(rec).videos(vid).path = strrep(obj.experiments(exp).recordings(rec).videos(vid).path, old, new);
-                        for roi = 1:obj.experiments(exp).recordings(rec).videos(vid).n_roi
-                            obj.experiments(exp).recordings(rec).videos(vid).rois(roi);
-                        end
                     end
-                end
-            end           
+                end                
+            end 
+            obj.video_folder = strrep(obj.video_folder, old, new);
         end
         
         function [experiment_idx, expe_already_there] = check_if_new_expe(obj, expe_path)
@@ -435,7 +435,7 @@ classdef Analysis_Set
             %   	True if the experiment was already there
             % -------------------------------------------------------------
             % Extra Notes:
-            % * If you changed hard drive, run update_children_paths()
+            % * If you changed hard drive, run update_all_paths()
             %   first before testing location or adding new experiments, or
             %   you may end with duplicates
             % -------------------------------------------------------------
@@ -469,6 +469,76 @@ classdef Analysis_Set
             end
         end
         
+        function [obj, analyzed_idx] = select_ROIs(obj, filter_list, select_ROIs)
+            %% Check if this experiment has already be listed somewhere.
+            % If yes, return the correct index
+            % If not, return a new, unused index
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   [Analysis_Set, analyzed_idx] = 
+            %       Analysis_Set.select_ROIs(filter_list, select_ROIs)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   filter_list (STR or CELL ARRAY of STR) - Optional - default
+            %           is ''
+            %   	If non-empty, only video path that match the filter
+            %   	will be updated and displayed
+            %
+            %   select_ROIs (BOOL) - Optional - default is true - To be
+            %   removed
+            %   	...
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   Analysis_Set (Analysis_Set object)
+            %   	The updated analysis set
+            %   analyzed_idx (the indexes of the experiments that 
+            %   	The idndexes of the experiments that were updated
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % * Experiments that will be displayed are also updated in case
+            %   you added/removed videos
+            % -------------------------------------------------------------
+            % Examples:
+            % * Setup all ROIs
+            %   my_analysis = my_analysis.select_ROIs()
+            %
+            % * Setup ROIs for a specific experiment
+            %   my_analysis = my_analysis.select_ROIs('2018-12-05')
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   20-05-2020
+            %
+            % See also: Analysis_Set.add_experiment
+            
+            if nargin < 2 || isempty(filter_list)
+                filter_list = {''};
+            end
+            if nargin < 3 || isempty(select_ROIs)
+                select_ROIs = true;
+            end
+
+            %% Update required fields
+            obj             = obj.update(filter_list);
+            if ~isempty(filter_list)
+                analyzed_idx   	= find(contains({obj.experiments.path}, filter_list));
+            else
+                analyzed_idx   	= 1:obj.n_expe;
+            end
+
+            %% Now extract ROIs
+            assignin('base', 'analysis_temp_backup', obj); %% Setup a safety backup
+            for experiment_idx = analyzed_idx
+                %% Now that all recordings were added, we can select ROIs
+                obj.experiments(experiment_idx) = select_video_ROIs(obj.experiments(experiment_idx), select_ROIs, 0, '', obj.default_tags);
+
+                %% Safety backup after each video export
+                assignin('base', 'analysis_temp_backup', obj);
+            end
+        end
+        
         function obj = set.video_folder(obj, new_video_folder)
             %% Set a new video_folder. If possible, update path in Childrens
             % -------------------------------------------------------------
@@ -491,10 +561,10 @@ classdef Analysis_Set
             % Revision Date:
             %   20-05-2020
             %
-            % See also: Analysis_Set.update_children_paths
+            % See also: Analysis_Set.update_all_paths
             
-            if ~isempty(obj.video_folder) && ~isempty(new_video_folder)
-                obj = update_children_paths(obj, obj.video_folder, new_video_folder);
+            if ~isempty(obj.video_folder) && ~isempty(new_video_folder) && ~contains(struct2array(dbstack(1)), 'update_all_paths')
+                obj = update_all_paths(obj, obj.video_folder, new_video_folder);
             end
             obj.video_folder = new_video_folder;
         end

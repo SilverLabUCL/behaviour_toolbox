@@ -215,8 +215,12 @@ function offsets = autoestimate_offsets(~, ~, all_frames)
     %% Get some info to help choosing ROIs
     offsets = {[0, 0]};
     for frame = 2:size(all_frames, 3)
-        offsets{frame} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,frame), 100);
-        offsets{frame} = offsets{frame}([4,3])*-1;
+        if ~isnan(mean2(all_frames(:,:,frame)))
+            offsets{frame} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,frame), 100);
+            offsets{frame} = offsets{frame}([4,3])*-1;
+        else
+            offsets{frame} = [NaN, NaN];
+        end
     end
 
     %% Update ROI position, or return values

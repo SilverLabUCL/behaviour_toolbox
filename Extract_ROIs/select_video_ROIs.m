@@ -12,6 +12,9 @@ function [current_experiment, failed_video_loading] = select_video_ROIs(current_
         default_tags = '';
     end
 
+    %%  QQ ADD A IF NOT EMPTY EXPERIMENT CHECK HERE
+    
+    
     clear global current_offset current_pos roi_handles
     global current_pos current_offset
 
