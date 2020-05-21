@@ -540,7 +540,42 @@ classdef Analysis_Set
                 assignin('base', 'analysis_temp_backup', obj);
             end
         end
-        
+
+        function obj = analyze(obj, filter_list, force, display, manual_browsing)
+            %% Force specific MI to be updated
+            % By default, only ROIs with no MI are analysed, unless you set
+            % force to true
+            if nargin < 2 || isempty(filter_list)
+                filter_list = {''};
+            end
+            if nargin < 3 || isempty(force)
+                force = false;
+            end
+            if nargin < 4 || isempty(display)
+                display = false;
+            end
+            if nargin < 5 || isempty(manual_browsing)
+                manual_browsing = false;
+            end
+            
+            %% Update required fields
+            obj             = obj.update(filter_list);
+            if ~isempty(filter_list)
+                analyzed_idx   	= find(contains({obj.experiments.path}, filter_list));
+            else
+                analyzed_idx   	= 1:obj.n_expe;
+            end
+
+            %% Now that all Videos are ready, get the motion index if the MI section is empty
+            assignin('base', 'analysis_temp_backup', obj); %% Setup a safety backup
+            for experiment_idx = analyzed_idx
+                obj.experiments(experiment_idx) = obj.experiments(experiment_idx).analyze(force, display, manual_browsing);
+                
+                %% Safety backup after each experiment export
+                assignin('base', 'analysis_temp_backup', obj);
+            end    
+        end
+
         function obj = set.video_folder(obj, new_video_folder)
             %% Set a new video_folder. If possible, update path in Childrens
             % -------------------------------------------------------------

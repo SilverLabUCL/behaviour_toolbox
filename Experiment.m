@@ -297,8 +297,37 @@ classdef Experiment
             end
         end
         
-        function obj = analyze(obj)
-            % To add. For now see Recording.analyze
+        function obj = analyze(obj, force, display, manual_browsing)
+            if nargin < 2 || isempty(force)
+                force = false;
+            end
+            if nargin < 3 || isempty(display)
+                display = false;
+            end
+            if nargin < 4 || isempty(manual_browsing)
+                manual_browsing = false;
+            end
+            
+            for rec = 1:obj.n_rec
+                for vid = 1:obj.recordings(rec).n_vid
+                    current_video = obj.recordings(rec).videos(vid);
+                    if any(cellfun(@isempty, current_video.motion_indexes)) || force
+                        %% Update MI's
+                        obj.recordings(rec).videos(vid) = current_video.analyze();
+
+                        %% Store results
+                        if display
+                            obj.recordings(rec).videos(vid).plot_MIs();
+                        end
+                    else
+                        fprintf(['No analysis required for ',current_video.path,'. Skipping extraction\n'])
+                    end
+                end 
+            end
+
+            if display
+                obj.recordings.plot_MIs(123, '', '', '', '', manual_browsing);
+            end
         end
         
         function [all_data, all_t_axes] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, filter)

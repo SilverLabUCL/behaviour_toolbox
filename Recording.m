@@ -141,7 +141,7 @@ classdef Recording
             all_MIs(cellfun(@(x) isempty(x), all_MIs)) = {[]};
 
             %% Filter video types by name if required, and flag NaN type (missing videos)
-            to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isempty(x)), all_types);%~cellfun(@(x) all(isnan(x)), all_types);
+            to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isempty(x)), all_types);
             all_MIs(~to_use)    = {[]}; % clear content for ignored MI's
             all_labels(~to_use) = {[]}; % clear content for ignored MI's 
             all_MIs             = reshape(all_MIs   , size(to_use));
@@ -190,9 +190,9 @@ classdef Recording
                     screens = get(0,'MonitorPositions');
                     f = figure(fig_number(videotype_idx));clf(); hold on;                    
                     set(f,'Color','w');hold on;                    
-                    if size(screens, 1) > 1
-                        set(f, 'Position', screens(2,:)/1.1);
-                    end
+%                     if size(screens, 1) > 1
+%                         set(f, 'Position', screens(2,:)/1.1);
+%                     end
 
                     %% Create subplot
                     axes            = [];
@@ -369,7 +369,9 @@ classdef Recording
                 roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
             end
             roi_labels = [roi_labels{:}];
-            roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));         
+            if ~isempty(roi_labels)
+                roi_labels = unique(roi_labels(cellfun('isclass', roi_labels, 'char')));  
+            end
         end 
         
         function t_start = get.t_start(obj)
