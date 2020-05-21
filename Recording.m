@@ -281,6 +281,29 @@ classdef Recording
 
         function motion_indexes = get.motion_indexes(obj)
             %% Get MIs for each video
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   motion_indexes = Analysis_Set.motion_indexes
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   motion_index_norm (N CELL ARRAY of M CELL Array of
+            %                       T x 2 MATRIX)
+            %   	1 cell for each N video, in which one 1 cell for each
+            %       M ROI. If motion indexes were extracted, T x 2 Matrix
+            %       (values, time). Cell is empty is no ROI was extracted.
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   21-05-2020
+            
             motion_indexes = {};
             for vid = 1:obj.n_vid
                 motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
@@ -289,6 +312,29 @@ classdef Recording
         
         function motion_index_norm = get.motion_index_norm(obj)
             %% Get normalized MIs for each video
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   motion_index_norm = Analysis_Set.motion_index_norm
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   motion_index_norm (N CELL ARRAY of M CELL Array of
+            %                       T x 2 MATRIX)
+            %   	1 cell for each N video, in which one 1 cell for each
+            %       M ROI. If motion indexes were extracted, T x 2 Matrix
+            %       (values, time). Cell is empty is no ROI was extracted.
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   21-05-2020
+            
             motion_index_norm = {};
             for vid = 1:obj.n_vid
                 motion_index_norm = [motion_index_norm, {obj.videos(vid).motion_index_norm}];
@@ -297,6 +343,27 @@ classdef Recording
 
         function roi_labels = get.roi_labels(obj)
             %% Get all ROIs labels for all videos in the recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   roi_labels = Analysis_Set.roi_labels
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   roi_labels (CELL ARRAY of STR)
+            %   	list of all the ROI labels in all the videos in this
+            %   	recording
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   21-05-2020
+            
             roi_labels = {};
             for vid = 1:obj.n_vid
                 roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
@@ -306,6 +373,31 @@ classdef Recording
         end 
         
         function t_start = get.t_start(obj)
+            %% Returns the start time of the recording/recording set
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   t_start = Analysis_Set.t_start
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   t_start (posix time)
+            %   	posix time of the start of the first recording in the
+            %   	selection.
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % * To convert posixtime to a timestamp, use:
+            %   datetime(t, 'ConvertFrom', 
+            %           'posixtime' ,'Format','dd-MMM-yyyy HH:mm:ss.SSSSS')
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   21-05-2020
+            
             t_start = [];
             for vid = 1:obj.n_vid
                 if obj.videos(vid).n_roi
@@ -317,6 +409,27 @@ classdef Recording
         end
         
         function analyzed = get.analyzed(obj)
+            %% Returns the analyzis status of the recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   analyzed = Analysis_Set.analyzed
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   analyzed (BOOL)
+            %   	true if all ROIs were extracted, false otherwise
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   21-05-2020
+            
             analyzed = true;
             for vid = 1:obj.n_vid
                 if obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).motion_indexes{:}}))
