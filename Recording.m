@@ -295,7 +295,7 @@ classdef Recording
         end
 
         function roi_labels = get.roi_labels(obj)
-            %% Get 
+            %% Get all ROIs labels for all videos in the recording
             roi_labels = {};
             for vid = 1:obj.n_vid
                 roi_labels = [roi_labels, {obj.videos(vid).roi_labels}];
@@ -307,8 +307,10 @@ classdef Recording
         function t_start = get.t_start(obj)
             t_start = [];
             for vid = 1:obj.n_vid
-                t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
-                t_start = [t_start, t_start, t];
+                if obj.videos(vid).n_roi
+                    t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
+                    t_start = [t_start, t_start, t];
+                end
             end
             t_start = nanmin(t_start);
         end

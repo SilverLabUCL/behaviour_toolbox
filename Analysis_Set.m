@@ -19,6 +19,9 @@
 % -------------------------------------------------------------------------
 % Class Methods (ignoring get()/set() methods):
 %
+% * List/Update video folder content and build experiments 
+%   Analysis_Set = Analysis_Set.update(filter_list)
+%
 % * Remove a specific experiment / set of experiments
 %   Analysis_Set = Analysis_Set.pop(expe_number) 
 %
@@ -30,6 +33,13 @@
 %
 % * Remove empty experiments
 %   Analysis_Set = Analysis_Set.cleanup()
+%
+% * Check if an experiment is new, and return its location
+%   [experiment_idx, expe_already_there] = 
+%               Analysis_Set.check_if_new_expe(expe_path)
+%
+% * Select location of ROIs for all/some recordings
+%   [Analysis_Set, analyzed_idx] = Analysis_Set.select_ROIs(filter_list)
 %
 % -------------------------------------------------------------------------
 % Extra Notes:
@@ -47,7 +57,6 @@
 %
 % * Add 2 empty experiments
 %   my_analysis.add_experiment(2);
-%
 %
 % -------------------------------------------------------------------------
 %                               Notice
@@ -469,24 +478,20 @@ classdef Analysis_Set
             end
         end
         
-        function [obj, analyzed_idx] = select_ROIs(obj, filter_list, select_ROIs)
+        function [obj, analyzed_idx] = select_ROIs(obj, filter_list)
             %% Check if this experiment has already be listed somewhere.
             % If yes, return the correct index
             % If not, return a new, unused index
             % -------------------------------------------------------------
             % Syntax: 
             %   [Analysis_Set, analyzed_idx] = 
-            %       Analysis_Set.select_ROIs(filter_list, select_ROIs)
+            %       Analysis_Set.select_ROIs(filter_list)
             % -------------------------------------------------------------
             % Inputs:
             %   filter_list (STR or CELL ARRAY of STR) - Optional - default
             %           is ''
             %   	If non-empty, only video path that match the filter
             %   	will be updated and displayed
-            %
-            %   select_ROIs (BOOL) - Optional - default is true - To be
-            %   removed
-            %   	...
             % -------------------------------------------------------------
             % Outputs: 
             %   Analysis_Set (Analysis_Set object)
@@ -511,13 +516,10 @@ classdef Analysis_Set
             % Revision Date:
             %   20-05-2020
             %
-            % See also: Analysis_Set.add_experiment
+            % See also: Experiment.select_ROIs
             
             if nargin < 2 || isempty(filter_list)
                 filter_list = {''};
-            end
-            if nargin < 3 || isempty(select_ROIs)
-                select_ROIs = true;
             end
 
             %% Update required fields
@@ -532,7 +534,7 @@ classdef Analysis_Set
             assignin('base', 'analysis_temp_backup', obj); %% Setup a safety backup
             for experiment_idx = analyzed_idx
                 %% Now that all recordings were added, we can select ROIs
-                obj.experiments(experiment_idx) = select_video_ROIs(obj.experiments(experiment_idx), select_ROIs, 0, '', obj.default_tags);
+                obj.experiments(experiment_idx) = obj.experiments(experiment_idx).select_ROIs('', obj.default_tags);
 
                 %% Safety backup after each video export
                 assignin('base', 'analysis_temp_backup', obj);

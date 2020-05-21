@@ -433,7 +433,7 @@ my_analysis.experiments(6).n_rec
 % There are 2 videos types in this experiment,
 % - We set 2 ROIs around whiskers in video 1
 % - We set 1 ROIs around whiskers in video 2
-my_analysis.experiments(6) = select_video_ROIs(my_analysis.experiments(6));
+my_analysis.experiments(6) = my_analysis.experiments(6).select_ROIs(my_analysis.experiments(6));
 
 %% Look at a few properties of the ROIs we just selected
 expe = my_analysis.experiments(6); % for display

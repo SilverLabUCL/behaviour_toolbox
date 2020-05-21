@@ -163,6 +163,140 @@ classdef Experiment
             end
         end 
         
+        function [obj, failed_video_loading] = select_ROIs(obj, fig_handle, default_tags)   
+            if nargin < 2 || isempty(fig_handle)
+                fig_handle = '';
+            end
+            if nargin < 3 || isempty(default_tags)
+                default_tags = '';
+            end
+
+            if ~isempty(obj)
+                clear global current_offset current_pos roi_handles
+                global current_pos current_offset
+
+                failed_video_loading    = {};
+                list_of_videotypes      = obj.videotypes;
+
+                %% For each videotype, get a representative frame
+                for video_type_idx = 1:numel(list_of_videotypes)
+                    %% Reset position to center, with 1 ROI
+                    current_pos         = {}; 
+
+                    existing_windows    = false(1, obj.n_rec);
+                    existing_motion_indexes = false(1, obj.n_rec);
+                    for rec = 1:obj.n_rec
+                        real_idx = find(contains({obj.recordings(rec).videos.path}, list_of_videotypes{video_type_idx}));
+                        if real_idx % When one video is missing for a specific recording
+                            existing_windows(1, rec)        = ~isempty(obj.recordings(rec).videos(real_idx).ROI_location); % no nested indexing method available as far as i know
+                            existing_motion_indexes(1, rec) = ~all(cellfun(@isempty, obj.recordings(rec).videos(real_idx).motion_indexes)); % no nested indexing method available as far as i know
+                        end
+                    end
+
+                    if all(existing_motion_indexes)
+                        obj.recordings.plot_MIs(123, true, list_of_videotypes{video_type_idx});
+                    end
+
+                    %% Plot the representative_frame for the current expe
+                    names = [];
+                    [obj, names] = display_video_frame(obj, video_type_idx, 0, fig_handle, default_tags);
+
+                    %% Clear empty cells if you deleted some ROIs. get id of deleted cells
+                    to_keep     = cellfun(@numel , current_pos) == 5;
+                    poped       = find(cellfun(@numel , current_pos) == 1);
+                    if ~isempty(poped)
+                        poped   = [current_pos{poped}];
+                    end
+                    current_pos = current_pos(to_keep);
+                    current_offset = current_offset(to_keep);
+                    names       = names(to_keep);
+
+                    %% If there were some preexisitng values, check if we need an update
+                    roi_change_detected = false;
+
+                    %% Check if there was any change            
+                    for el = 1:numel(current_pos)
+                        window_location = current_pos{el};
+                        offsets         = current_offset{el};
+
+                        try
+                            roi_change_detected = isempty(window_location) || ~all(existing_windows) || numel(current_pos) ~= obj.recordings(1).videos(video_type_idx).n_roi || roi_change_detected;
+                        catch
+                            error_box('Unable to store result for this video. This is usually due to a missing video');
+                            roi_change_detected = true;
+                        end
+
+                        %% If N ROI didn't obviously change, check location
+                        if ~roi_change_detected
+                            %% Check if location changed
+                            former_rois         = obj.recordings(1).videos(video_type_idx).ROI_location;
+                            roi_change_detected = ~any(sum(vertcat(former_rois{:}) == window_location,2) == 5);
+
+                            %% Check if offsets were updated
+                            if ~roi_change_detected
+                                former_offsets      = cell2mat(arrayfun(@(x) x.videos(video_type_idx).video_offset, [obj.recordings], 'UniformOutput', false)');
+                                roi_change_detected = roi_change_detected || (~isempty(offsets) && ~all(all(former_offsets == offsets)));
+                            end
+                        else
+                            break
+                        end
+                    end
+
+                    %% Add new windows and update motion indexes windows location  
+                    try
+                        roi_available = isprop(obj.recordings(rec).videos(video_type_idx),'n_roi');
+                    catch
+                        roi_available = false;    
+                    end
+                    if roi_change_detected || (isempty(current_pos) && roi_available)% && current_experiment.recordings(rec).videos(video_type_idx).n_roi > 0)
+                        for rec = 1:obj.n_rec
+                            target = obj.videotypes{video_type_idx};
+                            local_video_type_idx = find(contains(obj.recordings(rec).videotypes, target));
+                            if ~isempty(local_video_type_idx) % empty if video is missing
+                                n_rois = obj.recordings(rec).videos(local_video_type_idx).n_roi;
+                                previous_ids = vertcat(obj.recordings(rec).videos(local_video_type_idx).ROI_location{:});
+                                if isempty(current_pos) % Because you deleted everything !
+                                    obj.recordings(rec).videos(local_video_type_idx).rois = repmat(ROI, 1, 0);
+                                else
+                                    obj.recordings(rec).videos(local_video_type_idx).video_offset = mean(cell2mat(cellfun(@(x) x(rec,:), current_offset, 'UniformOutput', false)'),1); % only store mean displacement
+                                    for roi = 1:numel(current_pos) 
+                                        %% Check if it is a new ROI
+                                        if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
+                                            n_roi = obj.recordings(rec).videos(local_video_type_idx).n_roi;
+                                            if n_roi == 0 %% QQ NEED TO CREATE AMETHOD FOR THAT
+                                                obj.recordings(rec).videos(local_video_type_idx).rois = ROI;
+                                            else
+                                                obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1) = ROI;
+                                            end
+                                            obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
+                                            obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).name = names{roi};
+                                        else    
+                                            %% List ROIs to delete
+                                            to_pop = [];
+                                            for pop = poped
+                                                to_pop = [to_pop, find(previous_ids(:,5) == pop)];
+                                            end
+
+                                            if isempty(to_pop)
+                                                %% Then it's an update (or the same location)
+                                                obj.recordings(rec).videos(local_video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
+                                                obj.recordings(rec).videos(local_video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
+                                                obj.recordings(rec).videos(local_video_type_idx).rois(roi).name = names{roi};
+                                            else
+                                                %% Then it's a deletion
+                                                obj.recordings(rec).videos(local_video_type_idx).rois(to_pop) = [];
+                                                previous_ids = vertcat(obj.recordings(rec).videos(local_video_type_idx).ROI_location{:});
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
         function obj = analyze(obj)
             % To add. For now see Recording.analyze
         end
