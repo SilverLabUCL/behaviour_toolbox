@@ -600,9 +600,9 @@ classdef Analysis_Set
             %
             % See also: Analysis_Set.update_all_paths
             
-            if ~isempty(obj.video_folder) && ~isempty(new_video_folder) && ~contains(struct2array(dbstack(1)), 'update_all_paths')
-                obj = update_all_paths(obj, obj.video_folder, new_video_folder);
-            end
+%             if ~isempty(obj.video_folder) && ~isempty(new_video_folder) && ~contains(struct2array(dbstack(1)), 'update_all_paths')
+%                 obj = update_all_paths(obj, obj.video_folder, new_video_folder);
+%             end
             obj.video_folder = new_video_folder;
         end
         
