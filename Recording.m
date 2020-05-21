@@ -63,6 +63,7 @@ classdef Recording
         default_video_types = {'EyeCam'           ,...
                                'BodyCam'          ,...
                                'WhiskerCam'}      ; % Default camera names
+        analyzed            ; % true if all set ROIs were analyzed
     end
     
     methods
@@ -131,7 +132,7 @@ classdef Recording
                         end
                         all_labels(rec, vid)= {obj(rec).videos(match).roi_labels};
                     else
-                        all_types(rec, vid) = {NaN};
+                        all_types(rec, vid) = {''};
                         all_MIs(rec, vid)   = {cell(1,0)};
                         all_labels(rec, vid)= {cell(1,0)};
                     end
@@ -140,7 +141,7 @@ classdef Recording
             all_MIs(cellfun(@(x) isempty(x), all_MIs)) = {[]};
 
             %% Filter video types by name if required, and flag NaN type (missing videos)
-            to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isnan(x)), all_types);
+            to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isempty(x)), all_types);%~cellfun(@(x) all(isnan(x)), all_types);
             all_MIs(~to_use)    = {[]}; % clear content for ignored MI's
             all_labels(~to_use) = {[]}; % clear content for ignored MI's 
             all_MIs             = reshape(all_MIs   , size(to_use));
@@ -313,6 +314,16 @@ classdef Recording
                 end
             end
             t_start = nanmin(t_start);
+        end
+        
+        function analyzed = get.analyzed(obj)
+            analyzed = true;
+            for vid = 1:obj.n_vid
+                if obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).motion_indexes{:}}))
+                    analyzed = false;
+                    break
+                end
+            end
         end
     end
 end
