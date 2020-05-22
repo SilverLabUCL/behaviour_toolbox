@@ -174,6 +174,34 @@ classdef Experiment < handle
         end
         
         function cleanup(obj, clear_missing)
+            %% Remove empty recordings, and optionaly, invalid recordings
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Experiment.cleanup(clear_missing)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   clear_missing (BOOL) - Optional - Default is false
+            %   	remove recordings where path doesn't point to a real
+            %   	file
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            %  * Be careful if you use clear_missing == true. Make sure the
+            %   video paths did not change, or valid recordings may get
+            %   deleted. You may want to update paths first using 
+            %   Analysis_Set.update_all_path
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See alos: Analysis_Set.update_all_path
+            
             if nargin < 2 || isempty(clear_missing)
                 clear_missing = false;
             end
@@ -199,6 +227,37 @@ classdef Experiment < handle
         end
  
         function populate(obj, current_expe_path, parent)  
+            %% Browse experiment folder and add all possible valid videos
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Experiment.populate(current_expe_path, parent)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   current_expe_path (BOOL) - Optional - Default is obj.path
+            %   	The experiment path that contains all the videos.
+            %   	Search is based on folder names, so read documentation
+            %   	to see what the requirements are.
+            %
+            %   parent (Analysis_Set HANDLE) - Optional - Default is ''
+            %   	The handle to the analysis set enable the sue of some
+            %   	gloal settings such as default tags when using
+            %   	Experiment.select_ROIs instead of
+            %   	Analysis_Set.select_ROIs
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See alos: Analysis_Set.select_ROIs
+            
             %% To prevent creating duplicates, see analysis.add_experiment();
             if (nargin < 2 || isempty(current_expe_path)) && isdir(obj.path)
                 obj.path = fix_path(obj.path);
@@ -248,7 +307,39 @@ classdef Experiment < handle
             end
         end 
         
-        function failed_video_loading = select_ROIs(obj, fig_handle, default_tags)   
+        function failed = select_ROIs(obj, fig_handle, default_tags)   
+            %% Browse experiment folder and add all possible valid videos
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   failed = Experiment.select_ROIs(fig_handle, default_tags)  
+            % -------------------------------------------------------------
+            % Inputs:
+            %   fig_handle (BOOL) - Optional - Default is ''
+            %   	The figure handle where you want to display the ROI
+            %   	selection
+            %
+            %   default_tags (CELL ARRAY of STR) - Optional - Default is
+            %   collected from obj.parent_set.default_tags
+            %   	The list of default buttons/ROI names. If not provided,
+            %   	but if a Analysis_Set handle was set in obj.parent_set,
+            %   	the Analysis_Set.default_tags field can be used.
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   failed (CELL ARRAY of STR PATHS)
+            %       List of video paths that had an issue during loading
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See alos: Analysis_Set.select_ROIs
+
             if nargin < 2 || isempty(fig_handle)
                 fig_handle = '';
             end
@@ -260,7 +351,7 @@ classdef Experiment < handle
                 clear global current_offset current_pos roi_handles
                 global current_pos current_offset
 
-                failed_video_loading    = {};
+                failed    = {};
                 list_of_videotypes      = obj.videotypes;
 
                 %% For each videotype, get a representative frame
