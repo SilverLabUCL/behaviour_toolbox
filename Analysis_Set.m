@@ -5,10 +5,10 @@
 %   to get more details about the methods inputs and outputs.
 % -------------------------------------------------------------------------
 % Syntax: 
-%   this = Analysis_Set();
+%   this = Analysis_Set(video_folder);
 % -------------------------------------------------------------------------
 % Class Generation Inputs:
-%   video_folder(STR) - Optional
+%   video_folder(STR) - Optional - default is ''
 %                               Path to you top video folder, that contains
 %                               all the videos. If provided, the folder
 %                               will be set to Analysis_Set.video_folder
@@ -43,7 +43,9 @@
 %
 % -------------------------------------------------------------------------
 % Extra Notes:
-% * Analysis_Set is a handle
+% * Analysis_Set and all of its children classes (Experiment, Recording,
+%   Video, ROI) are handles. When you assign some of them to a variable.
+%   they keep the memory link with the original variable.
 % -------------------------------------------------------------------------
 % Examples: 
 %

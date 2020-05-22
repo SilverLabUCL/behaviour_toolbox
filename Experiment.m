@@ -4,15 +4,21 @@
 %   Type doc Experiment.function_name or Experiment Class.function_name 
 %   to get more details about the methods inputs and outputs.
 % -------------------------------------------------------------------------
-% Model: 
-%   this = Experiment();
+% Syntax: 
+%   this = Experiment(n_recordings, expe_path);
 % -------------------------------------------------------------------------
 % Class Generation Inputs: 
+%   n_recordings(INT) - Optional - Default is 0
+%                               Number of Recordings object to initialize. 
+%                               They will need to be populated
+%
+%   expe_path(STR) - Optional - Default is ''
+%                               Path to your experiment folder
 % -------------------------------------------------------------------------
 % Outputs: 
 %   this (Experiment object)
 % -------------------------------------------------------------------------
-% Methods Index (ignoring get()/set() methods):
+% Class Methods (ignoring get()/set() methods):
 %
 % * Add one / several empty recording.
 %   Experiment.add_recording(to_add)   
@@ -32,17 +38,24 @@
 % * Extract all Motion indexes for the experiment         
 %   Experiment.analyze(force, display)
 %
+% * Remove empty/missing experiments
+%   Experiment.clear_MIs(clear_missing)
+%
 % * Plot Motion indices
 %   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, zero_t, 
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter)
+%
+% * Clear MIs or delete specifc ROIS
+%   Experiment.clear_MIs(   idx_to_clear, videotype_filter,
+%                           ROI_filter, delete_ROI)
 % -------------------------------------------------------------------------
 % Extra Notes:
-% * Experiments is a handle. If you extract assign a set of experiment
-%   from an Analysis_Set for conveniency and edit it, it will be updated
-%   into your original Analysis_Set too
+% * Experiments is a handle. You can assign a set of Experiments to a 
+%   variable from an Analysis_Set for conveniency and edit it. As a handle,
+%   modified variables will be updated in your original Analysis_Set too
 % -------------------------------------------------------------------------
-% Examples - How To
+% Examples:
 %
 % * Add experiment 1 and all its recordings
 %   s = Analysis_Set();
@@ -53,12 +66,33 @@
 %
 % * Same as above + remove deleted/missing folders
 %   s.experiments(1).cleanup(true);
+%
 % -------------------------------------------------------------------------
-% Author(s):
-%   Antoine Valera
+%                               Notice
+%
+% Author(s): Antoine Valera
+%
+% This function was initially released as part of a toolbox for 
+% manipulating Videos acquired in the SIlverlab. The software was 
+% developed in the laboratory of Prof Robin Angus Silver at University
+% College London with funds from the NIH, ERC and Wellcome Trust.
+%
+% Copyright © 2015-2020 University College London
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%     http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License. 
 % -------------------------------------------------------------------------
 % Revision Date:
-% 21-04-2020
+% 21-05-2020
 %
 % See also Analysis_Set, Recording, Video, ROI
 
@@ -85,7 +119,7 @@ classdef Experiment < handle
             % -------------------------------------------------------------
             % Inputs:
             %   n_recordings (INT) - Optional - default is 0
-            %       path to the top folder containing all videos
+            %       number of empty Recordings to generate
             %
             %   expe_path (STR PATH)
             %       path to the experiment folder
@@ -304,11 +338,9 @@ classdef Experiment < handle
                     [recording_idx, rec_already_there] = check_if_new_rec(obj, current_recording_path);
                     if ~rec_already_there
                         %% If it is the first time we see this experiment, we create the Experiment object
-                        current_recording = Recording(numel(recordings_videos), current_recording_path);
-                    else
-                        current_recording = obj.recordings(recording_idx); % QQ MAY NEED DEEPCOPY
+                        obj.recordings(recording_idx) = Recording(numel(recordings_videos), current_recording_path);
                     end
-                    obj.recordings(recording_idx) = update_recording(current_recording, recordings_videos);
+                    obj.recordings(recording_idx).update();
                 end
                 
                 %% Sort alphabetically and remove empty/missing recordings
@@ -551,6 +583,64 @@ classdef Experiment < handle
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
                 obj.recordings.plot_MIs(123, '', strcmp(display, 'pause'));
+            end
+        end
+
+        function clear_MIs(obj, idx_to_clear, videotype_filter, ROI_filter, delete_ROI)
+            %% Clear MIs matching ROI_filter, or delete ROI
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Experiment.clear_MIs(   idx_to_clear, videotype_filter,
+            %                           ROI_filter, delete_ROI)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   idx_to_clear (1 x N INT) - Optional - Default will clear
+            %       all recordings
+            %   	list of recordings to filter. Any recording to filter
+            %   	will be filtered
+            %
+            %   videotype_filter (STR or CELL ARRAY of STR) - Optional 
+            %     Default - will clear all videos
+            %   	list of video to filter. Any video name matching the
+            %       filter will be cleared 
+            %
+            %   ROI_filter (STR or CELL ARRAY of STR) - Optional - Default
+            %           will clear all ROIs
+            %   	list of ROIs to filter. Any ROI label matching the
+            %       filter will be cleared 
+            %
+            %   delete_ROI (BOOL) - Default is false
+            %   	If true, the whole ROI is deleted
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Video.clear_MIs, Experiment.clear_MIs
+            
+            if nargin < 2 || isempty(idx_to_clear)
+                idx_to_clear = 1:obj.n_rec;
+            end
+            if nargin < 3 || isempty(videotype_filter)
+                videotype_filter = obj.videotypes;
+            end
+            if nargin < 4 || isempty(ROI_filter)
+                ROI_filter = obj.roi_labels;
+            end
+            if nargin < 5 || isempty(delete_ROI)
+                delete_ROI = false;
+            end
+            
+            for rec = idx_to_clear
+                obj.recordings(rec).clear_MIs(videotype_filter, ROI_filter, delete_ROI);
             end
         end
         

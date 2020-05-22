@@ -1,18 +1,24 @@
 %% Recording Class
 % 	This the class container for all the Video of an recording
 %
-%   Type doc Experiment.function_name or Experiment Class.function_name 
+%   Type doc Recording.function_name or Recording Class.function_name 
 %   to get more details about the methods inputs and outputs.
 % -------------------------------------------------------------------------
-% Model: 
-%   this = Recording();
+% Syntax: 
+%   this = Recording(n_video, recording_path);
 % -------------------------------------------------------------------------
 % Class Generation Inputs: 
+%   n_video(INT) - Optional - Default is 0
+%                               Number of Video object to initialize. They
+%                               will need to be populated
+%
+%   recording_path(STR) - Optional - Default is ''
+%                               Path to you recording folder
 % -------------------------------------------------------------------------
 % Outputs: 
 %   this (Recording object)
 % -------------------------------------------------------------------------
-% Methods Index (ignoring get()/set() methods):
+% Class Methods (ignoring get()/set() methods):
 %
 % * Update video list if you chenged in in the recording
 %   Recording.update()
@@ -25,13 +31,16 @@
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter,
 %                               normalize)
+%
+% * Clear MIs or delete specifc ROIS
+%   Recording.clear_MIs(videotype_filter, ROI_filter, delete_ROI)
 % -------------------------------------------------------------------------
 % Extra Notes:
-% * Recording is a handle. If you extract assign a set of recordings
-%   from an Experiment for conveniency and edit it, it will be updated
-%   into your original Experiment too
+% * Recording is a handle. You can assign a set of Recording to a variable
+%   from an Experiment for conveniency and edit it. As a handle, modified 
+%   variables will be updated in your original Experiments too
 % -------------------------------------------------------------------------
-% Examples - How To
+% Examples:
 %
 % * Refresh video list if you deleted a recording
 %   s = Analysis_Set();
@@ -40,12 +49,33 @@
 %
 % * Remove one video in a specific recording
 %   s.experiments(1).recordings(2).pop(1)
+%
 % -------------------------------------------------------------------------
-% Author(s):
-%   Antoine Valera
+%                               Notice
+%
+% Author(s): Antoine Valera
+%
+% This function was initially released as part of a toolbox for 
+% manipulating Videos acquired in the SIlverlab. The software was 
+% developed in the laboratory of Prof Robin Angus Silver at University
+% College London with funds from the NIH, ERC and Wellcome Trust.
+%
+% Copyright © 2015-2020 University College London
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%     http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License. 
 % -------------------------------------------------------------------------
 % Revision Date:
-% 21-04-2020
+% 21-05-2020
 %
 % See also Analysis_Set, Experiment, Video, ROI
 
@@ -75,6 +105,41 @@ classdef Recording < handle
     
     methods
         function obj = Recording(n_video, recording_path)
+            %% Recording Object Constructor. 
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   this = Recording(n_video, recording_path)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   n_video (INT) - Optional - default is 0
+            %       number of empty Recordings to generate
+            %
+            %   recording_path (STR PATH)
+            %       path to the Recording folder
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   this (Recording)
+            %   	The container for a given Recording with one or
+            %   	multiple Videos
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            %
+            % * Create a new Recording object
+            %     recording = Recording();
+            %
+            % * Create a new Recording object and assign a folder
+            %     recording = Recording('','/Rec/Folder/path');
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   20-05-2020
+            %
+            % See also:
+            
             if nargin < 1
                 n_video         = 0; % Empty recording
             end
@@ -108,7 +173,7 @@ classdef Recording < handle
             % Revision Date:
             %   22-05-2020
 
-            recordings_videos = dir([obj.path, '/**/*.avi']);
+            recordings_videos = dir([obj.path, '**/*.avi']);
             %% Check if all videos are in place
             if obj.n_vid
                 need_update = ~isfile({obj.videos.path}') | isempty({obj.videos.path}');
@@ -156,7 +221,7 @@ classdef Recording < handle
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, 
+            %   [all_data, all_t_axes] = Recording.plot_MIs(fig_number, 
             %       zero_t, manual_browsing, videotype_filter, 
             %       output_filter, regroup, ROI_filter, normalize)
             % -------------------------------------------------------------
@@ -216,7 +281,7 @@ classdef Recording < handle
             % * See general documentation for examples
             % -------------------------------------------------------------
             % Examples:
-            % * Get and Plot MI for current experiment
+            % * Get and Plot MI for current recording
             %   [MI, t] = Recording.plot_MIs()
             % -------------------------------------------------------------
             % Author(s):
@@ -370,9 +435,9 @@ classdef Recording < handle
                             if strcmp(normalize, 'global')
                                 mi_data = (mi_data - min(mi_data)) / (range(mi_data));
                             end
-                            novid       = diff(all_rois(:,2));
+                            novid       = diff(all_rois(:,rois(1)*2));
                             [idx]       = find(novid > (median(novid) * 2));
-                            taxis       = (all_rois(:,2)- t_offset);
+                            taxis       = (all_rois(:,rois(1)*2)- t_offset);
                             if isa(output_filter,'function_handle')
                                 mi_data = output_filter(mi_data);
                             end
@@ -399,16 +464,66 @@ classdef Recording < handle
                 end
             end
         end
+
+        function clear_MIs(obj, videotype_filter, ROI_filter, delete_ROI)
+            %% Clear MIs matching ROI_filter, or delete ROI
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Recording.clear_MIs(videotype_filter, ROI_filter, delete_ROI)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   videotype_filter (STR or CELL ARRAY of STR) - Optional 
+            %           Default - will clear all videos
+            %   	list of video to filter. Any video name matching the
+            %       filter will be cleared 
+            %
+            %   ROI_filter (STR or CELL ARRAY of STR) - Optional - Default
+            %           will clear all ROIs
+            %   	list of ROIs to filter. Any ROI label matching the
+            %       filter will be cleared 
+            %
+            %   delete_ROI (BOOL) - Default is false
+            %   	If true, the whole ROI is deleted
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Video.clear_MIs, Experiment.clear_MIs
+            
+            if nargin < 2 || isempty(videotype_filter)
+                videotype_filter = obj.videotypes;
+            end
+            if nargin < 3 || isempty(ROI_filter)
+                ROI_filter = obj.roi_labels;
+            end
+            if nargin < 4 || isempty(delete_ROI)
+                delete_ROI = false;
+            end
+
+            for vid = find(contains(obj.videotypes, videotype_filter))
+                obj.videos(vid).clear_MIs(ROI_filter, delete_ROI);
+            end
+        end
+        
         
 
         function set.path(obj, recording_path)
-            %% Set a new experiment path and fix synatx
+            %% Set a new recording path and fix synatx
             % -------------------------------------------------------------
             % Syntax: 
             %   Recording.path = recording_path
             % -------------------------------------------------------------
             % Inputs:
-            %   experiment_path (STR PATH)
+            %   recording_path (STR PATH)
             %   	The folder containing all the videos for a recording
             % -------------------------------------------------------------
             % Outputs: 
@@ -612,7 +727,7 @@ classdef Recording < handle
             
             t_start = [];
             for vid = 1:obj.n_vid
-                if obj.videos(vid).n_roi
+                if obj.videos(vid).n_roi && ~isempty(obj.videos(vid).absolute_times)
                     if isdatetime(obj.videos(vid).absolute_times(1))
                         t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
                     else

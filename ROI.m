@@ -1,33 +1,132 @@
+%% ROI Class
+% 	This the class containing info about ROI and ROI-extracted data
+%
+%   Type doc ROI.function_name or ROI Class.function_name 
+%   to get more details about the methods inputs and outputs.
+% -------------------------------------------------------------------------
+% Syntax: 
+%   this = ROI();
+% -------------------------------------------------------------------------
+% Class Generation Inputs: 
+% -------------------------------------------------------------------------
+% Outputs: 
+%   this (Video object)
+% -------------------------------------------------------------------------
+% Class Methods (ignoring get()/set() methods):
+% * Plot Motion indices for selected ROI
+%   f = plot_MI(obj, fig_number, use_norm) 
+% -------------------------------------------------------------------------
+% Extra Notes:
+% * ROI is a handle. You can assign a set of ROIs to a variable
+%   from a Video for conveniency and edit it. As a handle, modified 
+%   variables will be updated in your original Video too
+% -------------------------------------------------------------------------
+% Examples:
+% -------------------------------------------------------------------------
+%                               Notice
+%
+% Author(s): Antoine Valera
+%
+% This function was initially released as part of a toolbox for 
+% manipulating Videos acquired in the SIlverlab. The software was 
+% developed in the laboratory of Prof Robin Angus Silver at University
+% College London with funds from the NIH, ERC and Wellcome Trust.
+%
+% Copyright © 2015-2020 University College London
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%     http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License. 
+% -------------------------------------------------------------------------
+% Revision Date:
+% 22-05-2020
+%
+% See also Analysis_Set, Experiment, Recordings, Video
+
 classdef ROI < handle
-    %EXPERIMENT Summary of this class goes here
-    %   Detailed explanation goes here
-    
     properties
-        n_ROI
-        ROI_location
-        motion_index
-        motion_index_norm
-        name
+        ROI_location        ; % [X Y width height id] coordinates of an roi
+        motion_index        ; % [T x 2] extracted roi info (data, time)
+        motion_index_norm   ; % motion_index values normalized to max
+        name                ; % ROI name
     end
     
     methods
         function obj = ROI()
+            %% ROI Object Constructor. 
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   this = ROI()
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   this (ROI)
+            %   	The container for a given ROI
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   20-05-2020
+            %
+            % See also:
+            
             obj.ROI_location    = [];
             obj.motion_index    = [];
             obj.name            = [];
         end
         
-        function motion_index_norm = get.motion_index_norm(obj)
-            if ~isempty(obj.motion_index)
-                motion_index_norm = obj.motion_index;
-                motion_index_norm(:,1) = obj.motion_index(:,1) - prctile(obj.motion_index(:,1), 1);
-                motion_index_norm(:,1) = motion_index_norm(:,1) ./ nanmax(motion_index_norm(:,1));
-            end
-        end
-        
-        function f = plot_MI(obj, fig_number, use_norm) 
-            %% Selet RAW or norm data
-            if nargin < 3 || isempty(use_norm)
+        function f = plot_MI(obj, fig_number, normalize) 
+            %% Display and return MIs for current Recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Video.plot_MIs(fig_number, normalize)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   fig_number (1 x N_vid INT OR 1 x n_vid FIGURE HANDLE) - 
+            %       Optional - default will use figure [1:n_vid]
+            %   	This defines the figures/figure handles to use. If
+            %   	figure number don't match the number of vieos, default
+            %   	behaviour is used
+            %
+            %   normalize (STR) - Optional - any in {'none','local',
+            %       'global'} - Default is 'global'
+            %   	Define if MIs are normalized or not, and if
+            %   	normalization is done per recording
+            % -------------------------------------------------------------
+            % Outputs:
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % * Plot MI for current ROI
+            %   ROI.plot_MIs()
+            %
+            % * Plot normalized MI
+            %   ROI.plot_MIs(true)
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Recording.plot_MIs         
+            
+            if nargin < 3 || isempty(normalize)
                 if numel(obj) == 1
                     MI = obj.motion_index(:,1);
                 else
@@ -74,6 +173,37 @@ classdef ROI < handle
                     f.XAxis.Visible = 'off';
                 end
                 ylim(optimal_y_lim);
+            end
+        end
+        
+        
+        function motion_index_norm = get.motion_index_norm(obj)
+            %% Get normalized MIs for the ROI
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   motion_index_norm = ROI.motion_index_norm
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   motion_index_norm (T x 2 MATRIX)
+            %   	T x 2 Matrix (values, time). for the MI, normalized to
+            %   	range
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   21-05-2020
+            
+            if ~isempty(obj.motion_index)
+                motion_index_norm = obj.motion_index;
+                motion_index_norm(:,1) = obj.motion_index(:,1) - prctile(obj.motion_index(:,1), 1);
+                motion_index_norm(:,1) = motion_index_norm(:,1) ./ nanmax(motion_index_norm(:,1));
             end
         end
     end
