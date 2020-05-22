@@ -1,4 +1,4 @@
-classdef Video
+classdef Video < handle
     %EXPERIMENT Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -24,7 +24,7 @@ classdef Video
     end
     
     methods
-        function obj = Video(n_roi, file_path)
+        function obj = Video(n_roi, file_path) 
             if nargin < 1
                 n_roi = 0; % Empty recording
             end
@@ -35,11 +35,13 @@ classdef Video
             obj.reference_image = [];
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);
-            obj.rois            = repmat(ROI, 1, n_roi);
+            for el = 1:n_roi
+                obj.rois(el)      = ROI;
+            end
         end
         
         
-        function [obj, out] = analyze(obj, func)
+        function metric = analyze(obj, func)
             if nargin < 2 || isempty(func)
                 default = true;
             else
@@ -48,20 +50,20 @@ classdef Video
             
             %% Set timing info if missing
             if isempty(obj.timestamps) || default
-                obj = set_timestamps(obj);
+                set_timestamps(obj);
             end
 
             %% Get MI (or other function handle)
             if default    
                 t = obj.timestamps + posixtime(obj.absolute_times(1)) + rem(second(obj.absolute_times(1)),1); % posixtime in seconds
                 obj.motion_indexes = get_MI_from_video(obj.path, obj.ROI_location, t, false, false, '', obj.video_offset);
-                out = obj.motion_indexes;
+                metric = obj.motion_indexes;
             else
-                out = func();
+                metric = func();
             end
         end
         
-        function obj = set_timestamps(obj)
+        function set_timestamps(obj)
             [timepstamp_path, file] = fileparts(obj.path);
             file                    = erase(file, '-1');
             timepstamp_path         = fileparts(timepstamp_path); % To use the parent folder instead (because it has absolute timestamps)
@@ -125,7 +127,7 @@ classdef Video
             end
         end
 
-        function obj = set.path(obj, video_path)
+        function set.path(obj, video_path)
             %% Set a new experiment path and fix synatx
             % -------------------------------------------------------------
             % Syntax: 
@@ -178,10 +180,10 @@ classdef Video
             end
         end
 
-        function obj = set.motion_indexes(obj, motion_indexes)
+        function set.motion_indexes(obj, motion_indexes)
             %% Return the number of ROI windows
             if numel(motion_indexes) == 1 && isempty(motion_indexes)
-                obj = obj.clear_MIs();
+                obj.clear_MIs();
             else
                 for roi = 1:obj.n_roi
                     obj.rois(roi).motion_index = motion_indexes{roi};
@@ -189,13 +191,13 @@ classdef Video
             end
         end
         
-        function obj = clear_MIs(obj)            
+        function clear_MIs(obj)            
             for roi = 1:obj.n_roi
                 obj.rois(roi).motion_index = {};
             end
         end
         
-        function obj = clear_ROIs(obj)
+        function clear_ROIs(obj)
             obj.ROIs = {};
         end
 

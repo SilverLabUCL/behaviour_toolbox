@@ -1,4 +1,5 @@
 %% Show how to get timepoints for a specific MI
+error('to update with new handle')
 
 %analysis = behaviour_GUI.Experiment_set;
 smoothing = [3, 0];

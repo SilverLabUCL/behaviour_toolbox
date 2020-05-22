@@ -27,20 +27,21 @@
 %   Recording.cleanup(clear_missing)
 % -------------------------------------------------------------------------
 % Extra Notes:
-%   For now, Experiment is NOT a handle, which means you have to reassign
-%   the ouput of the object to itself
+% * Experiments is a handle. If you extract assign a set of experiment
+%   from an Analysis_Set for conveniency and edit it, it will be updated
+%   into your original Analysis_Set too
 % -------------------------------------------------------------------------
 % Examples - How To
 %
 % * Add experiment 1 and all its recordings
 %   s = Analysis_Set();
-%   s.experiments(1) = s.experiments(1).populate(experiment_path);
+%   s.experiments(1).populate(experiment_path);
 %
 % * Remove empty recordings and sort alphabetically
-%   s.experiments(1) = s.experiments(1).cleanup();
+%   s.experiments(1).cleanup();
 %
 % * Same as above + remove deleted/missing folders
-%   s.experiments(1) = s.experiments(1).cleanup(true);
+%   s.experiments(1).cleanup(true);
 % -------------------------------------------------------------------------
 % Author(s):
 %   Antoine Valera
@@ -50,7 +51,7 @@
 %
 % See also Analysis_Set, Recording
 
-classdef Experiment
+classdef Experiment < handle
     properties
         recordings = Recording  ; % Contain individual recordings
         path                    ; % The path of the experiment
@@ -61,6 +62,7 @@ classdef Experiment
         t_start                 ; % experiment aboslute t_start
         comment                 ; % User comment
         splitvideos = {}        ; % A list of split videos
+        parent_set              ; % handle to parent object
     end
     
     methods
@@ -71,11 +73,13 @@ classdef Experiment
             if nargin < 2
                 expe_path       = '';   % Empty recording
             end
-            obj.recordings      = repmat(Recording, 1, n_recordings);
+            for el = 1:n_recordings
+                obj.recordings = [obj.recordings, Recording];
+            end
             obj.path            = expe_path;
         end
         
-        function obj = add_recording(obj, to_add)
+        function add_recording(obj, to_add)
             if nargin < 2 || isempty(to_add)
                 to_add = 1;
             end
@@ -86,12 +90,12 @@ classdef Experiment
             end
         end
 
-        function obj = pop(obj, recording_idx)
+        function pop(obj, recording_idx)
             %% Remove a specific recording objct based on the video index
             obj.recordings(recording_idx) = [];
         end
         
-        function obj = cleanup(obj, clear_missing)
+        function cleanup(obj, clear_missing)
             if nargin < 2 || isempty(clear_missing)
                 clear_missing = false;
             end
@@ -112,11 +116,11 @@ classdef Experiment
                         to_remove = [to_remove, rec]; 
                     end
                 end 
-                obj = obj.pop(to_remove);
+                obj.pop(to_remove);
             end
         end
  
-        function obj = populate(obj, current_expe_path)  
+        function populate(obj, current_expe_path, parent)  
             %% To prevent creating duplicates, see analysis.add_experiment();
             if (nargin < 2 || isempty(current_expe_path)) && isdir(obj.path)
                 obj.path = fix_path(obj.path);
@@ -125,6 +129,9 @@ classdef Experiment
             else
                 fprintf([fix_path(current_expe_path),' is not a valid path\n']);
                 return
+            end
+            if nargin >= 3
+                obj.parent_set = parent;
             end
             
             %% List all recordings
@@ -151,24 +158,24 @@ classdef Experiment
                         %% If it is the first time we see this experiment, we create the Experiment object
                         current_recording = Recording(numel(recordings_videos), current_recording_path);
                     else
-                        current_recording = obj.recordings(recording_idx);
+                        current_recording = obj.recordings(recording_idx); % QQ MAY NEED DEEPCOPY
                     end
                     obj.recordings(recording_idx) = update_recording(current_recording, recordings_videos);
                 end
                 
                 %% Sort alphabetically and remove empty/missing recordings
-                obj = obj.cleanup(true);
+                obj.cleanup(true);
             else
                 fprintf([obj.path,' has no detectable video. Please check path and content\n'])
             end
         end 
         
-        function [obj, failed_video_loading] = select_ROIs(obj, fig_handle, default_tags)   
+        function failed_video_loading = select_ROIs(obj, fig_handle, default_tags)   
             if nargin < 2 || isempty(fig_handle)
                 fig_handle = '';
             end
             if nargin < 3 || isempty(default_tags)
-                default_tags = '';
+                default_tags = obj.parent_set.default_tags;
             end
 
             if ~isempty(obj)
@@ -297,7 +304,7 @@ classdef Experiment
             end
         end
         
-        function obj = analyze(obj, force, display, manual_browsing)
+        function analyze(obj, force, display, manual_browsing)
             if nargin < 2 || isempty(force)
                 force = false;
             end
@@ -310,17 +317,16 @@ classdef Experiment
             
             for rec = 1:obj.n_rec
                 for vid = 1:obj.recordings(rec).n_vid
-                    current_video = obj.recordings(rec).videos(vid);
-                    if any(cellfun(@isempty, current_video.motion_indexes)) || force
+                    if any(cellfun(@isempty, obj.recordings(rec).videos(vid).motion_indexes)) || force
                         %% Update MI's
-                        obj.recordings(rec).videos(vid) = current_video.analyze();
+                        obj.recordings(rec).videos(vid).analyze();
 
                         %% Store results
                         if display
                             obj.recordings(rec).videos(vid).plot_MIs();
                         end
                     else
-                        fprintf(['No analysis required for ',current_video.path,'. Skipping extraction\n'])
+                        fprintf(['No analysis required for ',obj.recordings(rec).videos(vid).path,'. Skipping extraction\n'])
                     end
                 end 
             end
@@ -371,7 +377,7 @@ classdef Experiment
             videotypes = unique(filenames(cellfun('isclass', filenames, 'char')));
         end   
 
-        function obj = set.path(obj, experiment_path)
+        function set.path(obj, experiment_path)
             %% Set a new experiment path and fix synatx
             % -------------------------------------------------------------
             % Syntax: 

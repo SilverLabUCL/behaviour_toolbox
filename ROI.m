@@ -1,4 +1,4 @@
-classdef ROI
+classdef ROI < handle
     %EXPERIMENT Summary of this class goes here
     %   Detailed explanation goes here
     

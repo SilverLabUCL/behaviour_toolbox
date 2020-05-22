@@ -20,37 +20,35 @@
 % Class Methods (ignoring get()/set() methods):
 %
 % * List/Update video folder content and build experiments 
-%   Analysis_Set = Analysis_Set.update(filter_list)
+%   Analysis_Set.update(filter_list)
 %
 % * Remove a specific experiment / set of experiments
-%   Analysis_Set = Analysis_Set.pop(expe_number) 
+%   Analysis_Set.pop(expe_number) 
 %
 % * Add one / several empty experiment.
-%   Analysis_Set = Analysis_Set.add_experiment(to_add)   
+%   Analysis_Set.add_experiment(to_add)   
 %
 % * Update all paths (for example if you change the location of the videos)
-%   Analysis_Set = Analysis_Set.update_path(old, new)
+%   Analysis_Set.update_path(old, new)
 %
 % * Remove empty experiments
-%   Analysis_Set = Analysis_Set.cleanup()
+%   Analysis_Set.cleanup()
 %
 % * Check if an experiment is new, and return its location
 %   [experiment_idx, expe_already_there] = 
 %               Analysis_Set.check_if_new_expe(expe_path)
 %
 % * Select location of ROIs for all/some recordings
-%   [Analysis_Set, analyzed_idx] = Analysis_Set.select_ROIs(filter_list)
+%   analyzed_idx = Analysis_Set.select_ROIs(filter_list)
 %
 % -------------------------------------------------------------------------
 % Extra Notes:
-%   For now, Analysis_Set is NOT a handle, which means you have to reassign
-%   the ouput of the object to itself
-%
+% * Analysis_Set is a handle
 % -------------------------------------------------------------------------
 % Examples: 
 %
 % * Initialise a new Analysis_Set with an empty experiment.
-%   my_analysis = Analysis_Set();
+%   Analysis_Set();
 %
 % * Change the default tags that will be displayed for video extraction
 %   my_analysis.default_tags = [my_analysis.default_tags, {'New Preset'}];
@@ -87,9 +85,7 @@
 %
 % See also: Experiment
 
-%% TODO : Convert to handle, but make sure the subset are handled properly
-
-classdef Analysis_Set
+classdef Analysis_Set < handle
     properties
         experiments  = []           ; % Contain individual experiments
         video_folder = ''           ; % Top video folder where experiments are located
@@ -144,11 +140,11 @@ classdef Analysis_Set
             end
         end
  
-        function obj = update(obj, filter_list)
+        function update(obj, filter_list)
             %% Update all videos. add new folder, remove old ones.
             % -------------------------------------------------------------
             % Syntax: 
-            %   Analysis_Set = Analysis_Set.update(filter_list)
+            %   Analysis_Set.update(filter_list)
             % -------------------------------------------------------------
             % Inputs:
             %   filter_list(STR or Cell of STR) - Optional - default is '';
@@ -162,10 +158,10 @@ classdef Analysis_Set
             % Examples:
             %
             % * Update all videos in video_folder
-            %   my_analysis = my_analysis.update();
+            %   my_analysis.update();
             %
             % * Update a specific folder only
-            %   my_analysis = my_analysis.update({'2018-12-04'});
+            %   my_analysis.update({'2018-12-04'});
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -199,29 +195,23 @@ classdef Analysis_Set
             [obj, experiment_folders] = check_or_fix_path_issues(obj, experiment_folders, filter_list);
 
             %% Go through all experiment folder. Add experiments if missing
-            splitvideo              = {}; % that will indicates problematic split videos
-            %subset                  = []; 
             for experiment_idx = 1:numel(experiment_folders)
                 current_expe_path                   = experiment_folders{experiment_idx};
-                [obj, experiment_idx]               = obj.add_experiment(current_expe_path); %% add or update experiment
-                splitvideo                          = [splitvideo, obj.experiments(experiment_idx).splitvideos]; % if any
-                %subset                              = [subset, experiment_idx]; % store correct indexes
+                experiment_idx                      = obj.add_experiment(current_expe_path); %% add or update experiment
 
                 %% Sort alphabetically and remove empty experiments
-                obj.experiments(experiment_idx)     = obj.experiments(experiment_idx).cleanup();
+                obj.experiments(experiment_idx).cleanup();
             end
-            %obj.experiments         = obj.experiments(subset); % in case you filtered the input, we filter the ouput
 
             %% final adjustements
-            obj = obj.cleanup();
+            obj.cleanup();
         end 
 
-        function [obj, experiment_idx, is_split] = add_experiment(obj, to_add)
+        function experiment_idx = add_experiment(obj, to_add)
             %% Add a specific experiment
             % -------------------------------------------------------------
             % Syntax: 
-            %   [Analysis_Set, experiment_idx, is_split] = 
-            %               Analysis_Set.add_experiment(to_add)
+            %   experiment_idx = Analysis_Set.add_experiment(to_add)
             % -------------------------------------------------------------
             % Inputs:
             %   to_add(INT or STR PATH or Cell ARRAY of STR PATH)
@@ -229,14 +219,8 @@ classdef Analysis_Set
             %       - if STR or CELL ARRAY, add the indicated path(s).
             % -------------------------------------------------------------
             % Outputs: 
-            %   Analysis_Set (Analysis_Set object)
-            %   	Updated Analysis_Set
-            %
             %   experiment_idx (1 x N INT)
             %   	Index(es) of the added experiments
-            %
-            %   is_split (?)
-            %   	Indicate problematic split-videos
             % -------------------------------------------------------------
             % Extra Notes:
             % * When adding path, it must be an experiment_folder, not a
@@ -248,16 +232,16 @@ classdef Analysis_Set
             % Examples:
             %   
             % * Add 4 empty experiments
-            %   my_analysis = my_analysis.add_experiment(4);
+            %   my_analysis.add_experiment(4);
             %
             % * Add an experiment with a known path
             %   fold = 'D:\topfolder\2018-12-03\experiment_1';
-            %   my_analysis = my_analysis.add_experiment(fold);
+            %   my_analysis.add_experiment(fold);
             %
             % * Add 2 experiments with known paths
             %   folds = {'D:\topfolder\2018-12-03\experiment_1',...
             %            'D:\topfolder\2018-12-03\experiment_2'};
-            %   my_analysis = my_analysis.add_experiment(folds);
+            %   my_analysis.add_experiment(folds);
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -271,7 +255,6 @@ classdef Analysis_Set
                 to_add = 1;
             end
             
-            is_split = NaN;
             if isnumeric(to_add)  
                 %% Add one/several empty experiments
                 if isempty(obj.experiments)
@@ -292,12 +275,11 @@ classdef Analysis_Set
                 else
                     %% Then it's an update
                 end
-                obj.experiments(experiment_idx)             = obj.experiments(experiment_idx).populate(to_add);
+                obj.experiments(experiment_idx).populate(to_add, obj);
             elseif iscell(to_add)
                 experiment_idx = [];
-                is_split       = {};
                 for el = 1:numel(to_add)
-                    [obj, experiment_idx(el), is_split{el}] = add_experiment(obj, to_add{el});
+                    experiment_idx(el) = obj.add_experiment(to_add{el});
                 end  
             else
                 error('must pass INT or STR path or CELL ARRAY of STR PATH')
@@ -308,7 +290,7 @@ classdef Analysis_Set
             %% Delete experiment at index(es) expe_number
             % -------------------------------------------------------------
             % Syntax: 
-            %   Analysis_Set = Analysis_Set.pop(to_remove)             
+            %   Analysis_Set.pop(to_remove)             
             % -------------------------------------------------------------
             % Inputs:
             %   to_remove(1 x N INT or STR PATH or Cell ARRAY of STR PATH)
@@ -326,11 +308,11 @@ classdef Analysis_Set
             % Examples:
             %   
             % * Remove experiment 5 and 6
-            %   my_analysis = my_analysis.pop([5, 6]);
+            %   my_analysis.pop([5, 6]);
             %   
             % * Remove all experiments the '2018-12-04' and an experiment
             %   called 'experiment_12'
-            %   my_analysis = my_analysis.pop({'2018-12-04','experiment_2'}); 
+            %   my_analysis.pop({'2018-12-04','experiment_2'}); 
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -344,18 +326,16 @@ classdef Analysis_Set
             obj.experiments(to_remove) = [];
         end
         
-        function obj = cleanup(obj)
+        function cleanup(obj)
             %% Remove experiments with no recordings, 
             %   Function also sort experiments alphabetically
             % -------------------------------------------------------------
             % Syntax: 
-            %   Analysis_Set = Analysis_Set.cleanup()             
+            %   Analysis_Set.cleanup()             
             % -------------------------------------------------------------
             % Inputs:
             % -------------------------------------------------------------
             % Outputs: 
-            %   Analysis_Set (Analysis_Set object)
-            %   	Updated Analysis_Set
             % -------------------------------------------------------------
             % Extra Notes:
             % -------------------------------------------------------------
@@ -373,7 +353,7 @@ classdef Analysis_Set
                     to_remove = [to_remove, exp]; 
                 end
             end 
-            obj = obj.pop(to_remove);
+            obj.pop(to_remove);
             
             %% Sort alphabetically
             [~, idx] = sort({obj.experiments.path});
@@ -383,11 +363,11 @@ classdef Analysis_Set
             %invalid = arrayfun(@(x) isempty(x.path), obj.experiments);
         end
 
-        function obj = update_all_paths(obj, old, new)
+        function update_all_paths(obj, old, new)
             %% Set a new video_folder. If possible, update path in Childrens
             % -------------------------------------------------------------
             % Syntax: 
-            %   Analysis_Set = Analysis_Set.update_all_paths(old, new)
+            %   Analysis_Set.update_all_paths(old, new)
             % -------------------------------------------------------------
             % Inputs:
             %   old (STR PATH)
@@ -402,7 +382,7 @@ classdef Analysis_Set
             % Examples:
             %
             % * Changed HD where video are located
-            %   my_analysis = my_analysis.update_all_paths('C:/','D:/')
+            %   my_analysis.update_all_paths('C:/','D:/')
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -481,14 +461,13 @@ classdef Analysis_Set
             end
         end
         
-        function [obj, analyzed_idx] = select_ROIs(obj, filter_list)
+        function analyzed_idx = select_ROIs(obj, filter_list)
             %% Check if this experiment has already be listed somewhere.
             % If yes, return the correct index
             % If not, return a new, unused index
             % -------------------------------------------------------------
             % Syntax: 
-            %   [Analysis_Set, analyzed_idx] = 
-            %       Analysis_Set.select_ROIs(filter_list)
+            %   analyzed_idx = Analysis_Set.select_ROIs(filter_list)
             % -------------------------------------------------------------
             % Inputs:
             %   filter_list (STR or CELL ARRAY of STR) - Optional - default
@@ -497,8 +476,6 @@ classdef Analysis_Set
             %   	will be updated and displayed
             % -------------------------------------------------------------
             % Outputs: 
-            %   Analysis_Set (Analysis_Set object)
-            %   	The updated analysis set
             %   analyzed_idx (the indexes of the experiments that 
             %   	The idndexes of the experiments that were updated
             % -------------------------------------------------------------
@@ -508,10 +485,10 @@ classdef Analysis_Set
             % -------------------------------------------------------------
             % Examples:
             % * Setup all ROIs
-            %   my_analysis = my_analysis.select_ROIs()
+            %   my_analysis.select_ROIs()
             %
             % * Setup ROIs for a specific experiment
-            %   my_analysis = my_analysis.select_ROIs('2018-12-05')
+            %   my_analysis.select_ROIs('2018-12-05')
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -526,7 +503,7 @@ classdef Analysis_Set
             end
 
             %% Update required fields
-            obj             = obj.update(filter_list);
+            obj.update(filter_list);
             if ~isempty(filter_list)
                 analyzed_idx   	= find(contains({obj.experiments.path}, filter_list));
             else
@@ -534,17 +511,13 @@ classdef Analysis_Set
             end
 
             %% Now extract ROIs
-            assignin('base', 'analysis_temp_backup', obj); %% Setup a safety backup
             for experiment_idx = analyzed_idx
                 %% Now that all recordings were added, we can select ROIs
-                obj.experiments(experiment_idx) = obj.experiments(experiment_idx).select_ROIs('', obj.default_tags);
-
-                %% Safety backup after each video export
-                assignin('base', 'analysis_temp_backup', obj);
+                obj.experiments(experiment_idx).select_ROIs('', obj.default_tags);
             end
         end
 
-        function obj = analyze(obj, filter_list, force, display, manual_browsing)
+        function analyze(obj, filter_list, force, display, manual_browsing)
             %% Force specific MI to be updated
             % By default, only ROIs with no MI are analysed, unless you set
             % force to true
@@ -562,7 +535,7 @@ classdef Analysis_Set
             end
             
             %% Update required fields
-            obj             = obj.update(filter_list);
+            obj.update(filter_list);
             if ~isempty(filter_list)
                 analyzed_idx   	= find(contains({obj.experiments.path}, filter_list));
             else
@@ -570,16 +543,12 @@ classdef Analysis_Set
             end
 
             %% Now that all Videos are ready, get the motion index if the MI section is empty
-            assignin('base', 'analysis_temp_backup', obj); %% Setup a safety backup
             for experiment_idx = analyzed_idx
-                obj.experiments(experiment_idx) = obj.experiments(experiment_idx).analyze(force, display, manual_browsing);
-                
-                %% Safety backup after each experiment export
-                assignin('base', 'analysis_temp_backup', obj);
+                obj.experiments(experiment_idx).analyze(force, display, manual_browsing);
             end    
         end
 
-        function obj = set.video_folder(obj, new_video_folder)
+        function set.video_folder(obj, new_video_folder)
             %% Set a new video_folder. If possible, update path in Childrens
             % -------------------------------------------------------------
             % Syntax: 

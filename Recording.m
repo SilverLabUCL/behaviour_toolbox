@@ -21,18 +21,19 @@
 %   Recording.pop(vid_number)
 % -------------------------------------------------------------------------
 % Extra Notes:
-%   For now, Recording is NOT a handle, which means you have to reassign
-%   the ouput of the object to itself
+% * Recording is a handle. If you extract assign a set of recordings
+%   from an Experiment for conveniency and edit it, it will be updated
+%   into your original Experiment too
 % -------------------------------------------------------------------------
 % Examples - How To
 %
 % * Refresh video list if you deleted a recording
 %   s = Analysis_Set();
-%   s.experiments(1) = s.experiments(1).populate(experiment_path);
-%   s.experiments(1).recordings(1) = s.experiments(1).recordings(1).update
+%   s.experiments(1).populate(experiment_path);
+%   s.experiments(1).recordings(1).update
 %
 % * Remove one video in a specific recording
-%   s.experiments(1).recordings(2) = s.experiments(1).recordings(2).pop(1)
+%   s.experiments(1).recordings(2).pop(1)
 % -------------------------------------------------------------------------
 % Author(s):
 %   Antoine Valera
@@ -43,10 +44,10 @@
 % See also Experiment, Video
 
 
-classdef Recording
+classdef Recording < handle
    
     properties
-        videos              ; % List of Video objects in this recording
+        videos = []         ; % List of Video objects in this recording
         n_vid = 0           ; % Number of videos in the recording
         path                ; % Path of the recording
         videotypes          ; % List the types of videos in this recording
@@ -74,16 +75,18 @@ classdef Recording
             if nargin < 2
                 recording_path  = '';   % Empty recording
             end
-            obj.videos          = repmat(Video, 1, n_video);
+            for el = 1:n_video
+                obj.videos = [obj.videos, Video];
+            end
             obj.path            = recording_path;
         end
 
         
-        function obj = update(obj)
-            obj = update_recording(obj, dir([obj.path, '/**/*.avi']));
+        function update(obj)
+            update_recording(obj, dir([obj.path, '/**/*.avi']));
         end
         
-        function obj = pop(obj, video_type_idx)
+        function pop(obj, video_type_idx)
             %% Remove a specific video objct based on the video index
             obj.videos(video_type_idx) = [];
         end
@@ -264,7 +267,7 @@ classdef Recording
         end
         
 
-        function obj = set.path(obj, recording_path)
+        function set.path(obj, recording_path)
             %% Set a new experiment path and fix synatx
             % -------------------------------------------------------------
             % Syntax: 

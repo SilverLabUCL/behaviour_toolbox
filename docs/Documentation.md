@@ -382,7 +382,28 @@ Videos that were not extracted will still be analysed, so it is recommended to u
 Scripted analysis
 =================
 
-> Requirements : you must have arranged your data as explained [here](#Video-Folder-Pre-processing)
+> Requirements : you must have arranged your data as explained [here](#Video-Folder-Pre-processing).
+
+### Quick summary
+
+Here is a quick example on how to extract MI's from scratch. More details about each steps are provided in the next sections
+
+```matlab
+%% Create object
+my_analysis = Analysis_Set('D:\Video for Toolbox testing')
+
+%% List all recordings
+my_analysis = my_analysis.update();
+
+%% Select MI's for a specific experiment (here experiment 1)
+my_analysis.experiments(1).select_ROIs();
+
+%% Extract MI's
+my_analysis.analyze();
+
+%% Display MI's and get output values
+[data, t] = my_analysis.experiments(end).plot_MIs();
+```
 
 ## Initial set up
 
@@ -393,7 +414,7 @@ If you did the initial part of the pipeline using the GUI, you can then use it f
 The initial step is to isolate the Analysis_Set object. You can do this by extracting it from the GUI handle, or by reloaded a backup analysis
 
 ```matlab
-%% Get the Analysis set from the GUI
+%% Get the Analysis set handle from the GUI
 analysis = behaviour_GUI.Experiment_set;
 
 %% Get the Analysis set from a backup
@@ -406,8 +427,8 @@ The other option is to create a whole database from scratch. For more details, s
 
 ```matlab
 %% Create database
-my_analysis = Analysis_Set('C:\Users\vanto\Desktop\Video for Toolbox testing\');
-my_analysis = my_analysis.update(); % list all experiments
+Analysis_Set('C:\Users\vanto\Desktop\Video for Toolbox testing\');
+my_analysis.update(); % list all experiments
 ```
 ## Browse Data Properties
 
@@ -433,9 +454,10 @@ my_analysis.experiments(6).n_rec
 % There are 2 videos types in this experiment,
 % - We set 2 ROIs around whiskers in video 1
 % - We set 1 ROIs around whiskers in video 2
-my_analysis.experiments(6) = my_analysis.experiments(6).select_ROIs(my_analysis.experiments(6));
+my_analysis.experiments(6).select_ROIs();
 
-%% Look at a few properties of the ROIs we just selected
+%% Look at a few properties of the ROIs we just selected. 
+%% NOTE : we are going to use a handle, so the corresponding expe in my_analysis will be updated too 
 expe = my_analysis.experiments(6); % for display
 
 %% We can look at the ROIs of recording # 2;
@@ -474,7 +496,6 @@ round(roi.ROI_location)
   logical
    		0
 
-
 % Look at selected motion indices (one per ROI) for recording 2:
 % First video has 2 MIs (because there were 2 ROIs)
 % Second video has 1 MI (because there was 1 ROIs)
@@ -488,7 +509,10 @@ expe.recordings(2).motion_indexes
 ### Extract Motion index
 
 ```matlab
-%% To extract MI for a specific video
+%% To extract MI for a specific video. 
+my_analysis.experiments(6).recordings(2).videos(1).analyze();
+
+%% Same, but using a handle
 vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
 vid = vid.analyze();
 
@@ -506,13 +530,13 @@ You can extract the content of ROIs for other purposes, such as pupil tracking, 
 For this example, we are starting from the video defined in the [previous section](#Extract-Motion-index) :
 
 ```matlab
-%% Script 1 # 
+%% Demo Script : to extract mean image for a set of recordings
+vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
+im = vid.analyze(@(~,~) get_mean_proj(vid.path, vid.ROI_location{1}));
+figure();imagesc(im);axis image
+
 function im = get_mean_proj(file_path_or_data, ROI)
     [~, video] = get_MI_from_video(file_path_or_data, '', '', ROI);
     im = nanmean(video{1}, 3);
 end
-
-vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
-[~, im] = vid.analyze(@(~,~) get_mean_proj(vid.path, vid.ROI_location{1}));
-figure();imagesc(im);axis image
 ```

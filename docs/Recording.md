@@ -4,7 +4,7 @@ The Recording class contains all the Videos acquired at the same time. Each vide
 
 ## Hierarchy
 
-Analysis_Set < Experiment < Recording
+[Analysis_Set](Analysis_Set.md)< [Experiment](Experiment.md) < Recording
 
 ## Add/Delete Video
 
@@ -19,10 +19,10 @@ my_set = my_analysis.experiments(1).recordings([2,6,9]);
 
 %% Refresh video list if you deleted a recording
 a_recording = my_analysis.experiments(1).recordings(1);
-a_recording = a_recording.update;
+a_recording.update();
 
 % Remove one video in this specific recording
-a_recording = a_recording.pop(1);
+a_recording.pop(1);
 ```
 
 Get the properties of the recordings videos
@@ -58,7 +58,7 @@ Similar to the `videos.path` property above, and once extracted you can collect
 For example, if wanted to collect the ROIs coordinates from video # 2 in recordings # [1,2,6,8] of experiment # 6 :
 
 ```
-my_ROIs = arrayfun(@(x) x.videos(2).ROI_location, [my_analysis.experiments(6).recordings([1,2,6,8]])], 'UniformOutput', false)
+my_ROIs = arrayfun(@(x) x.videos(2).ROI_location, [my_analysis.experiments(6).recordings([1,2,6,8])], 'UniformOutput', false);
 ```
 
 
@@ -71,29 +71,29 @@ You can get display the motion indexes for a given recording
 
 ```matlab
 %% Simplest plot for a single recording
-analysis.experiments(1).recordings(1).plot_MIs();
+my_analysis.experiments(1).recordings(1).plot_MIs();
 
 %% Same as above, but capture the output (one cell per videotype)
-[data, time] = analysis.experiments(1).recordings(1).plot_MIs();
+[data, time] = my_analysis.experiments(1).recordings(1).plot_MIs();
 
 %% Get data for a set of recordings (see image below)
-[data, time] = analysis.experiments(1).recordings([1, 3, 5]).plot_MIs();
+[data, time] = my_analysis.experiments(1).recordings([1, 3, 5]).plot_MIs();
 ```
 
-![image-20200520123907078](media/Recording/image-20200520123907078.png)
+![image-20200520123907078](media/image-20200520123907078.png)
 
 Note that if you plot time `figure();plot(time{1})` you can see the separation between recordings.
 
-![image-20200520123707058](media/Recording/image-20200520123707058.png)
+![image-20200520123707058](media/image-20200520123707058.png)
 
 
 
 ```matlab
 %% You can plot the whole experiment if you omit the recording numbers
-analysis.experiments(1).recordings.plot_MIs()
+my_analysis.experiments(1).recordings.plot_MIs()
 
 %% Note that this is equivalent to 
-analysis.experiments(1).plot_MIs()
+my_analysis.experiments(1).plot_MIs()
 ```
 
 ### Filtering and input options
@@ -106,15 +106,15 @@ By default, figure numbers are 1:n_vid, but this can be adjusted
 %% For example, if we have 2 video_types :
 
 %% Use figure 1 and 2 (default behaviour)
-analysis.experiments(1).recordings.plot_MIs();
+my_analysis.experiments(1).recordings.plot_MIs();
 
 %% Use figure 456, and 789
-analysis.experiments(1).recordings.plot_MIs([456, 789]);
+my_analysis.experiments(1).recordings.plot_MIs([456, 789]);
 
 %% Pass figure handles
 f1 = figure(123);
 f2 = figure(456)
-analysis.experiments(1).recordings.plot_MIs([f1, f2]);
+my_analysis.experiments(1).recordings.plot_MIs([f1, f2]);
 ```
 
 #### recording time
@@ -123,12 +123,12 @@ By default, time is zeroed at the time of the first recording selected. if you s
 
 ```matlab
 %% Default behaviour zeroes time
-[~, time] = analysis.experiments(1).recordings([3, 5]).plot_MIs('');
+[~, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('');
 time{1}(1)
 >> ans = 0
 
 %% Use absolute time
-[~, time] = analysis.experiments(1).recordings([3, 5]).plot_MIs('', false);
+[~, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('', false);
 t = time{1}(1)
 >> 1.5700e+09
 
@@ -144,7 +144,7 @@ You want to filter a specific video type when display MIs.
 
 ```matlab
 %% To display only 'EyeCam'. Note that unselected videos are returned as empty cells
-[data, time] = analysis.experiments(1).recordings([3, 5]).plot_MIs('', '', 'Eye')
+[data, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('', '', 'Eye')
 >> data =
   1×2 cell array
     {0×0 double}    {2966×4 double}
@@ -156,10 +156,10 @@ Once extracted, you can apply an operation a a specific trace (for example filte
 
 ```matlab
 %% Apply local moving minimum (to filter laser)
-analysis.experiments(1).recordings.plot_MIs('', '', '', @(x) movmin(x, 3))
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', @(x) movmin(x, 3))
 
 %% Apply gaussian filter
-analysis.experiments(1).recordings.plot_MIs('', '', '', @(x) smoothdata(x, 'gaussian', [50, 0]))
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', @(x) smoothdata(x, 'gaussian', [50, 0]))
 ```
 
 #### Display Normalized vs Raw Data
@@ -168,13 +168,13 @@ By default, data is normalized for all the selected recordings, but this can be 
 
 ```matlab
 %% Default behaviour does a global normalization across all recordings
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'global')
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'global')
 
 %% You can disable normalization
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'none')
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'none')
 
 %% You can nomalize each recording individually
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'local')
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'local')
 ```
 
 #### Interactive Browsing
@@ -182,7 +182,7 @@ analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'local')
 If you have a lot of videos to browse, you can set `manual_browsing` to true. The code will wait for you to close the plot before loading the next one. This is more relevant when looking at multiple experiments at once
 
 ```
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', true)
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', true)
 ```
 
 #### Average ROIs, Filter ROIs
@@ -191,15 +191,15 @@ By default ROIs with the same name are averaged together. You can choose to aver
 
 ``` matlab
 %% By default, ROIs are regrouped and averaged by name
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '');
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '');
 
 %% Display all ROIs separately, even when the have the same name
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', false);
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', false);
 
 %% Display specific ROIs (empty input would show all ROIs)
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', {'Tail', 'Whisker'});
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', {'Tail', 'Whisker'});
 
 %% Display only Whisker recordings, but do not merge them
-analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', false, 'Whisker')
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', false, 'Whisker')
 ```
 
