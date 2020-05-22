@@ -19,6 +19,12 @@
 %
 % * Remove a specific video / set of videos
 %   Recording.pop(vid_number)
+%
+% * Plot Motion indices for selected recordings
+%   [all_data, all_t_axes] = Recording.plot_MIs(fig_number, zero_t, 
+%                               manual_browsing, videotype_filter, 
+%                               output_filter, regroup, ROI_filter,
+%                               normalize)
 % -------------------------------------------------------------------------
 % Extra Notes:
 % * Recording is a handle. If you extract assign a set of recordings
@@ -41,7 +47,7 @@
 % Revision Date:
 % 21-04-2020
 %
-% See also Experiment, Video
+% See also Analysis_Set, Experiment, Video, ROI
 
 
 classdef Recording < handle
@@ -192,15 +198,13 @@ classdef Recording < handle
             %   	normalization is done per recording
             % -------------------------------------------------------------
             % Outputs:
-            %   all_data ([1 x n_expe] CELL ARRAY of [1 x n_vid] CELL ARRAY
-            %                of [T x n_roi] MATRIX) - 
-            %   	For all experiments, returns the MI for the selected
+            %   all_data ([1 x n_vid] CELL ARRAY of [T x n_roi] MATRIX) - 
+            %   	For all recordings, returns the MI for the selected
             %   	videos. Videos that are filtered out return an empty
             %   	cell. Recordings are concatenated.
             %
-            %   all_t_axes ([1 x n_expe] CELL ARRAY of [1 x n_vid] CELL ARRAY
-            %                of [T x 1] MATRIX) - 
-            %   	For all experiments, returns the time for the selected
+            %   all_t_axes ([1 x n_vid] CELL ARRAY of [T x 1] MATRIX) - 
+            %   	For all recordings, returns the time for the selected
             %   	videos. Videos that are filtered out return an empty
             %   	cell. time is either absolute or starting from the
             %   	beginning of the recording depending on zero_t
