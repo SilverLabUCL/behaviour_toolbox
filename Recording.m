@@ -83,11 +83,65 @@ classdef Recording < handle
 
         
         function update(obj)
-            update_recording(obj, dir([obj.path, '/**/*.avi']));
+            %% Update list of videos in the recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Recording.update()
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+
+            recordings_videos = dir([obj.path, '/**/*.avi']);
+            %% Check if all videos are in place
+            if obj.n_vid
+                need_update = ~isfile({obj.videos.path}') | isempty({obj.videos.path}');
+
+                %% If you added a video, Figure out which one
+                if numel(recordings_videos) > numel(need_update)
+                    error_box('Re-addition of video not fully implemented. ask if needed. As a work around you can remove the recording, update the table and re-add the recording')
+                end
+
+                for vid = 1:numel(recordings_videos)
+                    if need_update(vid) % If you added videos in a recording, or if there is no information
+                        obj.videos(vid).path = fix_path([recordings_videos(vid).folder,'/',recordings_videos(vid).name]);
+                    end
+                end
+            end
         end
         
         function pop(obj, video_type_idx)
             %% Remove a specific video objct based on the video index
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Recording.pop(video_type_idx)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   video_type_idx (INT)
+            %   	delete recording at specified location
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            
             obj.videos(video_type_idx) = [];
         end
         
@@ -555,7 +609,11 @@ classdef Recording < handle
             t_start = [];
             for vid = 1:obj.n_vid
                 if obj.videos(vid).n_roi
-                    t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
+                    if isdatetime(obj.videos(vid).absolute_times(1))
+                        t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
+                    else
+                        t = obj.videos(vid).absolute_times(1);
+                    end
                     t_start = [t_start, t_start, t];
                 end
             end

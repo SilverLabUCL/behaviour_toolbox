@@ -14,17 +14,28 @@
 % -------------------------------------------------------------------------
 % Methods Index (ignoring get()/set() methods):
 %
-% * List all recordings in th experiment
-%   Recording.populate(current_expe_path)
+% * Add one / several empty recording.
+%   Experiment.add_recording(to_add)   
 %
 % * Remove a specific recording / set of recording
-%   Recording.pop(rec_number) 
-%
-% * Add one / several empty recording.
-%   Recording.add_recording(to_add)   
+%   Experiment.pop(rec_number) 
 %
 % * Remove empty/missing experiments
-%   Recording.cleanup(clear_missing)
+%   Experiment.cleanup(clear_missing)
+%
+% * List all recordings in the experiment
+%   Experiment.populate(current_expe_path)
+%
+% * Select ROI location for all recordings in experiment      
+%   failed = Experiment.select_ROIs(fig_handle, default_tags)         
+%
+% * Extract all Motion indexes for the experiment         
+%   Experiment.analyze(force, display)
+%
+% * Plot Motion indices
+%   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, zero_t, 
+%                               manual_browsing, videotype_filter, 
+%                               output_filter, regroup, ROI_filter)
 % -------------------------------------------------------------------------
 % Extra Notes:
 % * Experiments is a handle. If you extract assign a set of experiment
@@ -474,7 +485,7 @@ classdef Experiment < handle
                 end
             end
         end
-        
+
         function analyze(obj, force, display)
             %% Extract MIs for current experiments
             % -------------------------------------------------------------
