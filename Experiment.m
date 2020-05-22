@@ -343,8 +343,10 @@ classdef Experiment < handle
             if nargin < 2 || isempty(fig_handle)
                 fig_handle = '';
             end
-            if nargin < 3 || isempty(default_tags)
+            if (nargin < 3 || isempty(default_tags)) && isfield(obj.parent_set, 'default_tags')
                 default_tags = obj.parent_set.default_tags;
+            elseif nargin < 3 || isempty(default_tags)
+                default_tags = '';
             end
 
             if ~isempty(obj)
@@ -370,7 +372,7 @@ classdef Experiment < handle
                     end
 
                     if all(existing_motion_indexes)
-                        obj.recordings.plot_MIs(123, true, list_of_videotypes{video_type_idx});
+                        obj.recordings.plot_MIs(123, true, '', list_of_videotypes{video_type_idx});
                     end
 
                     %% Plot the representative_frame for the current expe
@@ -516,7 +518,7 @@ classdef Experiment < handle
             if nargin < 2 || isempty(force)
                 force = false;
             end
-            if nargin < 3 || isempty(display)s
+            if nargin < 3 || isempty(display)
                 display = false;
             end
             
@@ -537,17 +539,17 @@ classdef Experiment < handle
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
-                obj.recordings.plot_MIs(123, '', '', '', '', strcmp(display, 'pause'));
+                obj.recordings.plot_MIs(123, '', strcmp(display, 'pause'));
             end
         end
         
         function [all_data, all_t_axes] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter)
-            %% Display and return MIs for all ecordings in the experiment
+            %% Display and return MIs for all recordings in the experiment
             % -------------------------------------------------------------
             % Syntax: 
             %   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, 
-            %       zero_t, manual_browsing, videotype_filter, filter, 
-            %       regroup, ROI_filter)
+            %       zero_t, manual_browsing, videotype_filter, 
+            %       output_filter, regroup, ROI_filter)
             % -------------------------------------------------------------
             % Inputs:
             %   fig_number (1 x N_vid INT OR 1 x n_vid FIGURE HANDLE) - 
@@ -598,16 +600,12 @@ classdef Experiment < handle
             % Extra Notes:
             % * When using Videotype filter, the videos that are filtered
             %   out are returning an empty cell array.
+            %
+            % * See general documentation for examples
             % -------------------------------------------------------------
             % Examples:
             % * Get and Plot MI for current experiment
             %   [MI, t] = Experiment.plot_MIs()
-            %
-            % * Analyze all ROIs. Reanalyse old ones.
-            %   Experiment.analyze(true)
-            %
-            % * Analyze missing ROIs, plot result
-            %   Experiment.analyze('', true)
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -648,7 +646,7 @@ classdef Experiment < handle
                     fig_number  = (1:numel(obj(exp).videotypes)) + auto;
                     auto        = max(fig_number);                    
                 end
-                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number, zero_t, videotype_filter, output_filter, '', manual_browsing, regroup, ROI_filter);
+                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter);
             end
         end
 
@@ -675,7 +673,7 @@ classdef Experiment < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also:
+            % See also: Recording.videotypes
 
             filenames = {};
             for rec = 1:obj.n_rec

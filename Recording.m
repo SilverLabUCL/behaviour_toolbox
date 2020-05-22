@@ -92,30 +92,106 @@ classdef Recording < handle
         end
         
            
-        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, videotype_filter, output_filter, normalize, manual_browsing, regroup, ROI_filter)
+        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
+            %% Display and return MIs for current Recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, 
+            %       zero_t, manual_browsing, videotype_filter, 
+            %       output_filter, regroup, ROI_filter, normalize)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   fig_number (1 x N_vid INT OR 1 x n_vid FIGURE HANDLE) - 
+            %       Optional - default will use figure [1:n_vid]
+            %   	This defines the figures/figure handles to use. If
+            %   	figure number don't match the number of vieos, default
+            %   	behaviour is used
+            %
+            %   zero_t (BOOL) - Optional - default is true
+            %   	If true, time axis starts at 0 for the first recording,
+            %   	otherwise absolute time is displayed. See 
+            %   	Recording.t_start documentation for more information.
+            %
+            %   manual_browsing (BOOL) - Optional - default is false
+            %   	If true, MIs display will pause until the figure is 
+            %   	closed
+            %
+            %   videotype_filter (STR or CELL ARRAY of STR) - Optional - 
+            %       default is unique([obj.videotypes])
+            %   	Only videos matching videotype_filter are displayed.
+            %
+            %   output_filter (function handle) - Optional - default is ''
+            %   	if a function hande is provided, the function is
+            %   	applied to each MI array during extraction. see
+            %   	Recording.plot_MI for more information
+            %
+            %   regroup (BOOL) - Optional - default is true
+            %   	if true, ROIs with the same name are displayed together
+            %
+            %   ROI_filter (STR or CELL ARRAY of STR) - Optional - 
+            %       default is unique([obj.roi_labels])
+            %   	display only selected ROIs
+            %
+            %   normalize (STR) - Optional - any in {'none','local',
+            %       'global'} - Default is 'global'
+            %   	Define if MIs are normalized or not, and if
+            %   	normalization is done per recording
+            % -------------------------------------------------------------
+            % Outputs:
+            %   all_data ([1 x n_expe] CELL ARRAY of [1 x n_vid] CELL ARRAY
+            %                of [T x n_roi] MATRIX) - 
+            %   	For all experiments, returns the MI for the selected
+            %   	videos. Videos that are filtered out return an empty
+            %   	cell. Recordings are concatenated.
+            %
+            %   all_t_axes ([1 x n_expe] CELL ARRAY of [1 x n_vid] CELL ARRAY
+            %                of [T x 1] MATRIX) - 
+            %   	For all experiments, returns the time for the selected
+            %   	videos. Videos that are filtered out return an empty
+            %   	cell. time is either absolute or starting from the
+            %   	beginning of the recording depending on zero_t
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % * When using Videotype filter, the videos that are filtered
+            %   out are returning an empty cell array.
+            %
+            % * See general documentation for examples
+            % -------------------------------------------------------------
+            % Examples:
+            % * Get and Plot MI for current experiment
+            %   [MI, t] = Recording.plot_MIs()
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Experiment.plot_MIs
+ 
             if nargin < 2 || isempty(fig_number)
             	fig_number = '';
             end
             if nargin < 3 || isempty(zero_t)
             	zero_t = true;
             end
-            if nargin < 4 || isempty(videotype_filter)
-                videotype_filter = unique([obj.videotypes]);
-            end
-            if nargin < 5 || isempty(output_filter)
-                output_filter = false; % eg : @(x) movmin(x, 3)
-            end
-            if nargin < 6 || isempty(normalize)
-                normalize = 'global';
-            end
-            if nargin < 7 || isempty(manual_browsing)
+            if nargin < 4 || isempty(manual_browsing)
                 manual_browsing = false;
             end
-            if nargin < 8 || isempty(regroup)
+            if nargin < 5 || isempty(videotype_filter)
+                videotype_filter = unique([obj.videotypes]);
+            end
+            if nargin < 6 || isempty(output_filter)
+                output_filter = false; % eg : @(x) movmin(x, 3)
+            end
+            if nargin < 7 || isempty(regroup)
                 regroup = true;
             end
-            if nargin < 9 || isempty(ROI_filter)
+            if nargin < 8 || isempty(ROI_filter)
                 ROI_filter = unique([obj.roi_labels]);
+            end
+            if nargin < 9 || isempty(normalize)
+                normalize = 'global';
             end
 
             %% Regroup MIs in a matrix and fill missing cells
@@ -296,12 +372,54 @@ classdef Recording < handle
 
         function n_vid = get.n_vid(obj)
             %% Return the number of video available
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   n_vid = Recording.n_vid
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   n_vid (INT)
+            %   	number of videos listed in the recording
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            
             n_vid = numel(obj.videos);
         end
         
         function videotypes = get.videotypes(obj)
-            %% List all video_types available in the Children
-            %videotypes = {obj.videos.path};
+            %% List all video_types available in the Recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   videotypes = Recording.videotypes
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   videotypes (CELL ARRAY of STR)
+            %   	The name of all videos in the recording, without the
+            %   	extensions
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Experiment.videotypes
+            
             videotypes = {obj.videos.video_types};
         end 
 

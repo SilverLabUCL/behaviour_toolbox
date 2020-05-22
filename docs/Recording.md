@@ -138,13 +138,21 @@ datetime(t, 'ConvertFrom', 'posixtime' ,'Format','dd-MMM-yyyy HH:mm:ss.SSSSS')
 
 ```
 
+#### Interactive Browsing
+
+If you have a lot of videos to browse, you can set `manual_browsing` to true. The code will wait for you to close the plot before loading the next one. This is more relevant when looking at multiple experiments at once
+
+```
+my_analysis.experiments(1).recordings.plot_MIs('', '', true)
+```
+
 #### Filter specific videos
 
 You want to filter a specific video type when display MIs. 
 
 ```matlab
 %% To display only 'EyeCam'. Note that unselected videos are returned as empty cells
-[data, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('', '', 'Eye')
+[data, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('', '', '', 'Eye')
 >> data =
   1×2 cell array
     {0×0 double}    {2966×4 double}
@@ -156,33 +164,10 @@ Once extracted, you can apply an operation a a specific trace (for example filte
 
 ```matlab
 %% Apply local moving minimum (to filter laser)
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', @(x) movmin(x, 3))
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', @(x) movmin(x, 3))
 
 %% Apply gaussian filter
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', @(x) smoothdata(x, 'gaussian', [50, 0]))
-```
-
-#### Display Normalized vs Raw Data
-
-By default, data is normalized for all the selected recordings, but this can be modulated
-
-```matlab
-%% Default behaviour does a global normalization across all recordings
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'global')
-
-%% You can disable normalization
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'none')
-
-%% You can nomalize each recording individually
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', 'local')
-```
-
-#### Interactive Browsing
-
-If you have a lot of videos to browse, you can set `manual_browsing` to true. The code will wait for you to close the plot before loading the next one. This is more relevant when looking at multiple experiments at once
-
-```
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', true)
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', @(x) smoothdata(x, 'gaussian', [50, 0]))
 ```
 
 #### Average ROIs, Filter ROIs
@@ -191,15 +176,29 @@ By default ROIs with the same name are averaged together. You can choose to aver
 
 ``` matlab
 %% By default, ROIs are regrouped and averaged by name
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '');
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '');
 
 %% Display all ROIs separately, even when the have the same name
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', false);
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', false);
 
 %% Display specific ROIs (empty input would show all ROIs)
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', {'Tail', 'Whisker'});
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', {'Tail', 'Whisker'});
 
 %% Display only Whisker recordings, but do not merge them
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', false, 'Whisker')
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', false, 'Whisker')
+```
+#### Display Normalized vs Raw Data
+
+By default, data is normalized for all the selected recordings, but this can be modulated
+
+```matlab
+%% Default behaviour does a global normalization across all recordings
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', 'global')
+
+%% You can disable normalization
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', 'none')
+
+%% You can nomalize each recording individually
+my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', 'local')
 ```
 
