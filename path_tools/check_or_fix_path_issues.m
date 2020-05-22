@@ -3,12 +3,12 @@ function [analysis, experiment_folders] = check_or_fix_path_issues(analysis, exp
         filter_list = {};
     end
 
-    experiment_folders = arrayfun(@(x) [strrep(fullfile(x.folder, x.name),'\', '/'),'/'], experiment_folders, 'UniformOutput', false);   
+    experiment_folders = arrayfun(@(x) fix_path(fullfile(x.folder, x.name)), experiment_folders, 'UniformOutput', false);   
 
     %% Remove filtered or absent files/folders
     for expe_idx = analysis.n_expe:-1:1     
         experiment = analysis.experiments(expe_idx);
-        if ~isempty(experiment.recordings) && ~isempty(experiment.path) && isfolder(experiment.path) %&& (isempty(filter_list) || any(cellfun(@(x) contains(strrep(experiment.filenames{1}{1},'\','/'), strrep(x, '\','/')), filter_list)))
+        if ~isempty(experiment.recordings) && ~isempty(experiment.path) && isfolder(experiment.path)
             for recording_idx = experiment.n_rec:-1:1
                 if isfolder(experiment.recordings(recording_idx).path)
                     for video_type_idx = experiment.recordings(recording_idx).n_vid:-1:1                
@@ -39,7 +39,7 @@ function [analysis, experiment_folders] = check_or_fix_path_issues(analysis, exp
     
     %% Filter video folders accordingly
 	for el = numel(experiment_folders):-1:1
-        if ~isempty(filter_list) && ~any(cellfun(@(x) contains(experiment_folders{el}, strrep(x, '\','/')), filter_list))
+        if ~isempty(filter_list) && ~any(cellfun(@(x) contains(experiment_folders{el}, fix_path(x)), filter_list))
             experiment_folders(el) = [];
         end
     end    

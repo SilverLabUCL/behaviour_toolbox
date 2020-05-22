@@ -35,8 +35,7 @@ function [reference_frame, video_type, video_paths, failed_video_loading, all_fr
             % --> if it is not sharp, you may have moved the camera during
             % the experiment
             if ~isempty(local_video_type_idx)
-                current_path = experiment.recordings(rec).videos(local_video_type_idx).path;
-                current_path = strrep(current_path,'\','/'); 
+                current_path = fix_path(experiment.recordings(rec).videos(local_video_type_idx).path);
                 try
                     if get_preview
                         video = VideoReader(current_path);                

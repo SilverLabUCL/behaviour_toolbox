@@ -104,7 +104,7 @@ for exp = 1:numel(analysis.experiments)
         
         out = '';
         figure(123);xlim([0, numel(data)*dt*video_fact]);
-        title(strrep(current_subselection(idx).videos(end).path,'_','-'))
+        title(fix_path(current_subselection(idx).videos(end).path,true))
         for el = 1:numel(starts)
             plot(time(starts(el):stops(el))*video_fact, data(starts(el):stops(el)), 'Color', 'r', 'LineWidth', 2); hold on
             out = [out, num2str(round(starts(el)*dt,1)), '-', num2str(round(stops(el)*dt, 1)),'; '];

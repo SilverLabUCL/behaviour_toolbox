@@ -119,30 +119,30 @@ classdef Experiment
         function obj = populate(obj, current_expe_path)  
             %% To prevent creating duplicates, see analysis.add_experiment();
             if (nargin < 2 || isempty(current_expe_path)) && isdir(obj.path)
-                obj.path = strrep(obj.path,'\','/');
+                obj.path = fix_path(obj.path);
             elseif isdir(current_expe_path)
-                obj.path = strrep(current_expe_path,'\','/');
+                obj.path = fix_path(current_expe_path);
             else
-                fprintf([current_expe_path,' is not a valid path\n']);
+                fprintf([fix_path(current_expe_path),' is not a valid path\n']);
                 return
             end
             
             %% List all recordings
-            recordings_folder = dir([obj.path, '/*_*_*']);
+            recordings_folder = dir([obj.path, '*_*_*']);
 
             obj.splitvideos = {};
             if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
                 for recording_idx = 1:numel(recordings_folder)
                     %% Get all videos in the experiment
                     % Videos are expected to be avi files in a subfolder,as provided by the labview export software
-                    current_recording_path  = strrep([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name],'\','/');
-                    recordings_videos       = dir([current_recording_path, '/**/*.avi']);
+                    current_recording_path  = fix_path([recordings_folder(recording_idx).folder,'/',recordings_folder(recording_idx).name]);
+                    recordings_videos       = dir([current_recording_path, '**/*.avi']);
 
                     %% Code doesn't handle the *-2.avi videos
                     if any(any(contains({recordings_videos.name}, '-2.avi')))
                         % QQ Need to be sorted by merging exported files. This happens for some very big files i think, or when you use the
                         obj.splitvideo{recording_idx} = current_recording_path;
-                        fprintf([strrep(current_recording_path,'\','/'),' contains a split video and will not be analyzed\n'])
+                        fprintf([current_recording_path,' contains a split video and will not be analyzed\n'])
                     end
 
                     %% Check if recording is new or if it's an update
@@ -370,6 +370,33 @@ classdef Experiment
             %% Regroup videos by video type (eyecam, bodycam etc...)
             videotypes = unique(filenames(cellfun('isclass', filenames, 'char')));
         end   
+
+        function obj = set.path(obj, experiment_path)
+            %% Set a new experiment path and fix synatx
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Experiment.path = experiment_path
+            % -------------------------------------------------------------
+            % Inputs:
+            %   experiment_path (STR PATH)
+            %   	The folder containing all the recordings
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also:
+
+            obj.path = fix_path(experiment_path);
+        end
 
         function roi_labels = get.roi_labels(obj)
             %% List all video_types available in the Children

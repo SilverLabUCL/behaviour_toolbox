@@ -187,7 +187,7 @@ classdef Analysis_Set
             
             %% Print selected folders. Filter excluded sets.
             for el = numel(experiment_folders):-1:1
-                current_expe_path = [strrep(experiment_folders(el).folder,'\', '/'),'/',experiment_folders(el).name, '/'];
+                current_expe_path = fix_path([experiment_folders(el).folder,'/',experiment_folders(el).name]);
                 if contains(current_expe_path, obj.folder_exclusion) || ~isdir(current_expe_path)
                     experiment_folders(el) = [];
                 else
@@ -412,12 +412,15 @@ classdef Analysis_Set
             %
             % See also: Analysis_Set.update_all_paths
             
+            old = old;
+            new = fix_path(new);
+            
             for exp = 1:obj.n_expe                 
-                obj.experiments(exp).path = strrep(obj.experiments(exp).path, old, new);
+                obj.experiments(exp).path = strrep(fix_path(obj.experiments(exp).path), old, new);
                 for rec = 1:obj.experiments(exp).n_rec
-                    obj.experiments(exp).recordings(rec).path = strrep(obj.experiments(exp).recordings(rec).path,old,new);
+                    obj.experiments(exp).recordings(rec).path = strrep(fix_path(obj.experiments(exp).recordings(rec).path),old,new);
                     for vid = 1:obj.experiments(exp).recordings(rec).n_vid
-                        obj.experiments(exp).recordings(rec).videos(vid).path = strrep(obj.experiments(exp).recordings(rec).videos(vid).path, old, new);
+                        obj.experiments(exp).recordings(rec).videos(vid).path = strrep(fix_path(obj.experiments(exp).recordings(rec).videos(vid).path), old, new);
                     end
                 end                
             end 
@@ -458,7 +461,7 @@ classdef Analysis_Set
             %
             % See also: Analysis_Set.add_experiment
             
-            expe_path = strrep([expe_path,'/'], '\', '/'); expe_path = strrep(expe_path, '//', '/');
+            expe_path               = fix_path(expe_path);
             expe_already_there      = false;
 
             %% If we find the experiment somewhere, we update the index
@@ -596,14 +599,14 @@ classdef Analysis_Set
             %   Antoine Valera. 
             %---------------------------------------------
             % Revision Date:
-            %   20-05-2020
+            %   22-05-2020
             %
             % See also: Analysis_Set.update_all_paths
             
 %             if ~isempty(obj.video_folder) && ~isempty(new_video_folder) && ~contains(struct2array(dbstack(1)), 'update_all_paths')
 %                 obj = update_all_paths(obj, obj.video_folder, new_video_folder);
 %             end
-            obj.video_folder = new_video_folder;
+            obj.video_folder = fix_path(new_video_folder);
         end
         
         
@@ -630,33 +633,6 @@ classdef Analysis_Set
             %   20-05-2020
             
             n_expe = numel(obj.experiments);
-        end
-
-        function video_folder = get.video_folder(obj)
-            %% Return the number of experiment in the database
-            % -------------------------------------------------------------
-            % Syntax: 
-            %   video_folder = Analysis_Set.video_folder
-            % -------------------------------------------------------------
-            % Inputs:
-            % -------------------------------------------------------------
-            % Outputs: 
-            %   video_folder (STR)
-            %   	Return the path to the top folder that contains all the
-            %   	videos
-            % -------------------------------------------------------------
-            % Extra Notes:
-            % -------------------------------------------------------------
-            % Examples:
-            % -------------------------------------------------------------
-            % Author(s):
-            %   Antoine Valera. 
-            %---------------------------------------------
-            % Revision Date:
-            %   20-05-2020
-            
-            video_folder = strrep([obj.video_folder, '/'],'\','/');
-            video_folder = strrep(video_folder,'//','/');
         end
         
         function videotypes = get.videotypes(obj)

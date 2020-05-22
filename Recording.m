@@ -217,7 +217,7 @@ classdef Recording
                             
                             %% Prepare subplot for the ROI
                             ax          = subplot('Position',[0.1, 0.95 - sz*roi_count, 0.85, sz - 0.01]);
-                            if roi_count == 1; title([type_list{videotype_idx},' ; ', strrep(fileparts(obj(1).path),'_','\_')]);hold on; end
+                            if roi_count == 1; title([type_list{videotype_idx},' ; ', fix_path(fileparts(obj(1).path),true)]);hold on; end
                             ax.XAxis.Visible = 'off';
                             ylabel(ROI_names{roi+1});hold on
 
@@ -262,6 +262,34 @@ classdef Recording
                 end
             end
         end
+        
+
+        function obj = set.path(obj, recording_path)
+            %% Set a new experiment path and fix synatx
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Recording.path = recording_path
+            % -------------------------------------------------------------
+            % Inputs:
+            %   experiment_path (STR PATH)
+            %   	The folder containing all the videos for a recording
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also:
+
+            obj.path = fix_path(recording_path);
+        end
 
         function n_vid = get.n_vid(obj)
             %% Return the number of video available
@@ -278,6 +306,7 @@ classdef Recording
             %% Get reference image per Video
             reference_images = {obj.videos.reference_image};
         end 
+        
 
         function motion_indexes = get.motion_indexes(obj)
             %% Get MIs for each video

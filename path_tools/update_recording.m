@@ -11,7 +11,7 @@ function current_recording = update_recording(current_recording, recordings_vide
     
     for vid = 1:numel(recordings_videos)
         if need_update(vid) % If you added videos in a recording, or if there is no information
-            current_recording.videos(vid).path = strrep([recordings_videos(vid).folder,'/',recordings_videos(vid).name],'\','/');
+            current_recording.videos(vid).path = fix_path([recordings_videos(vid).folder,'/',recordings_videos(vid).name]);
         end
     end
 end

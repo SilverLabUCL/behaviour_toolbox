@@ -3,30 +3,30 @@
 function [current_experiment, names] = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle, preset_buttons)
     %% Display the frame, and add any existing ROI
     if nargin < 4 || isempty(fig_handle)
-        fig_handle = figure(123); clf();hold on;
+        fig_handle      = figure(123); clf();hold on;
     end
     if nargin < 5 || isempty(preset_buttons)
-        preset_buttons = '';
+        preset_buttons  = '';
     end
 
     clear global current_offset current_pos roi_handles link current_video
     global link current_video current_pos busy
-    link            = {};
-    link.name       = {};
-    link.id         = [];
-    link.label      = {};
+    link                = {};
+    link.name           = {};
+    link.id             = [];
+    link.label          = {};
     link.preset_buttons_handles = {};
-    current_video   = 0;
-    current_pos     = {};
-    busy            = false;
+    current_video       = 0;
+    current_pos         = {};
+    busy                = false;
 
     list_of_videotypes = current_experiment.videotypes;
     type = list_of_videotypes{video_type_idx}; % cellfun(@(x) contains(type, x), [current_experiment.recordings(1).default_video_types])
     [reference_frame, ~, ~, ~, all_frames] = get_representative_frame(current_experiment, video_type_idx, type, true);
 
     %% QQ using video_type_idx instead of name. could cause issue with video failures
-    video_paths     = cell(current_experiment.n_rec, 1);
-    ROI_offsets     = cell(current_experiment.n_rec, 1);
+    video_paths         = cell(current_experiment.n_rec, 1);
+    ROI_offsets         = cell(current_experiment.n_rec, 1);
     for rec = 1:numel(current_experiment.recordings) % cannot use video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)'; if there are missing videos
         real_idx = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
         if ~isempty(real_idx)
@@ -40,43 +40,43 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     end
     
     last_valid_videorec = find(~strcmp(video_paths, ''), 1, 'last');
-    video_path      = strrep(strrep(fileparts(fileparts(fileparts(video_paths{last_valid_videorec}))),'\','/'),'_','-');
+    video_path          = fileparts(fileparts(fileparts(video_paths{last_valid_videorec})));
     
-    ROI_window      = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
-    link.existing_MI= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).motion_indexes;
-    link.n_vid      = size(all_frames, 3);
-    link.auto_offsets = autoestimate_offsets('', '', all_frames);
+    ROI_window          = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
+    link.existing_MI    = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).motion_indexes;
+    link.n_vid          = size(all_frames, 3);
+    link.auto_offsets   = autoestimate_offsets('', '', all_frames);
 
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);
     axis image; hold on;
-    fig_handle.Color= 'w';
-    tit             = title({'Close window or press Return key to validate'; strrep(strrep(video_path,'\','/'),'_','-')});
+    fig_handle.Color    = 'w';
+    tit                 = title({'Close window or press Return key to validate'; fix_path(video_path, true)});
     set(gca,'YDir','reverse');hold on ;
-    im_handle       = imagesc(reference_frame,'hittest','off'); hold on;
+    im_handle           = imagesc(reference_frame,'hittest','off'); hold on;
 
     %% Add callback to add more ROIs
-    cmenu           = uicontextmenu;
-    position        = [floor(size(reference_frame, 2)/2), floor(size(reference_frame, 1)/2), 20, 20]; %default pos
-    bgmenu          = uimenu(cmenu,'label','Add ROI','Callback',@(src,eventdata) add_rect(src, eventdata, position));
+    cmenu               = uicontextmenu;
+    position            = [floor(size(reference_frame, 2)/2), floor(size(reference_frame, 1)/2), 20, 20]; %default pos
+    bgmenu              = uimenu(cmenu,'label','Add ROI','Callback',@(src,eventdata) add_rect(src, eventdata, position));
     set(gca, 'uicontextmenu', cmenu)
     set(fig_handle,'KeyPressFcn',{@escape_btn ,fig_handle});
     
     %% If there are preexisting ROIs, display them
     global current_offset
     for roi_idx = 1:size(ROI_window,2)
-        roi_position = ROI_window(1,:); %first video is enough
-        roi_position = roi_position{roi_idx};
+        roi_position    = ROI_window(1,:); %first video is enough
+        roi_position    = roi_position{roi_idx};
 
         if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name)     
-            label = ['Label # ',num2str(roi_idx)];
+            label       = ['Label # ',num2str(roi_idx)];
         else
-            label = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name;
+            label       = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name;
         end
         if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).motion_index)
-            color = 'y';
+            color       = 'y';
         else
-            color = 'g';
+            color       = 'g';
         end  
         add_rect('', '', roi_position, label, color, size(all_frames, 3));
         
@@ -88,9 +88,9 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
 
     %% Add preset button
     offset = 0;
-    for preset      = 1:numel(preset_buttons)
-        offset      = offset + 50;
-        position    = position(1:4); % no keeping id
+    for preset          = 1:numel(preset_buttons)
+        offset          = offset + 50;
+        position        = position(1:4); % no keeping id
         link.preset_buttons_handles{preset} = uicontrol('Style', 'pushbutton', 'String', preset_buttons{preset}, 'Position', [30 50+offset 100 40], 'Callback', @(event, src) add_rect(src, event, position,'', '', size(all_frames, 3)));
     end
     
@@ -114,7 +114,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         pause(display_duration);
     end
 
-    names       = link.name;
+    names           = link.name;
     close all
 end
 
@@ -135,10 +135,10 @@ function change_image(event, src, reference_frame, all_frames, im_handle, tit, v
     enable_disable_buttons(current_video == 0);
     if event.Value == 0
         im = reference_frame;
-        tit.String{2} = strrep(strrep(fileparts(fileparts(fileparts(video_paths{1}))),'\','/'),'_','\_');
+        tit.String{2} = fix_path(fileparts(fileparts(fileparts(video_paths{1}))),true);
     else
         im = all_frames(:,:,event.Value);
-        tit.String{2} = strrep(strrep(video_paths{event.Value},'\','/'),'_','\_');
+        tit.String{2} = fix_path(video_paths{event.Value},true);
     end
     im_handle.CData = im; 
     
@@ -364,7 +364,7 @@ function MI_preview(~, ~, im_handle)
     if current_video
         video_path = get(im_handle.Parent, 'title');
         video_path = video_path.String{2};
-        video_path = strrep(video_path, '\_', '_');
+        video_path = fix_path(video_path, true);
         MIs = get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) ;
         t = MIs{1}(:, 2);
         MIs = cell2mat(cellfun(@(x) x(:, 1), MIs, 'UniformOutput', false));

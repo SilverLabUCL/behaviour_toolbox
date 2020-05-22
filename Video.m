@@ -125,6 +125,33 @@ classdef Video
             end
         end
 
+        function obj = set.path(obj, video_path)
+            %% Set a new experiment path and fix synatx
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Video.path = video_path
+            % -------------------------------------------------------------
+            % Inputs:
+            %   experiment_path (STR PATH)
+            %   	The path to the individual video
+            % -------------------------------------------------------------
+            % Outputs: 
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also:
+
+            obj.path = fix_path(video_path);
+        end
+
         function n_roi = get.n_roi(obj)
             %% Return the number of ROI windows
             n_roi = numel(obj.rois);
