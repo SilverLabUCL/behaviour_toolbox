@@ -82,3 +82,23 @@ my_analysis.select_ROIs()
 my_analysis.select_ROIs('2018-12-05')
 ```
 
+### Extract MIs
+
+You can extract all the motion indexes at once once the ROI location was defined
+
+```matlab
+%% Analyze all un-analysed ROIs for all experiments
+my_analysis.analyze()
+
+%% Analyze all un-analysed ROIs for a subset of experiment using a filter
+my_analysis.analyze('2018-12-05')
+
+%% Analyze all ROIs, reanalyse the ones that were already extracted
+my_analysis.analyze('', true)
+
+%% Display result for each experiment
+my_analysis.analyze('', '', true)
+
+%% Display result for each experiment, but pause until window is closed
+my_analysis.analyze('', '', 'auto')
+```

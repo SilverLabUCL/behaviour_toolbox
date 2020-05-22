@@ -90,3 +90,72 @@ my_analysis.experiments(1).global_reference_images
 my_analysis.experiments(1).t_start
 ```
 
+
+
+## Data Analysis
+
+### Set ROIs
+
+If you want to position / update ROIs for a specific experiment or a know set of experiments. 
+
+```matlab
+%% Setup all ROIs for a specific experiment
+my_analysis.experiment(1).select_ROIs()
+
+%% Setup ROIs for a set of experiment
+my_analysis.experiment([1, 4]).select_ROIs()
+```
+
+For filtering using experiment paths, see [Analysis_set.select_ROIs](Analysis_Set.md#Set-ROIs)
+
+### Extract MIs
+
+You can extract all the motion indexes at once once the ROI location was defined
+
+```matlab
+%% Analyze all un-analysed ROIs for experiment 1
+my_analysis.experiments(1).analyze()
+
+%% Analyze all ROIs, reanalyse the ones that were already extracted
+my_analysis.experiments(1).analyze(true)
+
+%% Display result for experiment 1
+my_analysis.experiments(1).analyze('', true)
+```
+
+### Plot MIs
+
+Once extracted, you can display motion indexes
+
+```matlab
+%% Display MIs for experiment 6
+my_analysis.experiments(6).plot_MIs()
+
+%% Display MIs for experiment 3 and 4
+my_analysis.experiments([3, 4]).plot_MIs()
+
+%% Get MI values
+[MIs, time] = my_analysis.experiments(1).plot_MIs()
+
+%% Plot MIs in figure 6 and 7. (you need to provide the same number of idx as the mumber of videotypes)
+my_analysis.experiments(1).plot_MIs([6, 7])
+
+%% Plot against absolute time
+my_analysis.experiments(1).plot_MIs('', false)
+
+%% Pause between plots, until figure is closed
+my_analysis.experiments(1).plot_MIs('', '', true)
+
+%% Display only Eye Cam
+my_analysis.experiments(1).plot_MIs('', '', '', 'Eye')
+
+%% Apply a small filter
+my_analysis.experiments(1).plot_MIs('', '', '', '', @(x) movmedian(x, 3))
+
+%% Prevent regrouping ROis with the same name
+analysis.experiments(3).plot_MIs('', '', '', '', '', false)
+
+%% Filter specific ROIs
+analysis.experiments(3).plot_MIs('', '', '', '', '', '', {'Whisker', 'Tail'})
+```
+

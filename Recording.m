@@ -92,7 +92,7 @@ classdef Recording < handle
         end
         
            
-        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, videotype_filter, filter, normalize, manual_browsing, regroup, ROI_filter)
+        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, videotype_filter, output_filter, normalize, manual_browsing, regroup, ROI_filter)
             if nargin < 2 || isempty(fig_number)
             	fig_number = '';
             end
@@ -102,8 +102,8 @@ classdef Recording < handle
             if nargin < 4 || isempty(videotype_filter)
                 videotype_filter = unique([obj.videotypes]);
             end
-            if nargin < 5 || isempty(filter)
-                filter = false; % eg : @(x) movmin(x, 3)
+            if nargin < 5 || isempty(output_filter)
+                output_filter = false; % eg : @(x) movmin(x, 3)
             end
             if nargin < 6 || isempty(normalize)
                 normalize = 'global';
@@ -200,9 +200,9 @@ classdef Recording < handle
                     %% Create subplot
                     axes            = [];
                     if regroup
-                        n_rois      = sum(ismember(unique(current_labels{1}), ROI_filter)); 
+                        n_rois      = sum(contains(unique(current_labels{1}), ROI_filter)); 
                     else
-                        n_rois      = sum(ismember(current_labels{1}, ROI_filter)); 
+                        n_rois      = sum(contains(current_labels{1}, ROI_filter)); 
                         ROI_names   = current_labels{1};
                     end   
                     sz              = 0.9/n_rois; % use (numel(unique([ROI_names{:}]))) instead to insert gaps and match locations across videos
@@ -239,8 +239,8 @@ classdef Recording < handle
                             novid       = diff(all_rois(:,2));
                             [idx]       = find(novid > (median(novid) * 2));
                             taxis       = (all_rois(:,2)- t_offset);
-                            if isa(filter,'function_handle')
-                                mi_data = filter(mi_data);
+                            if isa(output_filter,'function_handle')
+                                mi_data = output_filter(mi_data);
                             end
                             plot(taxis, mi_data); hold on;
                             for p = 1:numel(idx)
@@ -431,6 +431,8 @@ classdef Recording < handle
             %---------------------------------------------
             % Revision Date:
             %   21-05-2020
+            %
+            % See also: Experiment.t_start
             
             t_start = [];
             for vid = 1:obj.n_vid

@@ -83,7 +83,7 @@
 % Revision Date:
 % 21-04-2020
 %
-% See also: Experiment
+% See also: Experiment, Recording, Video, ROI
 
 classdef Analysis_Set < handle
     properties
@@ -517,10 +517,51 @@ classdef Analysis_Set < handle
             end
         end
 
-        function analyze(obj, filter_list, force, display, manual_browsing)
-            %% Force specific MI to be updated
-            % By default, only ROIs with no MI are analysed, unless you set
-            % force to true
+        function analyze(obj, filter_list, force, display)
+            %% Extract MIs for all experiments
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Analysis_Set.analyze(filter_list, force, display)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   filter_list (STR or CELL ARRAY of STR) - Optional - default
+            %           is ''
+            %   	If non-empty, only video path that match the filter
+            %   	will be updated and displayed
+            %
+            %   force (BOOL) - Optional - default is false
+            %   	If true, reanalyze previous MIs. If false, only analyze
+            %   	missing ones
+            %
+            %   display (BOOL or STR) - Optional - default is false
+            %   	- If true or 'auto', MIs are displayed for each 
+            %   	recording (after extraction). If extraction was already
+            %   	done, MIs are also shown.
+            %       - If 'pause' MIs display will pause until the figure
+            %   	 is closed
+            % -------------------------------------------------------------
+            % Outputs:
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % * Analyze all ROIs where an un-analysed ROI is set
+            %   my_analysis.analyze()
+            %
+            % * Analyze all ROIs. Reanalyse old ones.
+            %   my_analysis.analyze('',true)
+            %
+            % * Analyze/Re-analyze all ROIs in a specific experiment
+            %   my_analysis.select_ROIs('2018-12-05', true)
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Experiment.analyze
+
             if nargin < 2 || isempty(filter_list)
                 filter_list = {''};
             end
@@ -529,9 +570,6 @@ classdef Analysis_Set < handle
             end
             if nargin < 4 || isempty(display)
                 display = false;
-            end
-            if nargin < 5 || isempty(manual_browsing)
-                manual_browsing = false;
             end
             
             %% Update required fields
@@ -544,7 +582,7 @@ classdef Analysis_Set < handle
 
             %% Now that all Videos are ready, get the motion index if the MI section is empty
             for experiment_idx = analyzed_idx
-                obj.experiments(experiment_idx).analyze(force, display, manual_browsing);
+                obj.experiments(experiment_idx).analyze(force, display);
             end    
         end
 
@@ -572,9 +610,9 @@ classdef Analysis_Set < handle
             %
             % See also: Analysis_Set.update_all_paths
             
-%             if ~isempty(obj.video_folder) && ~isempty(new_video_folder) && ~contains(struct2array(dbstack(1)), 'update_all_paths')
-%                 obj = update_all_paths(obj, obj.video_folder, new_video_folder);
-%             end
+            %             if ~isempty(obj.video_folder) && ~isempty(new_video_folder) && ~contains(struct2array(dbstack(1)), 'update_all_paths')
+            %                 obj = update_all_paths(obj, obj.video_folder, new_video_folder);
+            %             end
             obj.video_folder = fix_path(new_video_folder);
         end
         
