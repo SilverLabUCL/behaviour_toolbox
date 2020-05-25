@@ -141,7 +141,7 @@ classdef Recording < handle
             % See also:
             
             if nargin < 1
-                n_video         = 0; % Empty recording
+                n_video         = 0;    % Empty recording
             end
             if nargin < 2
                 recording_path  = '';   % Empty recording
@@ -151,15 +151,18 @@ classdef Recording < handle
             end
             obj.path            = recording_path;
         end
-
         
-        function update(obj)
+        function update(obj, full_update)
             %% Update list of videos in the recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   Recording.update()
+            %   Recording.update(full_update)
             % -------------------------------------------------------------
             % Inputs:
+            %   full_update (BOOL) - Optional - default is falif true,
+            %   video timestamps will be computed too. This will slow down
+            %   refresh for a big database, and can be handled when
+            %   extracting MIs
             % -------------------------------------------------------------
             % Outputs: 
             % -------------------------------------------------------------
@@ -172,6 +175,10 @@ classdef Recording < handle
             %---------------------------------------------
             % Revision Date:
             %   22-05-2020
+            
+            if nargin < 2 || isempty(full_update)
+                full_update = false;
+            end
 
             recordings_videos = dir([obj.path, '**/*.avi']);
             %% Check if all videos are in place
@@ -186,6 +193,9 @@ classdef Recording < handle
                 for vid = 1:numel(recordings_videos)
                     if need_update(vid) % If you added videos in a recording, or if there is no information
                         obj.videos(vid).path = fix_path([recordings_videos(vid).folder,'/',recordings_videos(vid).name]);
+                        if full_update
+                            obj.videos(vid).set_timestamps();
+                        end
                     end
                 end
             end
@@ -199,7 +209,7 @@ classdef Recording < handle
             % -------------------------------------------------------------
             % Inputs:
             %   video_type_idx (INT)
-            %   	delete recording at specified location
+            %   	delete video at specified location
             % -------------------------------------------------------------
             % Outputs: 
             % -------------------------------------------------------------
@@ -214,6 +224,59 @@ classdef Recording < handle
             %   22-05-2020
             
             obj.videos(video_type_idx) = [];
+        end
+
+        function analyze(obj, force, display)
+            %% Extract MIs for current recording
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   Recording.analyze(force, display)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   force (BOOL) - Optional - default is false
+            %   	If true, reanalyze previous MIs. If false, only analyze
+            %   	missing ones
+            %
+            %   display (BOOL or STR) - Optional - default is false
+            %   	- If true or 'auto', MIs are displayed for each 
+            %   	recording (after extraction). If extraction was already
+            %   	done, MIs are also shown.
+            %       - If 'pause' MIs display will pause until the figure
+            %   	 is closed
+            % -------------------------------------------------------------
+            % Outputs:
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % * Analyze all ROIs where an un-analysed ROI is set
+            %   Experiment.analyze()
+            %
+            % * Analyze all ROIs. Reanalyse old ones.
+            %   Experiment.analyze(true)
+            %
+            % * Analyze missing ROIs, plot result
+            %   Experiment.analyze('', true)
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Experiment.analyze
+            
+            if nargin < 2 || isempty(force)
+                force = false;
+            end
+            if nargin < 3 || isempty(display)
+                display = false;
+            end
+
+            %% Go through video, and extract MI when required
+            for vid = 1:obj.n_vid    
+                obj.videos(vid).analyze('', force, display);
+            end 
         end
         
            
@@ -513,8 +576,6 @@ classdef Recording < handle
                 obj.videos(vid).clear_MIs(ROI_filter, delete_ROI);
             end
         end
-        
-        
 
         function set.path(obj, recording_path)
             %% Set a new recording path and fix synatx
@@ -593,7 +654,11 @@ classdef Recording < handle
             %
             % See also: Experiment.videotypes
             
-            videotypes = {obj.videos.video_types};
+            if obj.n_vid % for non-empty folders
+                videotypes = {obj.videos.video_types};
+            else
+                videotypes = '';
+            end
         end 
 
         function reference_images = get.reference_images(obj)

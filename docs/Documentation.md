@@ -79,15 +79,15 @@ The data is organized following a hierarchical structure. Each level is defined 
 
 [`Analysis_Set`](Analysis_Set.md) 		: The container for all your experiments
 
-[`Experiment`](Experiment.md) 			: Each Experiment contains multiple recordings
+[`Experiment`](Experiment.md) 			: Each Experiment contains one or multiple recordings
 
-[`Recording`](Recording.md)               : Each Recording contains multiple videos
+[`Recording`](Recording.md)               : Each Recording contains one or multiple videos
 
-`Video`
+[`Video`](Video.md)              		 : Each Video contains one or multiple ROIs
 
-`ROI`
+[`ROI`](ROI.md)             			  : ROIs enable video data extraction.
 
-Each parent structure can list its children properties. See Class documentation, or use cases at the end of the documentation for more details.
+Each parent structure can list its children properties. See Class documentation, or see demo scripts at the end of the documentation for more details.
 
 First run and database initialization
 =====================================

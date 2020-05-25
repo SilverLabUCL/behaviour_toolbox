@@ -64,6 +64,9 @@ function corrected_path = fix_path(input_path, for_printing)
         for_printing = false;
     end
     
+    %% Make sure we have a cha and not a string
+    input_path = char(input_path);
+    
     %% If no input, no output
     if isempty(input_path)
         corrected_path = input_path;

@@ -28,14 +28,16 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     video_paths         = cell(current_experiment.n_rec, 1);
     ROI_offsets         = cell(current_experiment.n_rec, 1);
     for rec = 1:numel(current_experiment.recordings) % cannot use video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)'; if there are missing videos
-        real_idx = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
-        if ~isempty(real_idx)
-            idx_to_use = real_idx;
-            video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
-            ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
-        else
-            video_paths{rec} = '';
-            ROI_offsets{rec} = [NaN, NaN];
+        if current_experiment.recordings(rec).n_vid
+            real_idx = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
+            if ~isempty(real_idx)
+                idx_to_use = real_idx;
+                video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
+                ROI_offsets{rec} = current_experiment.recordings(rec).videos(real_idx).video_offset;
+            else
+                video_paths{rec} = '';
+                ROI_offsets{rec} = [NaN, NaN];
+            end
         end
     end
     

@@ -2,9 +2,7 @@
 
 Analysis_Set Class is the container for all your experiments. It contains information about the location of your data, as well as some default properties.
 
-For now, the class is NOT a handle, which means you have to reassign the output of the object to itself.
-
-In an analysis set, you can add/remove experiments.
+Analysis_Set and all its children are handles. You can index them to simplify the code syntax. See [handle section](#About-handles).
 
 ### Start a new analysis and add experiments
 
@@ -69,6 +67,27 @@ If you want to ignore some experiment folders, you can edit the exclusion list.
 %% Ignore experiment from a specific day
 my_analysis.folder_exclusion = [my_analysis.folder_exclusion, {'2018-12-04'}];
 ```
+
+### About handles
+
+All classes are handles, which means you can index them. 
+
+```matlab
+%% Start from a existing analysis
+my_analysis.experiments(1).recordings(1).videos(1).rois(1).plot_MI();
+
+% Is equivalent to
+my_expe = my_analysis.experiments(1);
+my_expe.recordings(1).videos(1).rois(1).plot_MI();
+
+% Or to
+my_roi = my_analysis.experiments(1).recordings(1).videos(1).rois(1);
+my_roi.plot_MI();
+```
+
+In the example above, any operation happening on `my_expe.recordings(1).videos(1).rois(1)` or on `my_roi`
+
+actually happens to `my_analysis.experiments(1).recordings(1).videos(1).rois(1)`.
 
 ### Set ROIs
 

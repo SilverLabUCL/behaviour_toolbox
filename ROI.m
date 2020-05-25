@@ -56,7 +56,9 @@ classdef ROI < handle
         ROI_location        ; % [X Y width height id] coordinates of an roi
         motion_index        ; % [T x 2] extracted roi info (data, time)
         motion_index_norm   ; % motion_index values normalized to max
+        function_used       ; % function used for extraction
         name                ; % ROI name
+        parent_video_path   ; % path of video used for extraction
     end
     
     methods
@@ -89,25 +91,33 @@ classdef ROI < handle
             obj.name            = [];
         end
         
-        function f = plot_MI(obj, fig_number, normalize) 
+        function [f, MI] = plot_MI(obj, fig_number, normalize) 
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   Video.plot_MIs(fig_number, normalize)
+            %   [fh, MI] = Video.plot_MIs(fig_number, normalize)
             % -------------------------------------------------------------
             % Inputs:
-            %   fig_number (1 x N_vid INT OR 1 x n_vid FIGURE HANDLE) - 
-            %       Optional - default will use figure [1:n_vid]
-            %   	This defines the figures/figure handles to use. If
-            %   	figure number don't match the number of vieos, default
-            %   	behaviour is used
+            %   fig_number (INT or FIGURE HANDLE or AXIS HANDLE) - 
+            %       Optional - default will use figure 1. If INT or figure
+            %       handle, the corresponding figure is used. If you re
+            %       buidling a subplot, then fig_number can be an AXIS
+            %       HANDLE
             %
-            %   normalize (STR) - Optional - any in {'none','local',
-            %       'global'} - Default is 'global'
-            %   	Define if MIs are normalized or not, and if
-            %   	normalization is done per recording
+            %   normalize (BOOL) - Optional - default is false
+            %   	If true, uses normalized MI, otherwise used default MI.
             % -------------------------------------------------------------
-            % Outputs:
+            % Outputs:            
+            %   fh (Figure HANDLE) - 
+            %   	current figure or axis handle (axis handle only if
+            %   	fig_number was an axis handle itself
+            %            
+            %   MI ([T x 2] MATRIX or [T x N] Matrix) - optional 
+            %   	- By default, returns MI and timescale for current ROI.
+            %       Column 1 is the metric and column 2 is the timestamp 
+            %       extracted when running the MI extraction code.
+            %       - If you run a custom function handle for extraction
+            %       then all the data extracted is output.
             % -------------------------------------------------------------
             % Extra Notes:
             % -------------------------------------------------------------
@@ -173,6 +183,10 @@ classdef ROI < handle
                     f.XAxis.Visible = 'off';
                 end
                 ylim(optimal_y_lim);
+            end
+            
+            if nargout > 1
+                MI = [MI, obj.motion_index(:,2)];
             end
         end
         

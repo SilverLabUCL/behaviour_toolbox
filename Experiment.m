@@ -162,14 +162,14 @@ classdef Experiment < handle
         end
         
         function add_recording(obj, to_add)
-            %% Remove a specific recording objct based on the video index
+            %% Add one or several Recording objects
             % -------------------------------------------------------------
             % Syntax: 
             %   Experiment.add_recording(to_add)
             % -------------------------------------------------------------
             % Inputs:
             %   to_add (INT) - Optional - default is 1
-            %   	Add an N empty recordig at the designated index
+            %   	Add an N empty Recording objects
             % -------------------------------------------------------------
             % Outputs: 
             % -------------------------------------------------------------
@@ -187,7 +187,7 @@ classdef Experiment < handle
                 to_add = 1;
             end
             if isnumeric(to_add)
-                obj.Recording(end + 1:end + to_add) = Recording;
+                obj.recordings(end + 1:end + to_add) = Recording;
             else
                 % TODO : add cell array char support
             end
@@ -257,7 +257,7 @@ classdef Experiment < handle
             obj.recordings = obj.recordings(idx);
 
             %% Make sure there is no empty recording after reordering
-            obj.recordings = obj.recordings(~cellfun(@isempty, {obj.recordings.path}));    
+            obj.recordings = obj.recordings(~cellfun(@isempty, {obj.recordings.path}) & cellfun(@(x) x > 0, {obj.recordings.n_vid}));    
             
             if clear_missing
                 %% Remove folders that are not pointing at a real path
@@ -284,7 +284,7 @@ classdef Experiment < handle
             %   	to see what the requirements are.
             %
             %   parent (Analysis_Set HANDLE) - Optional - Default is ''
-            %   	The handle to the analysis set enable the sue of some
+            %   	The handle to the analysis set enable the use of some
             %   	gloal settings such as default tags when using
             %   	Experiment.select_ROIs instead of
             %   	Analysis_Set.select_ROIs
@@ -396,7 +396,11 @@ classdef Experiment < handle
                 clear global current_offset current_pos roi_handles
                 global current_pos current_offset
 
-                failed    = {};
+                %% Make sure there is no funny/empty video folder listed
+                obj.cleanup()
+                
+                %% Prepare extraction
+                failed                  = {};
                 list_of_videotypes      = obj.videotypes;
 
                 %% For each videotype, get a representative frame
@@ -407,10 +411,12 @@ classdef Experiment < handle
                     existing_windows    = false(1, obj.n_rec);
                     existing_motion_indexes = false(1, obj.n_rec);
                     for rec = 1:obj.n_rec
-                        real_idx = find(contains({obj.recordings(rec).videos.path}, list_of_videotypes{video_type_idx}));
-                        if real_idx % When one video is missing for a specific recording
-                            existing_windows(1, rec)        = ~isempty(obj.recordings(rec).videos(real_idx).ROI_location); % no nested indexing method available as far as i know
-                            existing_motion_indexes(1, rec) = ~all(cellfun(@isempty, obj.recordings(rec).videos(real_idx).motion_indexes)); % no nested indexing method available as far as i know
+                        if obj.recordings(rec).n_vid % for non empty-folders
+                            real_idx = find(contains({obj.recordings(rec).videos.path}, list_of_videotypes{video_type_idx}));
+                            if real_idx % When one video is missing for a specific recording
+                                existing_windows(1, rec)        = ~isempty(obj.recordings(rec).videos(real_idx).ROI_location); % no nested indexing method available as far as i know
+                                existing_motion_indexes(1, rec) = ~all(cellfun(@isempty, obj.recordings(rec).videos(real_idx).motion_indexes)); % no nested indexing method available as far as i know
+                            end
                         end
                     end
 
@@ -478,8 +484,8 @@ classdef Experiment < handle
                                 previous_ids = vertcat(obj.recordings(rec).videos(local_video_type_idx).ROI_location{:});
                                 if isempty(current_pos) % Because you deleted everything !
                                     obj.recordings(rec).videos(local_video_type_idx).rois = repmat(ROI, 1, 0);
-                                else
-                                    obj.recordings(rec).videos(local_video_type_idx).video_offset = mean(cell2mat(cellfun(@(x) x(rec,:), current_offset, 'UniformOutput', false)'),1); % only store mean displacement
+                                elseif obj.recordings(rec).n_vid % this will only exclude completely empty/irrelevant folders
+                                    obj.recordings(rec).videos(local_video_type_idx).video_offset = mean(cell2mat(cellfun(@(x) x(rec,:), current_offset, 'UniformOutput', false)'),1); % only store mean displacement. % IF YOU HAV AN ERROR HERE< CONSIDER CALLING experiment.cleanup()
                                     for roi = 1:numel(current_pos) 
                                         %% Check if it is a new ROI
                                         if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
@@ -566,19 +572,7 @@ classdef Experiment < handle
             end
             
             for rec = 1:obj.n_rec
-                for vid = 1:obj.recordings(rec).n_vid
-                    if any(cellfun(@isempty, obj.recordings(rec).videos(vid).motion_indexes)) || force
-                        %% Update MI's
-                        obj.recordings(rec).videos(vid).analyze();
-
-                        %% Store results
-                        if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
-                            obj.recordings(rec).videos(vid).plot_MIs();
-                        end
-                    else
-                        fprintf(['No analysis required for ',obj.recordings(rec).videos(vid).path,'. Skipping extraction\n'])
-                    end
-                end 
+                obj.recordings(rec).analyze(force, display);
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
@@ -855,10 +849,9 @@ classdef Experiment < handle
         function global_reference_images = get.global_reference_images(obj)
             %% List all video_types available in the Children
             % [N x M] Cell orray, of N recordings and M videos
-            videotypes = obj.videotypes;
-            global_reference_images = cell(obj.n_rec, numel(videotypes));
+            global_reference_images = cell(obj.n_rec, numel(obj.videotypes));
             for rec = 1:obj.n_rec
-                for vid = 1:numel(videotypes)
+                for vid = 1:obj.recordings(rec).n_vid
                     real_idx = find(contains({obj.recordings(rec).videos.path}, obj.videotypes{vid}));
                     if ~isempty(real_idx)
                         global_reference_images{rec, vid} = obj.recordings(rec).reference_images{real_idx};
