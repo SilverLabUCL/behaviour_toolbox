@@ -661,9 +661,55 @@ classdef Recording < handle
             end
         end 
 
-        function reference_images = get.reference_images(obj)
-            %% Get reference image per Video
-            reference_images = {obj.videos.reference_image};
+        function [reference_images, video_label] = get_representative_frame(obj, force)
+            %% Generate a consensus frame for the whole experiment
+            %   Consensus frame is an image build using the first frame of
+            %   each recording, in order to give an idea of the amount of
+            %   stability of the of the video location
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   [reference_frame, all_frames] =
+            %               Experiment.get_representative_frame(force)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   force (BOOL) - Optional - default is false
+            %   	If true, the first frame will be extracted again
+            % -------------------------------------------------------------
+            % Outputs:
+            %   all_frames ({X x Y} x N_VIDEO CELL ARRAY)
+            %   	One frame per video type, obtained from
+            %   	Video.reference_frame
+            %
+            %   video_label ({STR} x N_VIDEO CELL ARRAY)
+            %   	One label per video type, to enable filtering of
+            %   	specific video types
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Experiment.get_consensus_frame,
+            %   Video.reference_image 
+            
+            if nargin < 2 || isempty(force)
+                force = false;
+            end
+            
+            reference_images    = cell(1, obj.n_vid);
+            video_label         = cell(1, obj.n_vid);
+            for vid = 1:obj.n_vid
+                if force
+                    obj.videos(vid).reference_image = [];
+                end
+                reference_images{vid}   = obj.videos(vid).reference_image;
+                video_label{vid}        = obj.videos(vid).video_types;
+            end
         end 
         
 

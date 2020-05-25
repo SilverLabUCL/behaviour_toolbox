@@ -698,6 +698,37 @@ classdef Video < handle
                 motion_index_norm{roi} = obj.rois(roi).motion_index_norm;
             end
         end
+        
+        function reference_image = get.reference_image(obj)
+            %% Return or generate video reference image
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   reference_image = Video.reference_image
+            % -------------------------------------------------------------
+            % Inputs:
+            % -------------------------------------------------------------
+            % Outputs: 
+            %   reference_image (X x Y DOUBLE)
+            %   	A reference image for the selected video
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   25-05-2020
+            
+            if isempty(obj.reference_image)
+                video = VideoReader(obj.path);                
+                video.CurrentTime = 1;
+                vidFrame = readFrame(video);
+                obj.reference_image = double(adapthisteq(rgb2gray(vidFrame))); 
+            end
+            reference_image = obj.reference_image;
+        end
 
         function roi_labels = get.roi_labels(obj)
             %% Return label for each ROI

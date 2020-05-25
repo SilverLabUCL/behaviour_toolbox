@@ -425,8 +425,7 @@ classdef Experiment < handle
                     end
 
                     %% Plot the representative_frame for the current expe
-                    names = [];
-                    [obj, names] = display_video_frame(obj, video_type_idx, 0, fig_handle, default_tags);
+                    [obj, names] = display_video_frame(obj, list_of_videotypes{video_type_idx}, 0, fig_handle, default_tags);
 
                     %% Clear empty cells if you deleted some ROIs. get id of deleted cells
                     to_keep     = cellfun(@numel , current_pos) == 5;
@@ -522,6 +521,89 @@ classdef Experiment < handle
                     end
                 end
             end
+        end
+        
+        
+        function [consensus_frame, all_frames] = get_consensus_frame(obj, videotype, force)
+            %% Generate a consensus frame for the whole experiment
+            %   Consensus frame is an image build using the first frame of
+            %   each recording, in order to give an idea of the amount of
+            %   stability of the of the video location
+            % -------------------------------------------------------------
+            % Syntax: 
+            %   [reference_frame, all_frames] =
+            %    Experiment.get_consensus_frame(videotype, force)
+            % -------------------------------------------------------------
+            % Inputs:
+            %   videotype (STR) - Optional - default is ''
+            %   	The name of the video type to use for image
+            %   	regeneration 
+            %
+            %   force (BOOL) - Optional - default is false
+            %   	If true, the first frame will be extracted again
+            % -------------------------------------------------------------
+            % Outputs:
+            %   consensus_frame (X x Y x 3 DOUBLE)
+            %   	Consensus frame generated using all the recordings. See
+            %   	extra notes for color-code.
+            %
+            %   all_frames ({X x Y} x N_REC CELL ARRAY)
+            %   	One frame per recording, obtained from
+            %   	Video.reference_frame
+            % -------------------------------------------------------------
+            % Extra Notes:
+            % * Red indicates for the normalized sum
+            %   Green indicates the normalized variance
+            %   Blue indicates the normalized max
+            %   Saturated regions are NaNd, and displayed in black.
+            % -------------------------------------------------------------
+            % Examples:
+            % -------------------------------------------------------------
+            % Author(s):
+            %   Antoine Valera. 
+            %---------------------------------------------
+            % Revision Date:
+            %   22-05-2020
+            %
+            % See also: Recording.get_representative_frame
+            
+            if nargin < 2 || isempty(videotype)
+                videotype = obj.videotypes(1);
+            end
+            if nargin < 3 || isempty(force)
+                force = false;
+            end
+
+            consensus_frame = cell(1, obj.n_rec);
+            labels          = cell(1, obj.n_rec);
+            for rec = 1:obj.n_rec
+                [consensus_frame{rec}, labels{rec}] = obj.recordings(rec).get_representative_frame(force);
+            end
+            
+            %% Make sure we get one frame for the correct video, or a frame of NaN of similar size
+            real_idx        = cellfun(@(x) find(contains(x, videotype)), labels, 'UniformOutput', false);
+            missing         = cellfun(@isempty, real_idx);
+            first_valid     = find(~missing,1,'first');
+            consensus_frame(missing) = {{NaN(size(consensus_frame{first_valid}{real_idx{first_valid}}))}};
+            real_idx(missing) = {1};
+            consensus_frame = cellfun(@(x, y) x{y}, consensus_frame, real_idx, 'UniformOutput', false);
+ 
+            %% Concatenate
+            consensus_frame = cat(3,consensus_frame{:});
+            corrimage       = correlation_image(consensus_frame);
+            mask            = repmat(isnan(corrimage),1,1,3); % No DATA
+
+            %% Generate consensus frame
+            all_frames = consensus_frame;
+            meanimage   = nanmean(consensus_frame, 3);        
+            varimage    = nanvar(consensus_frame, 1, 3);
+            maximage    = nanmax(consensus_frame, [], 3);
+            maximage    = (maximage-meanimage);
+            consensus_frame = cat(3,...
+                                  (meanimage - nanmin(meanimage(:))) / (nanmax(meanimage(:)) - nanmin(meanimage(:))),...
+                                  (3*varimage - nanmin(varimage(:))) / (nanmax(varimage(:)) - nanmin(varimage(:))),...
+                                  (3*maximage - nanmin(maximage(:))) / (nanmax(maximage(:)) - nanmin(maximage(:))));
+            consensus_frame(imerode(mask, strel('disk',3))) = 0; % blank saturated regions  
         end
 
         function analyze(obj, force, display)

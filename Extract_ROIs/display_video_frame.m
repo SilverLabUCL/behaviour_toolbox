@@ -1,6 +1,6 @@
 %% TODO : replace video_type_idx by name matching
 
-function [current_experiment, names] = display_video_frame(current_experiment, video_type_idx, display_duration, fig_handle, preset_buttons)
+function [current_experiment, names] = display_video_frame(current_experiment, video_type, display_duration, fig_handle, preset_buttons)
     %% Display the frame, and add any existing ROI
     if nargin < 4 || isempty(fig_handle)
         fig_handle      = figure(123); clf();hold on;
@@ -20,16 +20,14 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     current_pos         = {};
     busy                = false;
 
-    list_of_videotypes = current_experiment.videotypes;
-    type = list_of_videotypes{video_type_idx}; % cellfun(@(x) contains(type, x), [current_experiment.recordings(1).default_video_types])
-    [reference_frame, ~, ~, ~, all_frames] = get_representative_frame(current_experiment, video_type_idx, type, true);
+    [reference_frame, all_frames] = current_experiment.get_consensus_frame(video_type);
 
     %% QQ using video_type_idx instead of name. could cause issue with video failures
     video_paths         = cell(current_experiment.n_rec, 1);
     ROI_offsets         = cell(current_experiment.n_rec, 1);
     for rec = 1:numel(current_experiment.recordings) % cannot use video_paths     = arrayfun(@(x) x.videos(video_type_idx).path, [current_experiment.recordings], 'UniformOutput', false)'; if there are missing videos
         if current_experiment.recordings(rec).n_vid
-            real_idx = find(cellfun(@(x) contains(x, type), {current_experiment.recordings(rec).videos.path}));
+            real_idx = find(cellfun(@(x) contains(x, video_type), {current_experiment.recordings(rec).videos.path}));
             if ~isempty(real_idx)
                 idx_to_use = real_idx;
                 video_paths{rec} = current_experiment.recordings(rec).videos(real_idx).path;
