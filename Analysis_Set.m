@@ -9,7 +9,7 @@
 % -------------------------------------------------------------------------
 % Class Generation Inputs:
 %   video_folder(STR) - Optional - default is ''
-%                               Path to you top video folder, that contains
+%                               Path to your top video folder, that contains
 %                               all the videos. If provided, the folder
 %                               will be set to Analysis_Set.video_folder
 %

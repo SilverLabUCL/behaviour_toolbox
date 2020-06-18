@@ -49,12 +49,15 @@ You can get display the motion indexes for a given video
 roi = my_analysis.experiments(1).recordings(1).videos(1).rois(1)
 
 %% Simplest plot for a single roi
-vid.rois(1).plot_MI()
+roi.plot_MI()
 
 %% Capture the output
-[~, MI] = vid.rois(1).plot_MI()
+[~, MI] = roi.plot_MI()
+
+%% Plot MI in figure 10
+[~, MI] = roi.plot_MI(10)
 
 %% Plot normalized MI
-[~, MI] = vid.rois(1).plot_MI('', true)
+[~, MI] = roi.plot_MI('', true)
 ```
 
