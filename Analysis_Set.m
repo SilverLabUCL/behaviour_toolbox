@@ -140,6 +140,10 @@ classdef Analysis_Set < handle
                 obj.video_folder = video_folder;
                 fprintf('video_folder added. call Analysis_Set.update() to add all containing experiments.\n')
             end
+            
+            if isempty(ver('images'))
+                error_box('Image Processing Toolbox is not installed but required to run the toolbox', 0)
+            end
         end
  
         function update(obj, filter_list)
