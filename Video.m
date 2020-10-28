@@ -89,7 +89,7 @@ classdef Video < handle
         motion_indexes  ; % All Extracted Motion indices
         motion_index_norm;% All Extracted normalized Motion indices
         video_offset    ; % Video offset relative to first experiment recording
-        position        ; % ?
+        position        ; % Camera Position?
         name            ; % ---
     end
     
@@ -145,7 +145,7 @@ classdef Video < handle
             end
         end
         
-        function metric = analyze(obj, func, force, display)
+        function metric = analyze(obj, func, force, display, fieldname)
             %% Store and format absolute timestamps for the current video
             % -------------------------------------------------------------
             % Syntax: 
@@ -194,6 +194,9 @@ classdef Video < handle
             if nargin < 4 || isempty(display)
                 display = false;
             end
+            if nargin < 5 || isempty(fieldname)
+                fieldname = 'motion_indexes';
+            end
             
             %% Update MI's (or run function handle)
             if any(cellfun(@isempty, obj.motion_indexes)) || force
@@ -213,10 +216,27 @@ classdef Video < handle
                 else
                     t = obj.absolute_times(1);
                 end  
-                obj.motion_indexes          = func(t);
-                [obj.rois.function_used]    = deal(func2str(func));
-                [obj.rois.parent_video_path]= deal(obj.path);
-                metric                      = obj.motion_indexes;
+               
+                metric = func(t);
+                if contains(func2str(func), 'get_MI_from_video')
+                    obj.motion_indexes          = metric;
+                    [obj.rois.function_used]    = deal(func2str(func));
+                    [obj.rois.parent_video_path]= deal(obj.path);
+                    metric                      = obj.motion_indexes;
+                else % for custom functions
+                    if ~iscell(metric)
+                        metric = repmat({metric}, 1, obj.n_roi);
+                    end
+                    for roi = obj.n_roi
+                        %% For custom functions, add property in individual ROIs
+                        if ~isprop(obj.rois(roi), fieldname)
+                            addprop(obj.rois(1),fieldname)
+                        end
+                        obj.rois(roi).(fieldname)                       = metric{roi};
+                        obj.rois(roi).(fieldname).Description           = func2str(func);
+                        obj.rois(roi).(fieldname).DetailedDescription   = obj.path;
+                    end
+                end
 
                 %% Plot results
                 if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)

@@ -51,7 +51,7 @@
 %
 % See also Analysis_Set, Experiment, Recordings, Video
 
-classdef ROI < handle
+classdef ROI < handle & dynamicprops
     properties
         ROI_location        ; % [X Y width height id] coordinates of an roi
         motion_index        ; % [T x 2] extracted roi info (data, time)

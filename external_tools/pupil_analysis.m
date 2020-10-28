@@ -65,7 +65,7 @@
 % See also fit_ellipse, load_stack, save_stack
 %
 
-function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prctile)
+function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prctile, ROI)
     %% Set Default inputs
     if nargin < 2 || isempty(rendering)
         rendering = false;
@@ -79,8 +79,18 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
 
     %% Open stack
     if exist(file_path, 'file')
-        data = load_stack(file_path);
+        data = mmread_light(file_path);
         nFrames = size(data, 3);
+    end
+    
+    data = smoothdata(data, 3, 'movmedian', [20, 0]);
+    
+    if nargin >= 5 && ~isempty(ROI)
+        ROI = round(ROI); ROI(ROI < 1) = 1;
+        
+        %% QQ ADD CHECK TO MAKE SURE ROI DOESNT SPAN FURTHER THAN VIDEO LIMIT
+        
+        data = data(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
     end
 
     %% Initialisation
@@ -88,6 +98,29 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
     PupilCentroid   = nan(nFrames, 2);
     PupilBoundary   = cell( nFrames,1);
     Threshold       = nan(nFrames, 1);
+    
+%     
+%     dark_prctile = 1;
+%     thresh_factor = 1.5;
+%     
+%     figure(123);cla();
+%     s1 = subplot(1,2,1); hold on;
+%     im1 = imagesc(data(:,:,1)); axis image;
+%     set(gca, 'YDir','reverse')
+%     s2 = subplot(1,2,2); hold on;
+%     im2 = imagesc(data(:,:,1)); axis image;
+%     set(gca, 'YDir','reverse')
+%     for frame = 1:nFrames
+%         curr_image = data(:,:,frame);
+%         Threshold( frame )  = thresh_factor * prctile(curr_image(:), dark_prctile);
+%         pupil               = curr_image < Threshold(frame);
+%         pupil               = bwareafilt(pupil, 1);       % keep largest connected dark component
+%         pupil               = imfill( pupil, 'holes' );
+%         
+%         im1.CData =  pupil;
+%         im2.CData =  data(:,:,frame);
+%         pause(0.001);
+%     end
 
     %% Run parallel on all frames
     parfor frame = 1:nFrames
@@ -98,6 +131,8 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
         Threshold( frame )  = thresh_factor * prctile(curr_image(:), dark_prctile);
         pupil               = curr_image < Threshold(frame);
         pupil               = bwareafilt(pupil, 1);       % keep largest connected dark component
+        pupil               = imdilate( pupil, strel('disk', 3));
+        pupil               = imerode( pupil, strel('disk', 3));
         pupil               = imfill( pupil, 'holes' );
 
         [ally, allx] = find(pupil);  
@@ -107,8 +142,8 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
         [ PupilBoundary{ frame }(:,2), PupilBoundary{ frame }(:,1)] =find( tmp ); 
         pupil_ellipse = fit_ellipse( PupilBoundary{frame}( :,1), PupilBoundary{frame}( :,2) );
         LongAxis( frame) = pupil_ellipse.long_axis;    ShortAxis(frame) = pupil_ellipse.short_axis;
-    %     A(frame)         = pupil_ellipse.a;            B(frame)         = pupil_ellipse.b;
-    %     X0(frame)        = pupil_ellipse.X0;           Y0(frame)        = pupil_ellipse.Y0;
+        A(frame)         = pupil_ellipse.a;            B(frame)         = pupil_ellipse.b;
+        X0(frame)        = pupil_ellipse.X0;           Y0(frame)        = pupil_ellipse.Y0;
         EllipseAngle(frame) = pupil_ellipse.phi;
     end
 
@@ -118,33 +153,47 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
                         'CentroidY',    mat2cell(PupilCentroid(:,2), nFrames), ...
                         'Boundary',     mat2cell(PupilBoundary, nFrames), ...
                         'Threshold',    mat2cell(Threshold, nFrames), ...
-                        'EllipseAngle', mat2cell(EllipseAngle, nFrames)         );
-    %                     'X_A',          mat2cell(A, nFrames), ...
-    %                     'Y_B',          mat2cell(B, nFrames), ...
-    %                     'X0',           mat2cell(X0, nFrames), ...
-    %                     'Y0',           mat2cell(Y0, nFrames), ...
+                        'EllipseAngle', mat2cell(EllipseAngle, nFrames),...
+                        'X_A',          mat2cell(A, nFrames), ...
+                        'Y_B',          mat2cell(B, nFrames), ...
+                        'X0',           mat2cell(X0, nFrames), ...
+                        'Y0',           mat2cell(Y0, nFrames));
 
     %% Plotting
     if rendering
         nPlot           = min( 16, nFrames);
-        Frames_to_plot  = sort(randperm(nFrames, nPlot));
+        Frames_to_plot  = sort(randperm(nFrames, nPlot-2));
+        [~, m] = nanmin(LongAxis .* ShortAxis * pi);
+        [~, M] = nanmax(LongAxis .* ShortAxis * pi);
+        Frames_to_plot = [Frames_to_plot, m, M];
 
-        figure;
+        figure(666);clf();
         colormap(gray)
         nr  = ceil(sqrt(nPlot) );
         for seq = 1:nPlot
             subplot(nr, nr, seq)
             frame = Frames_to_plot(seq);
             curr_image = data(:,:,frame);
-            imagesc( curr_image ); hold on
-            scatter( PupilBoundary{ frame }(:,1), PupilBoundary{ frame }(:,2), 6, 'MarkerFaceColor','r', 'MarkerEdgeColor', 'r')
-            scatter( PupilCentroid( frame,1 ), PupilCentroid( frame,2 ), 'w', 'filled' )
-    %         ellipse( A(frame),B(frame),EllipseAngle(frame),X0(frame),Y0(frame),'b');
-            title(['Frame ', num2str(frame)] )
+            imagesc( curr_image ); hold on; axis image; hold on;
+            scatter( PupilBoundary{ frame }(:,1), PupilBoundary{ frame }(:,2), 6, 'MarkerFaceColor','r', 'MarkerEdgeColor', 'r'); hold on;
+            scatter( PupilCentroid( frame,1 ), PupilCentroid( frame,2 ), 'w', 'filled' );hold on;
+            
+            
+%             a=A(frame); % horizontal radius
+%             b=B(frame); % vertical radius
+%             x0=X0(frame); % x0,y0 ellipse centre coordinates
+%             y0=Y0(frame);
+%             t=-pi:0.01:pi;
+%             x=x0+a*cos(t);
+%             y=y0+b*sin(t);
+%             plot(x,y, 'g-');hold on;
+            
+            %ellipse( A(frame),B(frame),EllipseAngle(frame),X0(frame),Y0(frame),'b');
+            title(['Frame ', num2str(frame)])
         end
 
 
-        figure();  hold on
+        figure(667); cla(); hold on
         %plot( LongAxis , 'r-' ); hold on
         %plot( ShortAxis, 'b--' ); hold on
         plot( LongAxis .* ShortAxis * pi, 'r' );
