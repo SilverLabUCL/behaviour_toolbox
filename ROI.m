@@ -54,15 +54,15 @@
 classdef ROI < handle & dynamicprops
     properties
         ROI_location        ; % [X Y width height id] coordinates of an roi
-        motion_index        ; % [T x 2] extracted roi info (data, time)
+        motion_index        ; % [N X 1] extracted roi info (data)
         motion_index_norm   ; % motion_index values normalized to max
         function_used       ; % function used for extraction
         name                ; % ROI name
-        parent_video_path   ; % path of video used for extraction
+        parent_h            ; % handle to parent video
     end
     
     methods
-        function obj = ROI()
+        function obj = ROI(parent)
             %% ROI Object Constructor. 
             % -------------------------------------------------------------
             % Syntax: 
@@ -89,6 +89,7 @@ classdef ROI < handle & dynamicprops
             obj.ROI_location    = [];
             obj.motion_index    = [];
             obj.name            = [];
+            obj.parent_h        = parent;
         end
         
         function [f, MI] = plot_MI(obj, fig_number, normalize) 
@@ -190,7 +191,14 @@ classdef ROI < handle & dynamicprops
             end
         end
         
-        
+        function motion_index = get.motion_index(obj)   
+            if ~isempty(obj.motion_index)
+            	motion_index = [obj.motion_index, obj.parent_h.t];
+            else
+                motion_index = [];
+            end
+        end
+
         function motion_index_norm = get.motion_index_norm(obj)
             %% Get normalized MIs for the ROI
             % -------------------------------------------------------------

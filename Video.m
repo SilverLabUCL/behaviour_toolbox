@@ -77,6 +77,7 @@ classdef Video < handle
         video_types     ; % Name of the video without extension
         timestamps      ; % Relative tiemstamps from the beginning of the video
         absolute_times  ; % Absolute timestamps in posix time
+        t               ; % Absolute timestamps in posix time?
         sampling_rate   ; % Video sampling rate
         reference_image ; % The reference image of the video
         comment         ; % User Comment
@@ -141,7 +142,7 @@ classdef Video < handle
             obj.timestamps      = cell(1, n_roi);
             obj.video_types     = cell(1, n_roi);
             for el = 1:n_roi
-                obj.rois = [obj.rois, ROI];
+                obj.rois = [obj.rois, ROI(obj)];
             end
         end
         
@@ -200,28 +201,16 @@ classdef Video < handle
             
             %% Update MI's (or run function handle)
             if any(cellfun(@isempty, obj.motion_indexes)) || force
-                %% Set timing info if missing
-                if isempty(obj.timestamps) 
-                    set_timestamps(obj);
-                end
-
                 %% If you run analyze without setting a ROI
                 if isempty(obj.ROI_location)
                     obj.add_roi(1); %% QQ maybe need to add a few more stuff
                 end
-
-                %% Get MI (or other function handle)
-                if isdatetime(obj.absolute_times(1))
-                    t = obj.timestamps + posixtime(obj.absolute_times(1)) + rem(second(obj.absolute_times(1)),1); % posixtime in seconds
-                else
-                    t = obj.absolute_times(1);
-                end  
-               
-                metric = func(t);
+                
+                metric = func(obj.t);
                 if contains(func2str(func), 'get_MI_from_video')
-                    obj.motion_indexes          = metric;
+                    obj.motion_indexes          = metric(:, 1);
                     [obj.rois.function_used]    = deal(func2str(func));
-                    [obj.rois.parent_video_path]= deal(obj.path);
+                    [obj.rois.parent_h]         = deal(obj);
                     metric                      = obj.motion_indexes;
                 else % for custom functions
                     if ~iscell(metric)
@@ -328,9 +317,9 @@ classdef Video < handle
             end
             if isnumeric(to_add)
                 if isempty(obj.rois)
-                    obj.rois = ROI; to_add = to_add - 1;
+                    obj.rois = ROI(obj); to_add = to_add - 1;
                 end
-                obj.rois(end + 1:end + to_add) = ROI;
+                obj.rois(end + 1:end + to_add) = ROI(obj);
             end
         end
         
@@ -776,6 +765,20 @@ classdef Video < handle
             for roi = 1:obj.n_roi
                 roi_labels{roi} = obj.rois(roi).name;
             end
+        end
+        
+        function t = get.t(obj)
+            %% Set timing info if missing
+            if isempty(obj.timestamps) 
+                set_timestamps(obj);
+            end
+            
+            %% Return t
+            if isdatetime(obj.absolute_times(1))
+                t = obj.timestamps + posixtime(obj.absolute_times(1)) + rem(second(obj.absolute_times(1)),1); % posixtime in seconds
+            else
+                t = obj.absolute_times(1);
+            end  
         end
         
 

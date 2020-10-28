@@ -482,7 +482,7 @@ classdef Experiment < handle
                                 n_rois = obj.recordings(rec).videos(local_video_type_idx).n_roi;
                                 previous_ids = vertcat(obj.recordings(rec).videos(local_video_type_idx).ROI_location{:});
                                 if isempty(current_pos) % Because you deleted everything !
-                                    obj.recordings(rec).videos(local_video_type_idx).rois = repmat(ROI, 1, 0);
+                                    obj.recordings(rec).videos(local_video_type_idx).rois = repmat(ROI(obj.recordings(rec).videos(local_video_type_idx)), 1, 0);
                                 elseif obj.recordings(rec).n_vid % this will only exclude completely empty/irrelevant folders
                                     obj.recordings(rec).videos(local_video_type_idx).video_offset = mean(cell2mat(cellfun(@(x) x(rec,:), current_offset, 'UniformOutput', false)'),1); % only store mean displacement. % IF YOU HAV AN ERROR HERE< CONSIDER CALLING experiment.cleanup()
                                     for roi = 1:numel(current_pos) 
@@ -490,9 +490,9 @@ classdef Experiment < handle
                                         if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
                                             n_roi = obj.recordings(rec).videos(local_video_type_idx).n_roi;
                                             if n_roi == 0 %% QQ NEED TO CREATE AMETHOD FOR THAT
-                                                obj.recordings(rec).videos(local_video_type_idx).rois = ROI;
+                                                obj.recordings(rec).videos(local_video_type_idx).rois = ROI(obj.recordings(rec).videos(local_video_type_idx));
                                             else
-                                                obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1) = ROI;
+                                                obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1) = ROI(obj.recordings(rec).videos(local_video_type_idx));
                                             end
                                             obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).ROI_location = current_pos{roi}; % no nested indexing method available as far as i know
                                             obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1).name = names{roi};
