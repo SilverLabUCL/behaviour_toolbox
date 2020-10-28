@@ -462,7 +462,7 @@ classdef Video < handle
                 obj.pop(to_clear);
             else
                 for el = sort(unique(to_clear))
-                    obj.rois(el).motion_index   = [];
+                    obj.rois(el).extracted_data   = [];
                 end
             end
         end
@@ -554,7 +554,7 @@ classdef Video < handle
                 error('Number of MIs provided does not match the number of MIs available. Use ')        
             else
                 for roi = 1:obj.n_roi
-                    obj.rois(roi).motion_index = motion_indexes{roi};
+                    obj.rois(roi).extracted_data = motion_indexes{roi};
                 end
             end
         end
@@ -674,7 +674,7 @@ classdef Video < handle
             
             motion_indexes    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
-                motion_indexes{roi} = obj.rois(roi).motion_index;
+                motion_indexes{roi} = obj.rois(roi).extracted_data;
             end
         end
         

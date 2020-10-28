@@ -54,7 +54,7 @@
 classdef ROI < handle & dynamicprops
     properties
         ROI_location        ; % [X Y width height id] coordinates of an roi
-        motion_index        ; % [N X 1] extracted roi info (data)
+        extracted_data      ; % [N X 1] extracted roi info (data)
         function_used       ; % function used for extraction
         name                ; % ROI name
         parent_h            ; % handle to parent video
@@ -86,7 +86,7 @@ classdef ROI < handle & dynamicprops
             % See also:
             
             obj.ROI_location    = [];
-            obj.motion_index    = [];
+            obj.extracted_data  = {};
             obj.name            = [];
             obj.parent_h        = parent;
         end
@@ -142,9 +142,9 @@ classdef ROI < handle & dynamicprops
             
             %% Get single or multiple extracted variable
             if numel(obj) == 1
-                MI = obj.motion_index(:,1);
+                MI = obj.extracted_data(:,1);
             else
-                MI = cell2mat(arrayfun(@(x) x.motion_index(:,1), obj, 'UniformOutput', false));
+                MI = cell2mat(arrayfun(@(x) x.extracted_data(:,1), obj, 'UniformOutput', false));
             end
             
             %% Normalize variable if required
@@ -188,20 +188,20 @@ classdef ROI < handle & dynamicprops
             end
             
             if nargout > 1
-                MI = [MI, obj.motion_index(:,2)];
+                MI = [MI, obj.extracted_data(:,2)];
             end
         end
         
-        function motion_index = get.motion_index(obj)   
-            if ~isempty(obj.motion_index)
-            	motion_index = obj.motion_index;
-                if size(motion_index, 2) == 1
-                   motion_index = [motion_index , obj.parent_h.t];
+        function extracted_data = get.extracted_data(obj)   
+            if ~isempty(obj.extracted_data)
+            	extracted_data = obj.extracted_data;
+                if size(extracted_data, 2) == 1
+                   extracted_data = [extracted_data , obj.parent_h.t];
                 else
                     1
                 end
             else
-                motion_index = [];
+                extracted_data = [];
             end
         end
     end
