@@ -55,7 +55,6 @@ classdef ROI < handle & dynamicprops
     properties
         ROI_location        ; % [X Y width height id] coordinates of an roi
         motion_index        ; % [N X 1] extracted roi info (data)
-        motion_index_norm   ; % motion_index values normalized to max
         function_used       ; % function used for extraction
         name                ; % ROI name
         parent_h            ; % handle to parent video
@@ -138,20 +137,22 @@ classdef ROI < handle & dynamicprops
             % See also: Recording.plot_MIs         
             
             if nargin < 3 || isempty(normalize)
-                if numel(obj) == 1
-                    MI = obj.motion_index(:,1);
-                else
-                    MI = cell2mat(arrayfun(@(x) x.motion_index(:,1),obj,'UniformOutput', false));
-                end
-                optimal_y_lim = [min(MI(:)) - range(MI(:))/20, max(MI(:)) + range(MI(:))/20];
-            else
-                if numel(obj) == 1
-                    MI = obj.motion_index_norm(:,1);
-                else
-                    MI = cell2mat(arrayfun(@(x) x.motion_index_norm(:,1),obj,'UniformOutput', false));
-                end
-                optimal_y_lim = [-0.05,1.05];
+                normalize = false;
             end
+            
+            %% Get single or multiple extracted variable
+            if numel(obj) == 1
+                MI = obj.motion_index(:,1);
+            else
+                MI = cell2mat(arrayfun(@(x) x.motion_index(:,1), obj, 'UniformOutput', false));
+            end
+            
+            %% Normalize variable if required
+            if normalize
+                MI(:,1) = MI(:,1) - prctile(MI(:,1), 1);
+                MI(:,1) = MI(:,1) ./ nanmax(MI(:,1));
+            end
+            optimal_y_lim = [min(MI(:)) - range(MI(:))/20, max(MI(:)) + range(MI(:))/20];
             
             %% Set correct figure handle
             if ~all(arrayfun(@isempty ,obj))
@@ -193,39 +194,14 @@ classdef ROI < handle & dynamicprops
         
         function motion_index = get.motion_index(obj)   
             if ~isempty(obj.motion_index)
-            	motion_index = [obj.motion_index, obj.parent_h.t];
+            	motion_index = obj.motion_index;
+                if size(motion_index, 2) == 1
+                   motion_index = [motion_index , obj.parent_h.t];
+                else
+                    1
+                end
             else
                 motion_index = [];
-            end
-        end
-
-        function motion_index_norm = get.motion_index_norm(obj)
-            %% Get normalized MIs for the ROI
-            % -------------------------------------------------------------
-            % Syntax: 
-            %   motion_index_norm = ROI.motion_index_norm
-            % -------------------------------------------------------------
-            % Inputs:
-            % -------------------------------------------------------------
-            % Outputs: 
-            %   motion_index_norm (T x 2 MATRIX)
-            %   	T x 2 Matrix (values, time). for the MI, normalized to
-            %   	range
-            % -------------------------------------------------------------
-            % Extra Notes:
-            % -------------------------------------------------------------
-            % Examples:
-            % -------------------------------------------------------------
-            % Author(s):
-            %   Antoine Valera. 
-            %---------------------------------------------
-            % Revision Date:
-            %   21-05-2020
-            
-            if ~isempty(obj.motion_index)
-                motion_index_norm = obj.motion_index;
-                motion_index_norm(:,1) = obj.motion_index(:,1) - prctile(obj.motion_index(:,1), 1);
-                motion_index_norm(:,1) = motion_index_norm(:,1) ./ nanmax(motion_index_norm(:,1));
             end
         end
     end

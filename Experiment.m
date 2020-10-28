@@ -720,7 +720,7 @@ classdef Experiment < handle
             end
         end
         
-        function [all_data, all_t_axes] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter)
+        function [all_data, all_t_axes] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
             %% Display and return MIs for all recordings in the experiment
             % -------------------------------------------------------------
             % Syntax: 
@@ -759,6 +759,11 @@ classdef Experiment < handle
             %   ROI_filter (STR or CELL ARRAY of STR) - Optional - 
             %       default is unique([obj.roi_labels])
             %   	display only selected ROIs
+            %
+            %   normalize (STR) - Optional - any in {'none','local',
+            %       'global'} - Default is 'global'
+            %   	Define if MIs are normalized or not, and if
+            %   	normalization is done per recording
             % -------------------------------------------------------------
             % Outputs:
             %   all_data ([1 x n_expe] CELL ARRAY of [1 x n_vid] CELL ARRAY
@@ -815,6 +820,9 @@ classdef Experiment < handle
             if nargin < 8 || isempty(ROI_filter)
                 ROI_filter = unique([obj.roi_labels]);
             end
+            if nargin < 9 || isempty(normalize)
+                normalize = 'global';
+            end
 
             all_data    = {};
             all_t_axes  = {};
@@ -823,7 +831,7 @@ classdef Experiment < handle
                     fig_number  = (1:numel(obj(exp).videotypes)) + auto;
                     auto        = max(fig_number);                    
                 end
-                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter);
+                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize);
             end
         end
 

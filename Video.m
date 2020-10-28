@@ -88,7 +88,6 @@ classdef Video < handle
         roi_labels      ; % Name of each ROI
         ROI_location    ; % ROI location
         motion_indexes  ; % All Extracted Motion indices
-        motion_index_norm;% All Extracted normalized Motion indices
         video_offset    ; % Video offset relative to first experiment recording
         position        ; % Camera Position?
         name            ; % ---
@@ -208,7 +207,7 @@ classdef Video < handle
                 
                 metric = func(obj.t);
                 if contains(func2str(func), 'get_MI_from_video')
-                    obj.motion_indexes          = metric(:, 1);
+                    [obj.motion_indexes]        = deal(cellfun(@(x) x(:,1), metric, 'UniformOutput', false));
                     [obj.rois.function_used]    = deal(func2str(func));
                     [obj.rois.parent_h]         = deal(obj);
                     metric                      = obj.motion_indexes;
@@ -676,35 +675,6 @@ classdef Video < handle
             motion_indexes    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
                 motion_indexes{roi} = obj.rois(roi).motion_index;
-            end
-        end
-        
-        function motion_index_norm = get.motion_index_norm(obj)
-            %% Return normalized MI for each ROI
-            % -------------------------------------------------------------
-            % Syntax: 
-            %   motion_index_norm = Video.motion_index_norm
-            % -------------------------------------------------------------
-            % Inputs:
-            % -------------------------------------------------------------
-            % Outputs: 
-            %   motion_index_norm (1 x N CELL ARRAY of T x 2 MATRIX)
-            %   	For each N ROI, a CELL with a T x 2 Matrix (values, 
-            %   	time). MIs are normalized to range.
-            % -------------------------------------------------------------
-            % Extra Notes:
-            % -------------------------------------------------------------
-            % Examples:
-            % -------------------------------------------------------------
-            % Author(s):
-            %   Antoine Valera. 
-            %---------------------------------------------
-            % Revision Date:
-            %   21-05-2020
-            
-            motion_index_norm    = cell(1, obj.n_roi);
-            for roi = 1:obj.n_roi
-                motion_index_norm{roi} = obj.rois(roi).motion_index_norm;
             end
         end
         

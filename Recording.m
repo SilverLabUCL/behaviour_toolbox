@@ -95,7 +95,6 @@ classdef Recording < handle
         t_stop              ; % recording t stop
         trial_number        ; % number of trials in the recording
         motion_indexes      ; % MI per video per ROI
-        motion_index_norm   ; % Normalized MI per video per ROI
         comment             ; % User comment
         default_video_types = {'EyeCam'           ,...
                                'BodyCam'          ,...
@@ -379,7 +378,7 @@ classdef Recording < handle
             if nargin < 9 || isempty(normalize)
                 normalize = 'global';
             end
-
+            
             %% Regroup MIs in a matrix and fill missing cells
             type_list = unique(horzcat(obj.videotypes));
             all_types = cell(numel(obj), numel(type_list));
@@ -389,11 +388,13 @@ classdef Recording < handle
                 for vid = 1:numel(type_list)
                     match = find(ismember(obj(rec).videotypes, type_list(vid)));
                     if ~isempty(match)
-                        all_types(rec, vid) = type_list(vid)                       ;
+                        all_types(rec, vid) = type_list(vid);
+                        all_MIs(rec, vid)   = obj(rec).motion_indexes(match)   ;
                         if strcmp(normalize, 'local')
-                            all_MIs(rec, vid)   = obj(rec).motion_index_norm(match);
-                        else
-                            all_MIs(rec, vid)   = obj(rec).motion_indexes(match)   ;
+                            for roi = 1:numel(all_MIs{rec, vid})
+                                all_MIs{rec, vid}{roi}(:,1) = all_MIs{rec, vid}{roi}(:,1) - prctile(all_MIs{rec, vid}{roi}(:,1), 1);
+                                all_MIs{rec, vid}{roi}(:,1) = all_MIs{rec, vid}{roi}(:,1) ./ nanmax(all_MIs{rec, vid}{roi}(:,1));
+                            end
                         end
                         all_labels(rec, vid)= {obj(rec).videos(match).roi_labels};
                     else
@@ -710,9 +711,8 @@ classdef Recording < handle
                 reference_images{vid}   = obj.videos(vid).reference_image;
                 video_label{vid}        = obj.videos(vid).video_types;
             end
-        end 
+        end
         
-
         function motion_indexes = get.motion_indexes(obj)
             %% Get MIs for each video
             % -------------------------------------------------------------
@@ -722,7 +722,7 @@ classdef Recording < handle
             % Inputs:
             % -------------------------------------------------------------
             % Outputs: 
-            %   motion_index_norm (N CELL ARRAY of M CELL Array of
+            %   motion_index (N CELL ARRAY of M CELL Array of
             %                       T x 2 MATRIX)
             %   	1 cell for each N video, in which one 1 cell for each
             %       M ROI. If motion indexes were extracted, T x 2 Matrix
@@ -741,37 +741,6 @@ classdef Recording < handle
             motion_indexes = {};
             for vid = 1:obj.n_vid
                 motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
-            end
-        end
-        
-        function motion_index_norm = get.motion_index_norm(obj)
-            %% Get normalized MIs for each video
-            % -------------------------------------------------------------
-            % Syntax: 
-            %   motion_index_norm = Analysis_Set.motion_index_norm
-            % -------------------------------------------------------------
-            % Inputs:
-            % -------------------------------------------------------------
-            % Outputs: 
-            %   motion_index_norm (N CELL ARRAY of M CELL Array of
-            %                       T x 2 MATRIX)
-            %   	1 cell for each N video, in which one 1 cell for each
-            %       M ROI. If motion indexes were extracted, T x 2 Matrix
-            %       (values, time). Cell is empty is no ROI was extracted.
-            % -------------------------------------------------------------
-            % Extra Notes:
-            % -------------------------------------------------------------
-            % Examples:
-            % -------------------------------------------------------------
-            % Author(s):
-            %   Antoine Valera. 
-            %---------------------------------------------
-            % Revision Date:
-            %   21-05-2020
-            
-            motion_index_norm = {};
-            for vid = 1:obj.n_vid
-                motion_index_norm = [motion_index_norm, {obj.videos(vid).motion_index_norm}];
             end
         end
 
