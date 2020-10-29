@@ -139,17 +139,17 @@ classdef Video < handle
             obj.path            = file_path;
             obj.reference_image = [];
             obj.timestamps      = cell(1, n_roi);
-            obj.video_types     = cell(1, n_roi);
+            obj.video_types     = cell(1, n_roi);            
             for el = 1:n_roi
                 obj.rois = [obj.rois, ROI(obj)];
             end
         end
         
-        function metric = analyze(obj, func, force, display, fieldname)
+        function metric = analyze(obj, func, force, display, varname)
             %% Store and format absolute timestamps for the current video
             % -------------------------------------------------------------
             % Syntax: 
-            %   metric = Video.analyze(func)
+            %   metric = Video.analyze(func, force, display, varname)
             % -------------------------------------------------------------
             % Inputs:
             %   func (FUNCTION HANDLE) - Optional - default is
@@ -166,7 +166,10 @@ classdef Video < handle
             %   	video (after extraction). If extraction was already
             %   	done, MIs are also shown.
             %       - If 'pause' MIs display will pause until the figure
-            %   	 is closed
+            %   	 is closed            
+            %
+            %   varname (STR) - Optional - default is 'motion_index'
+            %   	Set the variable name used for extraction
             % -------------------------------------------------------------
             % Outputs:
             %   metric (FUNCTION HANDLE OUTPUT) - defaut is T x 2 Matrix of
@@ -194,8 +197,8 @@ classdef Video < handle
             if nargin < 4 || isempty(display)
                 display = false;
             end
-            if nargin < 5 || isempty(fieldname)
-                fieldname = 'motion_indexes';
+            if nargin < 5 || isempty(varname)
+                varname = 'motion_index';
             end
             
             %% Update MI's (or run function handle)
@@ -205,25 +208,34 @@ classdef Video < handle
                     obj.add_roi(1); %% QQ maybe need to add a few more stuff
                 end
                 
+                %% No call function to get data
                 metric = func(obj.t);
-                if contains(func2str(func), 'get_MI_from_video')
-                    [obj.motion_indexes]        = deal(cellfun(@(x) x(:,1), metric, 'UniformOutput', false));
-                    [obj.rois.function_used]    = deal(func2str(func));
-                    [obj.rois.parent_h]         = deal(obj);
-                    metric                      = obj.motion_indexes;
-                else % for custom functions
-                    if ~iscell(metric)
-                        metric = repmat({metric}, 1, obj.n_roi);
+                
+                %% Check output shape
+                %                     if ~iscell(metric)
+                %                         metric = repmat({metric}, 1, obj.n_roi);
+                %                     end
+                % NEED TO Check if n_out == n_rois. if not, we ned to find
+                % out which roi to use
+                
+                %% Assign values to correct ROI
+                for roi = 1:obj.n_roi
+                    current_roi = obj.rois(roi);
+                    if ~isprop(current_roi.extracted_data, varname)
+                        p = addprop(current_roi.extracted_data,varname);
+                    else
+                        p = current_roi.extracted_data.findprop(varname);
                     end
-                    for roi = obj.n_roi
-                        %% For custom functions, add property in individual ROIs
-                        if ~isprop(obj.rois(roi), fieldname)
-                            addprop(obj.rois(1),fieldname)
-                        end
-                        obj.rois(roi).(fieldname)                       = metric{roi};
-                        obj.rois(roi).(fieldname).Description           = func2str(func);
-                        obj.rois(roi).(fieldname).DetailedDescription   = obj.path;
-                    end
+                    
+                    p.Description   = func2str(func);
+                    current_roi.extracted_data.(varname)               = metric{roi};
+%                     %p.SetMethod = @set_myCoord;
+%                     %p.GetMethod = @set_myCoord;
+%                     
+%                     current_roi.extracted_data.(varname) = metric{roi};
+%                     current_roi.extracted_data.function_used.(varname) = ;
+                    
+                    %% Add get method here
                 end
 
                 %% Plot results
@@ -555,7 +567,6 @@ classdef Video < handle
             % Revision Date:
             %   21-05-2020
             
-            varname = 'motion_index';
             if numel(motion_indexes) == 1 && isempty(motion_indexes)
                 obj.clear_MIs();
             elseif numel(motion_indexes) ~= obj.n_roi
@@ -563,7 +574,7 @@ classdef Video < handle
             else
                 for roi = 1:obj.n_roi
                     try
-                    obj.rois(roi).extracted_data.(varname) = motion_indexes{roi};
+                    obj.rois(roi).extracted_data.(obj.rois(roi).current_varname) = motion_indexes{roi};
                     catch
                         1
                     end

@@ -10,7 +10,7 @@
 % Class Generation Inputs: 
 % -------------------------------------------------------------------------
 % Outputs: 
-%   this (Video object)
+%   this (ROI object)
 % -------------------------------------------------------------------------
 % Class Methods (ignoring get()/set() methods):
 % * Plot Motion indices for selected ROI
@@ -51,13 +51,14 @@
 %
 % See also Analysis_Set, Experiment, Recordings, Video
 
-classdef ROI < handle & dynamicprops
+classdef ROI < handle
     properties
-        ROI_location        ; % [X Y width height id] coordinates of an roi
-        extracted_data  = {}; % [N X 1] extracted roi info (data)
-        function_used       ; % function used for extraction
-        name                ; % ROI name
-        parent_h            ; % handle to parent video
+        ROI_location                    ; % [X Y width height id] coordinates of an roi
+        extracted_data                  ; % [N X 1] extracted roi info (data)
+        function_used                   ; % function used for extraction
+        name                            ; % ROI name
+        parent_h                        ; % handle to parent video
+        current_varname = 'motion_index'; % The name of the currently used analysis variable. 
     end
     
     methods
@@ -86,9 +87,10 @@ classdef ROI < handle & dynamicprops
             % See also:
             
             obj.ROI_location    = [];
-            obj.extracted_data  = {};
             obj.name            = [];
             obj.parent_h        = parent;
+            obj.current_varname = 'motion_index';
+            obj.extracted_data  = Extracted_Data(obj);
         end
         
         function [f, MI] = plot_MI(obj, fig_number, normalize, varname) 
@@ -142,15 +144,15 @@ classdef ROI < handle & dynamicprops
             if nargin < 3 || isempty(normalize)
                 normalize = false;
             end
-            if nargin < 4 || isempty(varname)
-                varname = 'motion_index';
+            if nargin >= 4 && ~isempty(varname)
+                obj.current_varname = varname;
             end
-            
+
             %% Get single or multiple extracted variable
             if numel(obj) == 1
-                MI = obj.extracted_data.(varname)(:,1);
+                MI = obj.extracted_data.(obj.current_varname)(:,1);
             else
-                MI = cell2mat(arrayfun(@(x) x.extracted_data.(varname)(:,1), obj, 'UniformOutput', false));
+                MI = cell2mat(arrayfun(@(x) x.extracted_data.(obj.current_varname)(:,1), obj, 'UniformOutput', false));
             end
             
             %% Normalize variable if required
@@ -199,14 +201,22 @@ classdef ROI < handle & dynamicprops
         end
         
         function extracted_data = get.extracted_data(obj)
-            varname = 'motion_index';
-            if isempty(obj.extracted_data) || ~isfield(obj.extracted_data, varname)
-                obj.extracted_data.(varname) = [];
-            end
+            
+            %% When collecting data for a new variable or (the first one), create the field
+%             if isempty(obj.extracted_data) || ~isprop(obj.extracted_data, obj.current_varname)
+%                 if ~isprop(obj.extracted_data, obj.current_varname)
+%                     addprop(obj.extracted_data,obj.current_varname)
+%                 end
+% %                 obj.(varname)                       = metric{roi};
+% %                 obj.(varname).Description           = func2str(func);
+% %                 obj.(varname).DetailedDescription   = obj.path;
+%             end
+            
+            %% Now get the correct value if possible, and attach timestamp
             extracted_data = obj.extracted_data;
-            if ~isempty(extracted_data.(varname))
-                if size(extracted_data.(varname), 2) == 1
-                   extracted_data.(varname) = [extracted_data.(varname) , obj.parent_h.t];
+            if isprop(extracted_data, obj.current_varname) && ~isempty(extracted_data.(obj.current_varname))
+                if size(extracted_data.(obj.current_varname), 2) == 1
+                   extracted_data.(obj.current_varname) = [extracted_data.(obj.current_varname) , obj.parent_h.t];
                 end
             end
         end
