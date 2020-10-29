@@ -54,7 +54,7 @@
 classdef ROI < handle & dynamicprops
     properties
         ROI_location        ; % [X Y width height id] coordinates of an roi
-        extracted_data      ; % [N X 1] extracted roi info (data)
+        extracted_data  = {}; % [N X 1] extracted roi info (data)
         function_used       ; % function used for extraction
         name                ; % ROI name
         parent_h            ; % handle to parent video
@@ -91,11 +91,11 @@ classdef ROI < handle & dynamicprops
             obj.parent_h        = parent;
         end
         
-        function [f, MI] = plot_MI(obj, fig_number, normalize) 
+        function [f, MI] = plot_MI(obj, fig_number, normalize, varname) 
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [fh, MI] = Video.plot_MIs(fig_number, normalize)
+            %   [fh, MI] = Video.plot_MIs(fig_number, normalize, varname)
             % -------------------------------------------------------------
             % Inputs:
             %   fig_number (INT or FIGURE HANDLE or AXIS HANDLE) - 
@@ -106,6 +106,9 @@ classdef ROI < handle & dynamicprops
             %
             %   normalize (BOOL) - Optional - default is false
             %   	If true, uses normalized MI, otherwise used default MI.
+            %
+            %   varname (STR) - Optional - default is 'motion_index'
+            %   	Set the variable name used for extraction
             % -------------------------------------------------------------
             % Outputs:            
             %   fh (Figure HANDLE) - 
@@ -139,18 +142,21 @@ classdef ROI < handle & dynamicprops
             if nargin < 3 || isempty(normalize)
                 normalize = false;
             end
+            if nargin < 4 || isempty(varname)
+                varname = 'motion_index';
+            end
             
             %% Get single or multiple extracted variable
             if numel(obj) == 1
-                MI = obj.extracted_data(:,1);
+                MI = obj.extracted_data.(varname)(:,1);
             else
-                MI = cell2mat(arrayfun(@(x) x.extracted_data(:,1), obj, 'UniformOutput', false));
+                MI = cell2mat(arrayfun(@(x) x.extracted_data.(varname)(:,1), obj, 'UniformOutput', false));
             end
             
             %% Normalize variable if required
             if normalize
-                MI(:,1) = MI(:,1) - prctile(MI(:,1), 1);
-                MI(:,1) = MI(:,1) ./ nanmax(MI(:,1));
+                MI = MI - prctile(MI, 1);
+                MI = MI ./ nanmax(MI);
             end
             optimal_y_lim = [min(MI(:)) - range(MI(:))/20, max(MI(:)) + range(MI(:))/20];
             
@@ -188,20 +194,20 @@ classdef ROI < handle & dynamicprops
             end
             
             if nargout > 1
-                MI = [MI, obj.extracted_data(:,2)];
+                MI = [MI, obj.parent_h.t];
             end
         end
         
-        function extracted_data = get.extracted_data(obj)   
-            if ~isempty(obj.extracted_data)
-            	extracted_data = obj.extracted_data;
-                if size(extracted_data, 2) == 1
-                   extracted_data = [extracted_data , obj.parent_h.t];
-                else
-                    1
+        function extracted_data = get.extracted_data(obj)
+            varname = 'motion_index';
+            if isempty(obj.extracted_data) || ~isfield(obj.extracted_data, varname)
+                obj.extracted_data.(varname) = [];
+            end
+            extracted_data = obj.extracted_data;
+            if ~isempty(extracted_data.(varname))
+                if size(extracted_data.(varname), 2) == 1
+                   extracted_data.(varname) = [extracted_data.(varname) , obj.parent_h.t];
                 end
-            else
-                extracted_data = [];
             end
         end
     end

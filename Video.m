@@ -416,11 +416,11 @@ classdef Video < handle
             end
         end
         
-        function clear_MIs(obj, ROI_filter, delete_ROI)
+        function clear_MIs(obj, ROI_filter, delete_ROI, varname)
             %% Clear MIs matching ROI_filter, or delete ROI
             % -------------------------------------------------------------
             % Syntax: 
-            %   Video.clear_MIs(ROI_filter, delete_ROI)
+            %   Video.clear_MIs(ROI_filter, delete_ROI, varname)
             % -------------------------------------------------------------
             % Inputs:
             %   ROI_filter (STR or CELL ARRAY of STR) - Optional - Default
@@ -430,6 +430,9 @@ classdef Video < handle
             %
             %   delete_ROI (BOOL) - Default is false
             %   	If true, the whole ROI is deleted
+            %
+            %   varname (STR) - Optional - default is 'motion_index'
+            %   	Set the variable name used for extraction
             % -------------------------------------------------------------
             % Outputs: 
             % -------------------------------------------------------------
@@ -444,6 +447,10 @@ classdef Video < handle
             %   22-05-2020
             %
             % See also: Recording.clear_MIs, Experiment.clear_MIs
+            
+            if nargin < 4 || isempty(varname)
+                varname = 'motion_index';
+            end
             
             if nargin < 2 || isempty(ROI_filter)
                 ROI_filter = obj.roi_labels;
@@ -462,7 +469,7 @@ classdef Video < handle
                 obj.pop(to_clear);
             else
                 for el = sort(unique(to_clear))
-                    obj.rois(el).extracted_data   = [];
+                    obj.rois(el).extracted_data.(varname)   = [];
                 end
             end
         end
@@ -547,14 +554,19 @@ classdef Video < handle
             %---------------------------------------------
             % Revision Date:
             %   21-05-2020
-                        
+            
+            varname = 'motion_index';
             if numel(motion_indexes) == 1 && isempty(motion_indexes)
                 obj.clear_MIs();
             elseif numel(motion_indexes) ~= obj.n_roi
                 error('Number of MIs provided does not match the number of MIs available. Use ')        
             else
                 for roi = 1:obj.n_roi
-                    obj.rois(roi).extracted_data = motion_indexes{roi};
+                    try
+                    obj.rois(roi).extracted_data.(varname) = motion_indexes{roi};
+                    catch
+                        1
+                    end
                 end
             end
         end
@@ -672,9 +684,15 @@ classdef Video < handle
             % Revision Date:
             %   21-05-2020
             
+            varname = 'motion_index';
             motion_indexes    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
-                motion_indexes{roi} = obj.rois(roi).extracted_data;
+                obj.rois(roi).extracted_data
+                if isfield(obj.rois(roi).extracted_data, varname)
+                    motion_indexes{roi} = obj.rois(roi).extracted_data.(varname);
+                else
+                    motion_indexes{roi} = [];
+                end
             end
         end
         
