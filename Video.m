@@ -227,11 +227,14 @@ classdef Video < handle
                 valid_for_this_run = contains(obj.roi_labels,ROI_filter);
 
                 %% If you didn't pass an ROI filter and some data is missing (or you force re-analysis), run the function at the video level
+                available = false;
                 if isempty(ROI_filter) && (force || any(cellfun(@isempty, obj.motion_indexes)))
                     metric = func();
                     if ~iscell(metric)
                         metric = repmat({metric}, 1, obj.n_roi);
                     end
+                elseif isempty(ROI_filter)
+                    available = true;
                 end
                 
                 %% Assign values to correct ROI
@@ -240,25 +243,27 @@ classdef Video < handle
                         %% If you run function on a ROI by ROI basis
                         if ~isempty(ROI_filter) &&  (force || isempty(obj.rois(roi).extracted_data.(obj.current_varname)))
                             metric{roi} = func(); % store directly the ouput at the right place
+                        elseif ~isempty(ROI_filter)
+                            available = true;
                         end
 
-                        %% Store the result in the correct field
-                        try
-                        current_roi = obj.rois(roi);
-                        if ~isprop(current_roi.extracted_data, obj.current_varname)
-                            p = addprop(current_roi.extracted_data, obj.current_varname);
+                        if ~available    
+                            %% Store the result in the correct field
+                            current_roi = obj.rois(roi);
+                            if ~isprop(current_roi.extracted_data, obj.current_varname)
+                                p = addprop(current_roi.extracted_data, obj.current_varname);
+                            else
+                                p = current_roi.extracted_data.findprop(obj.current_varname);
+                            end
+
+                            p.Description   = func2str(func);
+                            current_roi.extracted_data.(obj.current_varname)               = metric{roi};
+
+                            if ~isempty(callback)
+                                p.GetMethod = str2func(callback);
+                            end
                         else
-                            p = current_roi.extracted_data.findprop(obj.current_varname);
-                        end
-                        catch
-                            1
-                        end
-
-                        p.Description   = func2str(func);
-                        current_roi.extracted_data.(obj.current_varname)               = metric{roi};
-                        
-                        if ~isempty(callback)
-                            p.GetMethod = str2func(callback);
+                             metric{roi} = obj.rois(roi).extracted_data.(obj.current_varname);
                         end
                     end
                 end

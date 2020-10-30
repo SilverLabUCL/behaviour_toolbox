@@ -68,12 +68,13 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         roi_position    = ROI_window(1,:); %first video is enough
         roi_position    = roi_position{roi_idx};
 
-        if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name)     
+        current_roi = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx);
+        if isempty(current_roi.name)     
             label       = ['Label # ',num2str(roi_idx)];
         else
-            label       = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name;
+            label       = current_roi.name;
         end
-        if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).extracted_data.(obj.current_varname))
+        if isempty(current_roi.extracted_data.(current_roi.current_varname))
             color       = 'y';
         else
             color       = 'g';
