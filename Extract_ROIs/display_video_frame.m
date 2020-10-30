@@ -73,8 +73,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         else
             label       = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).name;
         end
-        varname = 'motion_index'; 
-        if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).extracted_data.(varname))
+        if isempty(current_experiment.recordings(last_valid_videorec).videos(idx_to_use).rois(roi_idx).extracted_data.(obj.current_varname))
             color       = 'y';
         else
             color       = 'g';

@@ -51,7 +51,8 @@
 
 classdef Extracted_Data < handle & dynamicprops
     properties
-        parent_h                        ; % handle to parent ROI
+        parent_h                ; % handle to parent ROI object
+        current_varname         ; % The metric currently used
         %function_used                   ; % a list of function used to extract the data
     end
     

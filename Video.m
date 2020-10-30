@@ -91,10 +91,12 @@ classdef Video < handle
         video_offset    ; % Video offset relative to first experiment recording
         position        ; % Camera Position?
         name            ; % ---
+        parent_h        ; % handle to parent Recording object
+        current_varname ; % The metric currently used
     end
     
     methods
-        function obj = Video(n_roi, file_path) 
+        function obj = Video(parent, n_roi, file_path) 
             %% Video Object Constructor. 
             % -------------------------------------------------------------
             % Syntax: 
@@ -130,22 +132,24 @@ classdef Video < handle
             %
             % See also:
             
-            if nargin < 1
+            if nargin < 2 || isempty(n_roi)
                 n_roi = 0; % Empty recording
             end
-            if nargin < 2
+            if nargin < 3 || isempty(file_path)
                 file_path = ''; % Empty recording
             end
+            
             obj.path            = file_path;
             obj.reference_image = [];
             obj.timestamps      = cell(1, n_roi);
-            obj.video_types     = cell(1, n_roi);            
+            obj.video_types     = cell(1, n_roi);
+            obj.parent_h        = parent;
             for el = 1:n_roi
                 obj.rois = [obj.rois, ROI(obj)];
             end
         end
         
-        function metric = analyze(obj, func, force, display, varname)
+        function metric = analyze(obj, func, force, display, varname, ROI_filter, varargin)
             %% Store and format absolute timestamps for the current video
             % -------------------------------------------------------------
             % Syntax: 
@@ -170,6 +174,10 @@ classdef Video < handle
             %
             %   varname (STR) - Optional - default is 'motion_index'
             %   	Set the variable name used for extraction
+            %
+            %   ROI_filter (STR) - Optional - default is ''
+            %   	If non empty, only ROIs matching the name will be
+            %   	selected
             % -------------------------------------------------------------
             % Outputs:
             %   metric (FUNCTION HANDLE OUTPUT) - defaut is T x 2 Matrix of
@@ -189,7 +197,7 @@ classdef Video < handle
             % See also:   
             
             if nargin < 2 || isempty(func)
-                func = @(t) get_MI_from_video(obj.path, obj.ROI_location, t, false, false, '', obj.video_offset);
+                func = @(~,~) get_MI_from_video(obj.path, obj.ROI_location, '', false, false, '', obj.video_offset);
             end
             if nargin < 3 || isempty(force)
                 force = false;
@@ -198,44 +206,61 @@ classdef Video < handle
                 display = false;
             end
             if nargin < 5 || isempty(varname)
-                varname = 'motion_index';
+                obj.current_varname  = 'motion_index';
+                callback = '';
+            else
+                varname = strsplit(varname, '@');
+                if numel(varname) > 1
+                    callback = strtrim(varname{2});
+                else
+                    callback = '';
+                end
+                obj.current_varname = strtrim(varname{1});
+            end
+            if nargin < 6 || isempty(ROI_filter)
+                ROI_filter = '';
             end
             
-            %% Update MI's (or run function handle)
-            if any(cellfun(@isempty, obj.motion_indexes)) || force
-                %% If you run analyze without setting a ROI
-                if isempty(obj.ROI_location)
-                    obj.add_roi(1); %% QQ maybe need to add a few more stuff
+            %% Extract variable
+            if ~all(cellfun(@isempty, obj.roi_labels)) && any(contains(obj.roi_labels,ROI_filter))
+                %% If you used a ROI filter, list the ROIs that will need updating
+                valid_for_this_run = contains(obj.roi_labels,ROI_filter);
+
+                %% If you didn't pass an ROI filter and some data is missing (or you force re-analysis), run the function at the video level
+                if isempty(ROI_filter) && (force || any(cellfun(@isempty, obj.motion_indexes)))
+                    metric = func();
+                    if ~iscell(metric)
+                        metric = repmat({metric}, 1, obj.n_roi);
+                    end
                 end
-                
-                %% No call function to get data
-                metric = func(obj.t);
-                
-                %% Check output shape
-                %                     if ~iscell(metric)
-                %                         metric = repmat({metric}, 1, obj.n_roi);
-                %                     end
-                % NEED TO Check if n_out == n_rois. if not, we ned to find
-                % out which roi to use
                 
                 %% Assign values to correct ROI
                 for roi = 1:obj.n_roi
-                    current_roi = obj.rois(roi);
-                    if ~isprop(current_roi.extracted_data, varname)
-                        p = addprop(current_roi.extracted_data,varname);
-                    else
-                        p = current_roi.extracted_data.findprop(varname);
+                    if valid_for_this_run(roi) 
+                        %% If you run function on a ROI by ROI basis
+                        if ~isempty(ROI_filter) &&  (force || isempty(obj.rois(roi).extracted_data.(obj.current_varname)))
+                            metric{roi} = func(); % store directly the ouput at the right place
+                        end
+
+                        %% Store the result in the correct field
+                        try
+                        current_roi = obj.rois(roi);
+                        if ~isprop(current_roi.extracted_data, obj.current_varname)
+                            p = addprop(current_roi.extracted_data, obj.current_varname);
+                        else
+                            p = current_roi.extracted_data.findprop(obj.current_varname);
+                        end
+                        catch
+                            1
+                        end
+
+                        p.Description   = func2str(func);
+                        current_roi.extracted_data.(obj.current_varname)               = metric{roi};
+                        
+                        if ~isempty(callback)
+                            p.GetMethod = str2func(callback);
+                        end
                     end
-                    
-                    p.Description   = func2str(func);
-                    current_roi.extracted_data.(varname)               = metric{roi};
-%                     %p.SetMethod = @set_myCoord;
-%                     %p.GetMethod = @set_myCoord;
-%                     
-%                     current_roi.extracted_data.(varname) = metric{roi};
-%                     current_roi.extracted_data.function_used.(varname) = ;
-                    
-                    %% Add get method here
                 end
 
                 %% Plot results
@@ -243,7 +268,8 @@ classdef Video < handle
                     obj.plot_MIs();
                 end
             else
-                fprintf(['No analysis required for ',obj.path,'. Skipping extraction\n'])
+                fprintf(['No analysis required for ',obj.path,'. Skipping extraction\n']);
+                metric = {};
             end
         end
         
@@ -573,11 +599,7 @@ classdef Video < handle
                 error('Number of MIs provided does not match the number of MIs available. Use ')        
             else
                 for roi = 1:obj.n_roi
-                    try
                     obj.rois(roi).extracted_data.(obj.rois(roi).current_varname) = motion_indexes{roi};
-                    catch
-                        1
-                    end
                 end
             end
         end
@@ -695,12 +717,10 @@ classdef Video < handle
             % Revision Date:
             %   21-05-2020
             
-            varname = 'motion_index';
             motion_indexes    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
-                obj.rois(roi).extracted_data
-                if isfield(obj.rois(roi).extracted_data, varname)
-                    motion_indexes{roi} = obj.rois(roi).extracted_data.(varname);
+                if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
+                    motion_indexes{roi} = obj.rois(roi).extracted_data.(obj.rois(roi).current_varname);
                 else
                     motion_indexes{roi} = [];
                 end
@@ -804,6 +824,14 @@ classdef Video < handle
             %   21-05-2020
             
             [~, video_name] = fileparts(obj.path);
+        end
+        
+        function current_varname = get.current_varname(obj)
+            current_varname = obj.parent_h.parent_h.parent_h.current_varname;
+        end
+        
+        function set.current_varname(obj, current_varname)
+            obj.parent_h.parent_h.parent_h.current_varname = current_varname;
         end
     end
 end

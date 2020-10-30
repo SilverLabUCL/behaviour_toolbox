@@ -100,10 +100,12 @@ classdef Recording < handle
                                'BodyCam'          ,...
                                'WhiskerCam'}      ; % Default camera names
         analyzed            ; % true if all set ROIs were analyzed
+        parent_h            ; % handle to parent Experiment object
+        current_varname     ; % The metric currently used
     end
     
     methods
-        function obj = Recording(n_video, recording_path)
+        function obj = Recording(parent, n_video, recording_path)
             %% Recording Object Constructor. 
             % -------------------------------------------------------------
             % Syntax: 
@@ -139,15 +141,17 @@ classdef Recording < handle
             %
             % See also:
             
-            if nargin < 1
-                n_video         = 0;    % Empty recording
-            end
             if nargin < 2
+                n_video         = 0;    % Empty recording
+            else
+                obj.parent_h        = parent;
+            end
+            if nargin < 3
                 recording_path  = '';   % Empty recording
             end
             for el = 1:n_video
-                obj.videos = [obj.videos, Video];
-            end
+                obj.videos = [obj.videos, Video(obj)];
+            end            
             obj.path            = recording_path;
         end
         
@@ -378,6 +382,7 @@ classdef Recording < handle
             if nargin < 9 || isempty(normalize)
                 normalize = 'global';
             end
+            
             
             %% Regroup MIs in a matrix and fill missing cells
             type_list = unique(horzcat(obj.videotypes));
@@ -849,6 +854,14 @@ classdef Recording < handle
                 end
             end
         end
+        
+        function current_varname = get.current_varname(obj)
+            current_varname = obj.parent_h.parent_h.current_varname;
+        end
+        
+        function set.current_varname(obj, current_varname)
+            obj.parent_h.parent_h.current_varname = current_varname;
+        end        
     end
 end
 

@@ -53,12 +53,12 @@
 
 classdef ROI < handle
     properties
-        ROI_location                    ; % [X Y width height id] coordinates of an roi
-        extracted_data                  ; % [N X 1] extracted roi info (data)
-        function_used                   ; % function used for extraction
-        name                            ; % ROI name
-        parent_h                        ; % handle to parent video
-        current_varname = 'motion_index'; % The name of the currently used analysis variable. 
+        ROI_location            ; % [X Y width height id] coordinates of an roi
+        extracted_data          ; % [N X 1] extracted roi info (data)
+        function_used           ; % function used for extraction
+        name                    ; % ROI name
+        parent_h                ; % handle to parent Video object
+        current_varname         ; % The metric currently used
     end
     
     methods
@@ -89,15 +89,14 @@ classdef ROI < handle
             obj.ROI_location    = [];
             obj.name            = [];
             obj.parent_h        = parent;
-            obj.current_varname = 'motion_index';
             obj.extracted_data  = Extracted_Data(obj);
         end
         
-        function [f, MI] = plot_MI(obj, fig_number, normalize, varname) 
+        function [f, MI] = plot_MI(obj, fig_number, normalize) 
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [fh, MI] = Video.plot_MIs(fig_number, normalize, varname)
+            %   [fh, MI] = Video.plot_MIs(fig_number, normalize)
             % -------------------------------------------------------------
             % Inputs:
             %   fig_number (INT or FIGURE HANDLE or AXIS HANDLE) - 
@@ -108,9 +107,6 @@ classdef ROI < handle
             %
             %   normalize (BOOL) - Optional - default is false
             %   	If true, uses normalized MI, otherwise used default MI.
-            %
-            %   varname (STR) - Optional - default is 'motion_index'
-            %   	Set the variable name used for extraction
             % -------------------------------------------------------------
             % Outputs:            
             %   fh (Figure HANDLE) - 
@@ -143,9 +139,6 @@ classdef ROI < handle
             
             if nargin < 3 || isempty(normalize)
                 normalize = false;
-            end
-            if nargin >= 4 && ~isempty(varname)
-                obj.current_varname = varname;
             end
 
             %% Get single or multiple extracted variable
@@ -201,17 +194,6 @@ classdef ROI < handle
         end
         
         function extracted_data = get.extracted_data(obj)
-            
-            %% When collecting data for a new variable or (the first one), create the field
-%             if isempty(obj.extracted_data) || ~isprop(obj.extracted_data, obj.current_varname)
-%                 if ~isprop(obj.extracted_data, obj.current_varname)
-%                     addprop(obj.extracted_data,obj.current_varname)
-%                 end
-% %                 obj.(varname)                       = metric{roi};
-% %                 obj.(varname).Description           = func2str(func);
-% %                 obj.(varname).DetailedDescription   = obj.path;
-%             end
-            
             %% Now get the correct value if possible, and attach timestamp
             extracted_data = obj.extracted_data;
             if isprop(extracted_data, obj.current_varname) && ~isempty(extracted_data.(obj.current_varname))
@@ -219,6 +201,17 @@ classdef ROI < handle
                    extracted_data.(obj.current_varname) = [extracted_data.(obj.current_varname) , obj.parent_h.t];
                 end
             end
+            
+            %% QQ Add warning if no get mthod
+        end
+        
+        
+        function current_varname = get.current_varname(obj)
+            current_varname = obj.parent_h.parent_h.parent_h.parent_h.current_varname;
+        end
+        
+        function set.current_varname(obj, current_varname)
+            obj.parent_h.parent_h.parent_h.parent_h.current_varname = current_varname;
         end
     end
 end

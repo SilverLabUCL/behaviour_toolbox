@@ -99,7 +99,18 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
     PupilBoundary   = cell( nFrames,1);
     Threshold       = nan(nFrames, 1);
     
-%     
+
+    if ischar(thresh_factor)
+        template = nanmedian(data, 3);
+        x = floor(size(template, 1)/4);
+        y = floor(size(template, 2)/4);
+        template = template(x:end-x,y:end-y);
+        Threshold(:) = prctile(template(:), 5);
+        %figure();imagesc(template);
+        thresh_factor = 1.4;
+    end
+        
+    
 %     dark_prctile = 1;
 %     thresh_factor = 1.5;
 %     
@@ -128,7 +139,9 @@ function pupilFit = pupil_analysis(file_path, rendering, thresh_factor, dark_prc
         curr_image = data(:,:,frame);
 
         %% Identify pupil
-        Threshold( frame )  = thresh_factor * prctile(curr_image(:), dark_prctile);
+        if isnan(Threshold( frame ))
+            Threshold( frame )  = thresh_factor * prctile(curr_image(:), dark_prctile);
+        end
         pupil               = curr_image < Threshold(frame);
         pupil               = bwareafilt(pupil, 1);       % keep largest connected dark component
         pupil               = imdilate( pupil, strel('disk', 3));

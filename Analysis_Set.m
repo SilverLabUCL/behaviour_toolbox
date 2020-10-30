@@ -89,21 +89,22 @@
 
 classdef Analysis_Set < handle
     properties
-        experiments  = []           ; % Contain individual experiments
-        video_folder = ''           ; % Top video folder where experiments are located
-        n_expe       = 0            ; % Return number of experiments
-        default_tags = {'Whisker'   ,...
-                        'Nose'      ,...
-                        'Jaw'       ,...
-                        'Breast'    ,...
-                        'Wheel'     ,...
-                        'Laser'     ,...
-                        'Caudal Forelimb',...
-                        'Trunk'     ,...
-                        'Tail'      ,...
-                        'Eye'}      ; % Default ROI names
-        folder_exclusion = {' unidentified'} ; % path containing elements in this list are ignored
-        videotypes = {}             ; % List all existing videos types
+        experiments     = []           ; % Contain individual experiments
+        video_folder    = ''           ; % Top video folder where experiments are located
+        n_expe          = 0            ; % Return number of experiments
+        default_tags    = {'Whisker'   ,...
+                            'Nose'     ,...
+                            'Jaw'      ,...
+                            'Breast'   ,...
+                            'Wheel'    ,...
+                            'Laser'    ,...
+                            'Caudal Forelimb',...
+                            'Trunk'    ,...
+                            'Tail'     ,...
+                            'Eye'}     ; % Default ROI names
+        folder_exclusion= {' unidentified'} ; % path containing elements in this list are ignored
+        videotypes      = {}             ; % List all existing videos types
+        current_varname = 'motion_index' ; % The metric currently used
     end
 
     methods
@@ -265,19 +266,19 @@ classdef Analysis_Set < handle
                 %% Add one/several empty experiments
                 if isempty(obj.experiments)
                     experiment_idx  = 1:to_add;
-                    obj.experiments = repmat(Experiment,1,to_add);
+                    obj.experiments = repmat(Experiment(obj),1,to_add);
                 else
                     experiment_idx  = (numel(obj.experiments) + 1):(numel(obj.experiments)+ to_add);
-                    obj.experiments(end + 1:end + to_add) = Experiment;
+                    obj.experiments(end + 1:end + to_add) = Experiment(obj);
                 end
             elseif ischar(to_add)
                 %% Add/Update experiments using path 
                 [experiment_idx, expe_already_there]        = obj.check_if_new_expe(to_add);
                 if isempty(obj.experiments)
-                    obj.experiments                         = Experiment;
+                    obj.experiments                         = Experiment(obj);
                     experiment_idx                          = 1         ;
                 elseif ~expe_already_there
-                    obj.experiments(experiment_idx)         = Experiment;
+                    obj.experiments(experiment_idx)         = Experiment(obj);
                 else
                     %% Then it's an update
                 end

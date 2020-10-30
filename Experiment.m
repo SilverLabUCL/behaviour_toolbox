@@ -98,7 +98,7 @@
 
 classdef Experiment < handle
     properties
-        recordings = Recording  ; % Contain individual recordings
+        recordings  = Recording ; % Contain individual recordings
         path                    ; % The path of the experiment
         videotypes              ; % The names of all videos in this experiment
         roi_labels              ; % The names of all ROI labels in this experiment
@@ -107,11 +107,12 @@ classdef Experiment < handle
         t_start                 ; % experiment aboslute t_start
         comment                 ; % User comment
         splitvideos = {}        ; % A list of split videos
-        parent_set              ; % handle to parent object
+        parent_h                ; % handle to parent Analysis_Set object
+        current_varname         ; % The metric currently used
     end
     
     methods
-        function obj = Experiment(n_recordings, expe_path)
+        function obj = Experiment(parent, n_recordings, expe_path)
             %% Experiment Object Constructor. 
             % -------------------------------------------------------------
             % Syntax: 
@@ -149,15 +150,16 @@ classdef Experiment < handle
             % See also: Analysis_Set.update, Analysis_Set.add_experiment,
             %   Experiment.populate()
             
-            if nargin < 1 || isempty(n_recordings)
+            if nargin < 2 || isempty(n_recordings)
                 n_recordings    = 0;    % Empty recording
             end
-            if nargin < 2
+            if nargin < 3
                 expe_path       = '';   % Empty recording
             end
             for el = 1:(n_recordings - 1)
-                obj.recordings = [obj.recordings, Recording];
+                obj.recordings = [obj.recordings, Recording(obj)];
             end
+            obj.parent_h        = parent;
             obj.path            = fix_path(expe_path);
         end
         
@@ -187,7 +189,7 @@ classdef Experiment < handle
                 to_add = 1;
             end
             if isnumeric(to_add)
-                obj.recordings(end + 1:end + to_add) = Recording;
+                obj.recordings(end + 1:end + to_add) = Recording(obj);
             else
                 % TODO : add cell array char support
             end
@@ -313,7 +315,7 @@ classdef Experiment < handle
                 return
             end
             if nargin >= 3
-                obj.parent_set = parent;
+                obj.parent_h = parent;
             end
             
             %% List all recordings
@@ -337,8 +339,8 @@ classdef Experiment < handle
                     %% Check if recording is new or if it's an update
                     [recording_idx, rec_already_there] = check_if_new_rec(obj, current_recording_path);
                     if ~rec_already_there
-                        %% If it is the first time we see this experiment, we create the Experiment object
-                        obj.recordings(recording_idx) = Recording(numel(recordings_videos), current_recording_path);
+                        %% If it is the first time we see this recording, we create the Recording object
+                        obj.recordings(recording_idx) = Recording(obj, numel(recordings_videos), current_recording_path);
                     end
                     obj.recordings(recording_idx).update();
                 end
@@ -362,9 +364,9 @@ classdef Experiment < handle
             %   	selection
             %
             %   default_tags (CELL ARRAY of STR) - Optional - Default is
-            %   collected from obj.parent_set.default_tags
+            %   collected from obj.parent_h.default_tags
             %   	The list of default buttons/ROI names. If not provided,
-            %   	but if a Analysis_Set handle was set in obj.parent_set,
+            %   	but if a Analysis_Set handle was set in obj.parent_h,
             %   	the Analysis_Set.default_tags field can be used.
             % -------------------------------------------------------------
             % Outputs: 
@@ -386,8 +388,8 @@ classdef Experiment < handle
             if nargin < 2 || isempty(fig_handle)
                 fig_handle = '';
             end
-            if (nargin < 3 || isempty(default_tags)) && isfield(obj.parent_set, 'default_tags')
-                default_tags = obj.parent_set.default_tags;
+            if (nargin < 3 || isempty(default_tags)) && isfield(obj.parent_h, 'default_tags')
+                default_tags = obj.parent_h.default_tags;
             elseif nargin < 3 || isempty(default_tags)
                 default_tags = '';
             end
@@ -823,7 +825,7 @@ classdef Experiment < handle
             if nargin < 9 || isempty(normalize)
                 normalize = 'global';
             end
-
+            
             all_data    = {};
             all_t_axes  = {};
             for exp = 1:numel(obj) % usually 1 but can be more
@@ -1012,6 +1014,14 @@ classdef Experiment < handle
 
             n_rec = numel(obj.recordings);
         end 
+                
+        function current_varname = get.current_varname(obj)
+            current_varname = obj.parent_h.current_varname;
+        end
+        
+        function set.current_varname(obj, current_varname)
+            obj.parent_h.current_varname = current_varname;
+        end         
     end
 end
 
