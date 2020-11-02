@@ -31,7 +31,7 @@ for exp_idx = usable
     end
 end
 
-behaviour_GUI.Experiment_set.experiments(1).recordings(1).videos(1).plot_MIs
+behaviour_GUI.Experiment_set.experiments(1).recordings(1).videos(1).plot_results
 
 % is_pupil_field = cellfun(@(x) cellfun(@(y) isprop(y,'pupil'), {x.videos}, 'uni', false) , {my_analysis.experiments.recordings}, 'uni', false);
 % is_pupil_field = cellfun(@(x) cellfun(@(y) cellfun(@(z) isprop(z,'pupil'),...

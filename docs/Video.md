@@ -53,18 +53,18 @@ You can get display the motion indexes for a given video
 vid = my_analysis.experiments(1).recordings(1).videos(1)
 
 %% Simplest plot for a single recording
-vid.plot_MIs()
+vid.plot_results()
 
 %% Plot in defined figure
-vid.plot_MIs(5)
+vid.plot_results(5)
 
 %% Plot each ROI in a different subplot
-vid.plot_MIs('', true)
+vid.plot_results('', true)
 
 %% Plot normalized MI
-vid.plot_MIs('', '', true)
+vid.plot_results('', '', true)
 
 %% Capture the output (one cell per videotype)
-[data, time] = vid.plot_MIs();
+[data, time] = vid.plot_results();
 ```
 

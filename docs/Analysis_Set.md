@@ -74,15 +74,15 @@ All classes are handles, which means you can index them.
 
 ```matlab
 %% Start from a existing analysis
-my_analysis.experiments(1).recordings(1).videos(1).rois(1).plot_MI();
+my_analysis.experiments(1).recordings(1).videos(1).rois(1).plot_result();
 
 % Is equivalent to
 my_expe = my_analysis.experiments(1);
-my_expe.recordings(1).videos(1).rois(1).plot_MI();
+my_expe.recordings(1).videos(1).rois(1).plot_result();
 
 % Or to
 my_roi = my_analysis.experiments(1).recordings(1).videos(1).rois(1);
-my_roi.plot_MI();
+my_roi.plot_result();
 ```
 
 In the example above, any operation happening on `my_expe.recordings(1).videos(1).rois(1)` or on `my_roi`

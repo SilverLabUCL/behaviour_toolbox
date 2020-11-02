@@ -71,13 +71,13 @@ You can get display the motion indexes for a given recording
 
 ```matlab
 %% Simplest plot for a single recording
-my_analysis.experiments(1).recordings(1).plot_MIs();
+my_analysis.experiments(1).recordings(1).plot_results();
 
 %% Same as above, but capture the output (one cell per videotype)
-[data, time] = my_analysis.experiments(1).recordings(1).plot_MIs();
+[data, time] = my_analysis.experiments(1).recordings(1).plot_results();
 
 %% Get data for a set of recordings (see image below)
-[data, time] = my_analysis.experiments(1).recordings([1, 3, 5]).plot_MIs();
+[data, time] = my_analysis.experiments(1).recordings([1, 3, 5]).plot_results();
 ```
 
 ![image-20200520123907078](media/image-20200520123907078.png)
@@ -90,10 +90,10 @@ Note that if you plot time `figure();plot(time{1})` you can see the separation b
 
 ```matlab
 %% You can plot the whole experiment if you omit the recording numbers
-my_analysis.experiments(1).recordings.plot_MIs()
+my_analysis.experiments(1).recordings.plot_results()
 
 %% Note that this is equivalent to 
-my_analysis.experiments(1).plot_MIs()
+my_analysis.experiments(1).plot_results()
 ```
 
 ### Filtering and input options
@@ -106,15 +106,15 @@ By default, figure numbers are 1:n_vid, but this can be adjusted
 %% For example, if we have 2 video_types :
 
 %% Use figure 1 and 2 (default behaviour)
-my_analysis.experiments(1).recordings.plot_MIs();
+my_analysis.experiments(1).recordings.plot_results();
 
 %% Use figure 456, and 789
-my_analysis.experiments(1).recordings.plot_MIs([456, 789]);
+my_analysis.experiments(1).recordings.plot_results([456, 789]);
 
 %% Pass figure handles
 f1 = figure(123);
 f2 = figure(456)
-my_analysis.experiments(1).recordings.plot_MIs([f1, f2]);
+my_analysis.experiments(1).recordings.plot_results([f1, f2]);
 ```
 
 #### recording time
@@ -123,12 +123,12 @@ By default, time is zeroed at the time of the first recording selected. if you s
 
 ```matlab
 %% Default behaviour zeroes time
-[~, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('');
+[~, time] = my_analysis.experiments(1).recordings([3, 5]).plot_results('');
 time{1}(1)
 >> ans = 0
 
 %% Use absolute time
-[~, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('', false);
+[~, time] = my_analysis.experiments(1).recordings([3, 5]).plot_results('', false);
 t = time{1}(1)
 >> 1.5700e+09
 
@@ -143,7 +143,7 @@ datetime(t, 'ConvertFrom', 'posixtime' ,'Format','dd-MMM-yyyy HH:mm:ss.SSSSS')
 If you have a lot of videos to browse, you can set `manual_browsing` to true. The code will wait for you to close the plot before loading the next one. This is more relevant when looking at multiple experiments at once
 
 ```
-my_analysis.experiments(1).recordings.plot_MIs('', '', true)
+my_analysis.experiments(1).recordings.plot_results('', '', true)
 ```
 
 #### Filter specific videos
@@ -152,7 +152,7 @@ You want to filter a specific video type when display MIs.
 
 ```matlab
 %% To display only 'EyeCam'. Note that unselected videos are returned as empty cells
-[data, time] = my_analysis.experiments(1).recordings([3, 5]).plot_MIs('', '', '', 'Eye')
+[data, time] = my_analysis.experiments(1).recordings([3, 5]).plot_results('', '', '', 'Eye')
 >> data =
   1×2 cell array
     {0×0 double}    {2966×4 double}
@@ -164,10 +164,10 @@ Once extracted, you can apply an operation a a specific trace (for example filte
 
 ```matlab
 %% Apply local moving minimum (to filter laser)
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', @(x) movmin(x, 3))
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', @(x) movmin(x, 3))
 
 %% Apply gaussian filter
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', @(x) smoothdata(x, 'gaussian', [50, 0]))
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', @(x) smoothdata(x, 'gaussian', [50, 0]))
 ```
 
 #### Average ROIs, Filter ROIs
@@ -176,16 +176,16 @@ By default ROIs with the same name are averaged together. You can choose to aver
 
 ``` matlab
 %% By default, ROIs are regrouped and averaged by name
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '');
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', '');
 
 %% Display all ROIs separately, even when the have the same name
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', false);
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', false);
 
 %% Display specific ROIs (empty input would show all ROIs)
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', {'Tail', 'Whisker'});
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', '', {'Tail', 'Whisker'});
 
 %% Display only Whisker recordings, but do not merge them
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', false, 'Whisker')
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', false, 'Whisker')
 ```
 #### Display Normalized vs Raw Data
 
@@ -193,12 +193,12 @@ By default, data is normalized for all the selected recordings, but this can be 
 
 ```matlab
 %% Default behaviour does a global normalization across all recordings
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', 'global')
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', '', '', 'global')
 
 %% You can disable normalization
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', 'none')
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', '', '', 'none')
 
 %% You can nomalize each recording individually
-my_analysis.experiments(1).recordings.plot_MIs('', '', '', '', '', '', '', 'local')
+my_analysis.experiments(1).recordings.plot_results('', '', '', '', '', '', '', 'local')
 ```
 

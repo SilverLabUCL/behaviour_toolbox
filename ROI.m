@@ -14,7 +14,7 @@
 % -------------------------------------------------------------------------
 % Class Methods (ignoring get()/set() methods):
 % * Plot Motion indices for selected ROI
-%   f = plot_MI(obj, fig_number, use_norm) 
+%   f = plot_result(obj, fig_number, use_norm) 
 % -------------------------------------------------------------------------
 % Extra Notes:
 % * ROI is a handle. You can assign a set of ROIs to a variable
@@ -92,11 +92,11 @@ classdef ROI < handle
             obj.extracted_data  = Extracted_Data(obj);
         end
         
-        function [f, MI] = plot_MI(obj, fig_number, normalize) 
+        function [f, MI] = plot_result(obj, fig_number, normalize) 
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [fh, MI] = Video.plot_MIs(fig_number, normalize)
+            %   [fh, MI] = Video.plot_results(fig_number, normalize)
             % -------------------------------------------------------------
             % Inputs:
             %   fig_number (INT or FIGURE HANDLE or AXIS HANDLE) - 
@@ -124,10 +124,10 @@ classdef ROI < handle
             % -------------------------------------------------------------
             % Examples:
             % * Plot MI for current ROI
-            %   ROI.plot_MIs()
+            %   ROI.plot_results()
             %
             % * Plot normalized MI
-            %   ROI.plot_MIs(true)
+            %   ROI.plot_results(true)
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -135,7 +135,7 @@ classdef ROI < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Recording.plot_MIs         
+            % See also: Recording.plot_results         
             
             if nargin < 3 || isempty(normalize)
                 normalize = false;

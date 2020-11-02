@@ -42,7 +42,7 @@
 %   Experiment.clear_MIs(clear_missing)
 %
 % * Plot Motion indices
-%   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, zero_t, 
+%   [all_data, all_t_axes] = Experiment.plot_results(fig_number, zero_t, 
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter)
 %
@@ -423,7 +423,7 @@ classdef Experiment < handle
                     end
 
                     if all(existing_motion_indexes)
-                        obj.recordings.plot_MIs(123, true, '', list_of_videotypes{video_type_idx});
+                        obj.recordings.plot_results(123, true, '', list_of_videotypes{video_type_idx});
                     end
 
                     %% Plot the representative_frame for the current expe
@@ -660,7 +660,7 @@ classdef Experiment < handle
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
-                obj.recordings.plot_MIs(123, '', strcmp(display, 'pause'));
+                obj.recordings.plot_results(123, '', strcmp(display, 'pause'));
             end
         end
 
@@ -722,11 +722,11 @@ classdef Experiment < handle
             end
         end
         
-        function [all_data, all_t_axes] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
+        function [all_data, all_t_axes] = plot_results(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
             %% Display and return MIs for all recordings in the experiment
             % -------------------------------------------------------------
             % Syntax: 
-            %   [all_data, all_t_axes] = Experiment.plot_MIs(fig_number, 
+            %   [all_data, all_t_axes] = Experiment.plot_results(fig_number, 
             %       zero_t, manual_browsing, videotype_filter, 
             %       output_filter, regroup, ROI_filter)
             % -------------------------------------------------------------
@@ -753,7 +753,7 @@ classdef Experiment < handle
             %   output_filter (function handle) - Optional - default is ''
             %   	if a function hande is provided, the function is
             %   	applied to each MI array during extraction. see
-            %   	Recording.plot_MI for more information
+            %   	Recording.plot_result for more information
             %
             %   regroup (BOOL) - Optional - default is true
             %   	if true, ROIs with the same name are displayed together
@@ -789,7 +789,7 @@ classdef Experiment < handle
             % -------------------------------------------------------------
             % Examples:
             % * Get and Plot MI for current experiment
-            %   [MI, t] = Experiment.plot_MIs()
+            %   [MI, t] = Experiment.plot_results()
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -833,7 +833,7 @@ classdef Experiment < handle
                     fig_number  = (1:numel(obj(exp).videotypes)) + auto;
                     auto        = max(fig_number);                    
                 end
-                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_MIs(fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize);
+                [all_data{exp}, all_t_axes{exp}] = obj(exp).recordings.plot_results(fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize);
             end
         end
 

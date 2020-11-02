@@ -408,7 +408,7 @@ my_analysis.experiments(1).select_ROIs();
 my_analysis.analyze();
 
 %% Display MI's and get output values
-[data, t] = my_analysis.experiments(end).plot_MIs();
+[data, t] = my_analysis.experiments(end).plot_results();
 ```
 
 ## Initial set up

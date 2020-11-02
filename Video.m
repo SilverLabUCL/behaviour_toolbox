@@ -28,7 +28,7 @@
 %   Video.set_timestamps()
 %
 % * Plot Motion indices for selected recordings
-%   [all_data, all_t_axes] = Video.plot_MIs(fig_number, use_subplots,
+%   [all_data, all_t_axes] = Video.plot_results(fig_number, use_subplots,
 %                                               normalize)
 %
 % * Clear MIs or delete specifc ROIS
@@ -270,7 +270,7 @@ classdef Video < handle
 
                 %% Plot results
                 if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
-                    obj.plot_MIs();
+                    obj.plot_results();
                 end
             else
                 fprintf(['No analysis required for ',obj.path,'. Skipping extraction\n']);
@@ -308,7 +308,7 @@ classdef Video < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Recording.plot_MIs     
+            % See also: Recording.plot_results     
             
             [timepstamp_path, file] = fileparts(obj.path);
             file                    = erase(file, '-1');
@@ -365,11 +365,11 @@ classdef Video < handle
             end
         end
         
-        function [all_data, all_taxis] = plot_MIs(obj, fig_number, use_subplots, normalize)
+        function [all_data, all_taxis] = plot_results(obj, fig_number, use_subplots, normalize)
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [all_data, all_taxis] = Video.plot_MIs(fig_number, 
+            %   [all_data, all_taxis] = Video.plot_results(fig_number, 
             %                       use_subplots, normalize)
             % -------------------------------------------------------------
             % Inputs:
@@ -398,10 +398,10 @@ classdef Video < handle
             % -------------------------------------------------------------
             % Examples:
             % * Plot MI for current Video in a single plot
-            %   Video.plot_MIs()
+            %   Video.plot_results()
             %
             % * Plot MI for current Video in a subplots
-            %   Video.plot_MIs('', true)
+            %   Video.plot_results('', true)
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -409,7 +409,7 @@ classdef Video < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Recording.plot_MIs            
+            % See also: Recording.plot_results            
             
             if nargin < 2 || isempty(fig_number)
                 fig_number = cell(1,numel(obj));
@@ -445,7 +445,7 @@ classdef Video < handle
                         fig_number{vid} = subplot('Position',[0.1, 0.95 - sz*el, 0.85, sz - 0.01]);
                         fig_number{vid}.XAxis.Visible = 'off';
                     end
-                    [fig_number{vid}, MI] = obj(vid).rois(el).plot_MI(fig_number{vid}, normalize);                    
+                    [fig_number{vid}, MI] = obj(vid).rois(el).plot_result(fig_number{vid}, normalize);                    
                     all_data{vid} = [all_data{vid}, MI(:, 1)];
                 end
 

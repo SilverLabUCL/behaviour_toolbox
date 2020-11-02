@@ -129,33 +129,33 @@ Once extracted, you can display motion indexes
 
 ```matlab
 %% Display MIs for experiment 6
-my_analysis.experiments(6).plot_MIs()
+my_analysis.experiments(6).plot_results()
 
 %% Display MIs for experiment 3 and 4
-my_analysis.experiments([3, 4]).plot_MIs()
+my_analysis.experiments([3, 4]).plot_results()
 
 %% Get MI values
-[MIs, time] = my_analysis.experiments(1).plot_MIs()
+[MIs, time] = my_analysis.experiments(1).plot_results()
 
 %% Plot MIs in figure 6 and 7. (you need to provide the same number of idx as the mumber of videotypes)
-my_analysis.experiments(1).plot_MIs([6, 7])
+my_analysis.experiments(1).plot_results([6, 7])
 
 %% Plot against absolute time
-my_analysis.experiments(1).plot_MIs('', false)
+my_analysis.experiments(1).plot_results('', false)
 
 %% Pause between plots, until figure is closed
-my_analysis.experiments(1).plot_MIs('', '', true)
+my_analysis.experiments(1).plot_results('', '', true)
 
 %% Display only Eye Cam
-my_analysis.experiments(1).plot_MIs('', '', '', 'Eye')
+my_analysis.experiments(1).plot_results('', '', '', 'Eye')
 
 %% Apply a small filter
-my_analysis.experiments(1).plot_MIs('', '', '', '', @(x) movmedian(x, 3))
+my_analysis.experiments(1).plot_results('', '', '', '', @(x) movmedian(x, 3))
 
 %% Prevent regrouping ROis with the same name
-analysis.experiments(3).plot_MIs('', '', '', '', '', false)
+analysis.experiments(3).plot_results('', '', '', '', '', false)
 
 %% Filter specific ROIs
-analysis.experiments(3).plot_MIs('', '', '', '', '', '', {'Whisker', 'Tail'})
+analysis.experiments(3).plot_results('', '', '', '', '', '', {'Whisker', 'Tail'})
 ```
 

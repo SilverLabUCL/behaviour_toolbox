@@ -27,7 +27,7 @@
 %   Recording.pop(vid_number)
 %
 % * Plot Motion indices for selected recordings
-%   [all_data, all_t_axes] = Recording.plot_MIs(fig_number, zero_t, 
+%   [all_data, all_t_axes] = Recording.plot_results(fig_number, zero_t, 
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter,
 %                               normalize)
@@ -283,11 +283,11 @@ classdef Recording < handle
         end
         
            
-        function [all_data, all_taxis] = plot_MIs(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
+        function [all_data, all_taxis] = plot_results(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
             %% Display and return MIs for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [all_data, all_t_axes] = Recording.plot_MIs(fig_number, 
+            %   [all_data, all_t_axes] = Recording.plot_results(fig_number, 
             %       zero_t, manual_browsing, videotype_filter, 
             %       output_filter, regroup, ROI_filter, normalize)
             % -------------------------------------------------------------
@@ -314,7 +314,7 @@ classdef Recording < handle
             %   output_filter (function handle) - Optional - default is ''
             %   	if a function hande is provided, the function is
             %   	applied to each MI array during extraction. see
-            %   	Recording.plot_MI for more information
+            %   	Recording.plot_result for more information
             %
             %   regroup (BOOL) - Optional - default is true
             %   	if true, ROIs with the same name are displayed together
@@ -348,7 +348,7 @@ classdef Recording < handle
             % -------------------------------------------------------------
             % Examples:
             % * Get and Plot MI for current recording
-            %   [MI, t] = Recording.plot_MIs()
+            %   [MI, t] = Recording.plot_results()
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -356,7 +356,7 @@ classdef Recording < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Experiment.plot_MIs
+            % See also: Experiment.plot_results
  
             if nargin < 2 || isempty(fig_number)
             	fig_number = '';
