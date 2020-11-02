@@ -16,6 +16,8 @@ This toolbox was created to streamline ROI selection for Video acquisition in th
 
 This toolbox will help go through all the video as fast as possible, easily manipulate/Select ROIs. The Results are stored in a database-like structure (see below). ROI location and other video info can be manipulated to do batch analysis. The only preparatory work required is to regroup the videos folders by day and experiments.
 
+The Default analysis extract the motion index, for each ROI. Howver you can apply different function based on your needs (extract small video bouts for DeepLabCut, extract Pupil diameter from an Eye ROI... ). See [examples](#Other-use-case-for-ROIs).
+
 Setup and general information
 =============================
 
@@ -26,7 +28,7 @@ The current toolbox is in the private repository: <https://github.com/SilverLabU
 
 Please use the master branch, contact the Developers if you don't have access. 
 
-Download the repository, and add the files to the matlab path. No other dependencies are required.
+Download the repository, and add the files to the matlab path. You need to install the MATLAB `Image Processing Toolbox` if you don't have it. No other external dependencies are required.
 
 ### Video Folder Pre-processing
 
@@ -86,6 +88,8 @@ The data is organized following a hierarchical structure. Each level is defined 
 [`Video`](Video.md)              		 : Each Video contains one or multiple ROIs
 
 [`ROI`](ROI.md)             			  : ROIs enable video data extraction.
+
+[`Extracted_Data`](Extracted_Data.md)    : Location of Extracted variables obtained from the ROI.
 
 Each parent structure can list its children properties. See Class documentation, or see demo scripts at the end of the documentation for more details.
 
@@ -259,13 +263,15 @@ Once selected, the number of ROIs in the selection is displayed in the table.
 Analysis
 ========
 
-Once defined, you can calculate motion index for each ROI. Select the experiment/Group of experiment to process in the "experiments" column, then click on the [Show/Analyze] button.![](./media/image19.png)
+Once defined, you can calculate motion index for each ROI. Select the experiment/Group of experiment to process in the "experiments" column, then click on the [Show/Analyze] button to start the analysis process. .![](./media/image19.png)
 
+> By default, the metric extracted is the Motion Index (MI), which is the main example covered in this manual. However, you can choose to run different analysis functions based on your needs. See the [Custom Function](#Run-custom-functions-on-ROIs) section.
 
-This will start the analysis process. Videos that had all their Motion Index calculated are skipped, but if
-any new MI was added, we recalculate all MIs.
+Videos that had all their Motion Index calculated are skipped, but if a new ROI was added or if a previous ROI was moved, it will be calculated. 
 
-If required, you can force the recalculation of MIs for all videos at any time by ticking the [Recaluclate all] checkbox:
+> Whatever the number of ROIs to recalculate, the function need to reload the entire video, which is what take the most time. Reextracting 1 or many ROI takes almost the same. This may not be true for custom functions.
+
+If required, you can force the recalculation of MIs for all videos at any time by ticking the [Recalculate all] checkbox:
 
 ![](./media/image20.png)
 
@@ -415,7 +421,7 @@ The initial step is to isolate the Analysis_Set object. You can do this by extra
 
 ```matlab
 %% Get the Analysis set handle from the GUI
-analysis = behaviour_GUI.Experiment_set;
+my_analysis = behaviour_GUI.Experiment_set;
 
 %% Get the Analysis set from a backup
 load('some_backup.mat');
@@ -523,9 +529,11 @@ xlabel('time (ms)')
 
 
 
-## Other use case for ROIs
+## Run custom functions on ROIs
 
-You can extract the content of ROIs for other purposes, such as pupil tracking, or DeepLabCut.
+The default analysis extract the Motion Index for all selected ROIs. However, you can extract the content of ROIs for other purposes, such as pupil tracking, or DeepLabCut. To do this you nned to pass a function handle, whci can be run at the video or individual ROI level, and can be filtered for specific ROIs if needed.
+
+### Example 1 : Get Mean projection of ROIs
 
 For this example, we are starting from the video defined in the [previous section](#Extract-Motion-index) :
 
@@ -540,3 +548,61 @@ function im = get_mean_proj(file_path_or_data, ROI)
     im = nanmean(video{1}, 3);
 end
 ```
+
+### Example 2 : Track Pupil diameter using an external function
+
+For this example, we are going to run manually a function using pre-set ROI coordinates, and extract pupil tracking index
+
+```Matlab
+%% Get analysis handle (for clarity)
+my_analysis = behaviour_GUI.Experiment_set;
+
+%% Identify Videos with an Eye ROI
+usable = cellfun(@(x) any(strcmp(x, 'Eye')), {my_analysis.experiments.roi_labels});
+
+%% Now, for each ROI called "Eye", run pupil extraction
+rendering = true;
+thresh_factor = 1.5;
+dark_prctile = 1;
+
+%% Method 1, direct call
+for exp_idx = usable
+    for rec_idx = 1:my_analysis.experiments(idx).n_rec
+        rec = my_analysis.experiments(exp_idx).recordings(rec_idx);
+        for vid_idx = 1:rec.n_vid
+            vid = rec.videos(vid_idx);
+            EyeROI = find(cellfun(@(x) contains(x, 'Eye'), vid.roi_labels));
+            if ~isempty(EyeROI)
+                eye = vid.ROI_location{EyeROI};
+                pupilFit = pupil_analysis(vid.path, rendering, thresh_factor, dark_prctile, eye);
+            end
+        end
+    end
+end
+
+%% Method 2, using analyze() method and function callback
+for exp_idx = usable
+    for rec_idx = 1:my_analysis.experiments(idx).n_rec
+        rec = my_analysis.experiments(exp_idx).recordings(rec_idx);
+        for vid_idx = 1:rec.n_vid
+            vid = rec.videos(vid_idx);
+            data = vid.analyze(@(~,~) pupil_analysis(vid.path,...
+            										rendering,...
+                                                    thresh_factor,...
+                                                    dark_prctile,...
+                                                    vid.ROI_location{cellfun(@(x) contains(x, 'Eye'), vid.roi_labels)}), true);
+        end
+    end
+end
+            
+
+```
+
+### Example 3 : Store extracted metrics using an external function
+
+For this example, we are going to run a function using pre-set ROI coordinates, and store info in a new field (not MI)
+
+```matlab
+
+```
+
