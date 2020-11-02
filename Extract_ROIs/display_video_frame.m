@@ -74,7 +74,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         else
             label       = current_roi.name;
         end
-        if isempty(current_roi.extracted_data.(current_roi.current_varname))
+        if ~isprop(current_roi.extracted_data, current_roi.current_varname) || isempty(current_roi.extracted_data.(current_roi.current_varname))
             color       = 'y';
         else
             color       = 'g';

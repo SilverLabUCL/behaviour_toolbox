@@ -27,7 +27,7 @@ function [analysis, experiment_folders] = check_or_fix_path_issues(analysis, exp
                     end
                 else
                     %% Remove the whole recording
-                    experiment = experiment.pop(recording_idx);
+                    experiment.pop(recording_idx);
                 end
             end
             analysis.experiments(expe_idx) = experiment;  

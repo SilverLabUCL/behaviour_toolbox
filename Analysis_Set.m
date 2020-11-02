@@ -202,6 +202,7 @@ classdef Analysis_Set < handle
             [obj, experiment_folders] = check_or_fix_path_issues(obj, experiment_folders, filter_list);
 
             %% Go through all experiment folder. Add experiments if missing
+            fprintf('Please wait while updating all experiments in the folder...\n')
             for experiment_idx = 1:numel(experiment_folders)
                 current_expe_path                   = experiment_folders{experiment_idx};
                 experiment_idx                      = obj.add_experiment(current_expe_path); %% add or update experiment
@@ -209,6 +210,7 @@ classdef Analysis_Set < handle
                 %% Sort alphabetically and remove empty experiments
                 obj.experiments(experiment_idx).cleanup();
             end
+            fprintf('Update finsihed...\n')
 
             %% final adjustements
             obj.cleanup();
@@ -354,6 +356,7 @@ classdef Analysis_Set < handle
             % Revision Date:
             %   20-05-2020
 
+            fprintf('Cleaning up experiment list... ')
             to_remove = [];
             for exp = 1:obj.n_expe    
                 if isempty(obj.experiments(exp).recordings)
@@ -368,6 +371,7 @@ classdef Analysis_Set < handle
             
             %% Empty experiments can be detected here 
             %invalid = arrayfun(@(x) isempty(x.path), obj.experiments);
+            fprintf('Done\n')
         end
 
         function update_all_paths(obj, old, new)

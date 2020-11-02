@@ -318,6 +318,8 @@ classdef Experiment < handle
                 obj.parent_h = parent;
             end
             
+            fprintf(['Adding recordings in folder ... ',obj.path,' \n'])
+            
             %% List all recordings
             recordings_folder = dir([obj.path, '*_*_*']);
 
@@ -332,8 +334,9 @@ classdef Experiment < handle
                     %% Code doesn't handle the *-2.avi videos
                     if any(any(contains({recordings_videos.name}, '-2.avi')))
                         % QQ Need to be sorted by merging exported files. This happens for some very big files i think, or when you use the
-                        obj.splitvideo{recording_idx} = current_recording_path;
-                        fprintf([current_recording_path,' contains a split video and will not be analysed\n'])
+                        %obj.splitvideo{recording_idx} = current_recording_path;
+                        fprintf(['WARNING !!!!!!!!!!!!!! - TO FIX - ', current_recording_path,' contains a split video and will not be analysed\n'])
+                        recordings_videos = recordings_videos(~contains({recordings_videos.name}, '-1.avi'));
                     end
 
                     %% Check if recording is new or if it's an update

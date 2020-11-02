@@ -98,7 +98,8 @@ classdef Recording < handle
         comment             ; % User comment
         default_video_types = {'EyeCam'           ,...
                                'BodyCam'          ,...
-                               'WhiskerCam'}      ; % Default camera names
+                               'WhiskerCam'       ,...
+                               'FastCam'}      ; % Default camera names
         analysed            ; % true if all set ROIs were analysed
         parent_h            ; % handle to parent Experiment object
         current_varname     ; % The metric currently used
@@ -184,12 +185,19 @@ classdef Recording < handle
             end
 
             recordings_videos = dir([obj.path, '**/*.avi']);
+            %% Code doesn't handle the *-2.avi videos
+            pb = ~contains({recordings_videos.name}, '-1.avi');
+            if any(pb)
+                fprintf(['WARNING !!!!!!!!!!!!!! - TO FIX - ', obj.path,' contains a split video and will not be analysed\n'])
+                recordings_videos = recordings_videos(~pb);
+            end
+                    
             %% Check if all videos are in place
             if obj.n_vid
                 need_update = ~isfile({obj.videos.path}') | isempty({obj.videos.path}');
 
                 %% If you added a video, Figure out which one
-                if numel(recordings_videos) > numel(need_update)
+                if sum(~pb) > numel(need_update)%numel(recordings_videos) > numel(need_update)
                     error_box('Re-addition of video not fully implemented. ask if needed. As a work around you can remove the recording, update the table and re-add the recording')
                 end
 
@@ -415,7 +423,7 @@ classdef Recording < handle
             to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isempty(x)), all_types);
             all_results(~to_use)    = {[]}; % clear content for ignored result's
             all_labels(~to_use) = {[]}; % clear content for ignored result's 
-            all_results             = reshape(all_results   , size(to_use));
+            all_results         = reshape(all_results   , size(to_use));
             all_labels          = reshape(all_labels, size(to_use));
             
             %% Remove t 0
