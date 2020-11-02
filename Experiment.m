@@ -35,13 +35,13 @@
 % * Select ROI location for all recordings in experiment      
 %   failed = Experiment.select_ROIs(fig_handle, default_tags)         
 %
-% * Extract all Motion indexes for the experiment         
-%   Experiment.analyze(force, display)
+% * Extract all results for the experiment         
+%   Experiment.analyse(force, display)
 %
 % * Remove empty/missing experiments
 %   Experiment.clear_results(clear_missing)
 %
-% * Plot Motion indices
+% * Plot Results for current variable
 %   [all_data, all_t_axes] = Experiment.plot_results(fig_number, zero_t, 
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter)
@@ -127,7 +127,7 @@ classdef Experiment < handle
             % -------------------------------------------------------------
             % Outputs: 
             %   this (Analysis_Set)
-            %   	The container for all the analyzed data
+            %   	The container for all the analysed data
             % -------------------------------------------------------------
             % Extra Notes:
             % * Once created, and once a path is set, see
@@ -333,7 +333,7 @@ classdef Experiment < handle
                     if any(any(contains({recordings_videos.name}, '-2.avi')))
                         % QQ Need to be sorted by merging exported files. This happens for some very big files i think, or when you use the
                         obj.splitvideo{recording_idx} = current_recording_path;
-                        fprintf([current_recording_path,' contains a split video and will not be analyzed\n'])
+                        fprintf([current_recording_path,' contains a split video and will not be analysed\n'])
                     end
 
                     %% Check if recording is new or if it's an update
@@ -470,7 +470,7 @@ classdef Experiment < handle
                         end
                     end
 
-                    %% Add new windows and update motion indexes windows location  
+                    %% Add new windows and update ROI windows location  
                     try
                         roi_available = isprop(obj.recordings(rec).videos(video_type_idx),'n_roi');
                     catch
@@ -608,15 +608,15 @@ classdef Experiment < handle
             consensus_frame(imerode(mask, strel('disk',3))) = 0; % blank saturated regions  
         end
 
-        function analyze(obj, force, display)
+        function analyse(obj, force, display)
             %% Extract results for current experiments
             % -------------------------------------------------------------
             % Syntax: 
-            %   Experiment.analyze(force, display)
+            %   Experiment.analyse(force, display)
             % -------------------------------------------------------------
             % Inputs:
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous results. If false, only analyze
+            %   	If true, reanalyse previous results. If false, only analyse
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
@@ -631,14 +631,14 @@ classdef Experiment < handle
             % Extra Notes:
             % -------------------------------------------------------------
             % Examples:
-            % * Analyze all ROIs where an un-analysed ROI is set
-            %   Experiment.analyze()
+            % * Analyse all ROIs where an un-analysed ROI is set
+            %   Experiment.analyse()
             %
-            % * Analyze all ROIs. Reanalyse old ones.
-            %   Experiment.analyze(true)
+            % * Analyse all ROIs. Reanalyse old ones.
+            %   Experiment.analyse(true)
             %
-            % * Analyze missing ROIs, plot result
-            %   Experiment.analyze('', true)
+            % * Analyse missing ROIs, plot result
+            %   Experiment.analyse('', true)
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -646,7 +646,7 @@ classdef Experiment < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Experiment.analyze
+            % See also: Experiment.analyse
             
             if nargin < 2 || isempty(force)
                 force = false;
@@ -656,7 +656,7 @@ classdef Experiment < handle
             end
             
             for rec = 1:obj.n_rec
-                obj.recordings(rec).analyze(force, display);
+                obj.recordings(rec).analyse(force, display);
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
@@ -797,7 +797,7 @@ classdef Experiment < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Experiment.analyze
+            % See also: Experiment.analyse
 
             if nargin < 2 || isempty(fig_number)
                 auto        = 0;

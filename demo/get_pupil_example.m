@@ -26,7 +26,7 @@ for exp_idx = usable
         for vid_idx = 1:rec.n_vid
             vid = rec.videos(vid_idx);
             fh = @(~,~) pupil_analysis(vid.path, rendering, 'auto', dark_prctile, vid.ROI_location{cellfun(@(x) contains(x, 'Eye'), vid.roi_labels)});
-            data = vid.analyze(fh, true, '', 'pupil @format_pupil_output','Eye');
+            data = vid.analyse(fh, true, '', 'pupil @format_pupil_output','Eye');
         end
     end
 end

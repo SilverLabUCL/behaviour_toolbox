@@ -26,7 +26,7 @@
 % * Remove a specific video / set of videos
 %   Recording.pop(vid_number)
 %
-% * Plot Motion indices for selected recordings
+% * Plot Results for selected reordings using current variable
 %   [all_data, all_t_axes] = Recording.plot_results(fig_number, zero_t, 
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter,
@@ -99,7 +99,7 @@ classdef Recording < handle
         default_video_types = {'EyeCam'           ,...
                                'BodyCam'          ,...
                                'WhiskerCam'}      ; % Default camera names
-        analyzed            ; % true if all set ROIs were analyzed
+        analysed            ; % true if all set ROIs were analysed
         parent_h            ; % handle to parent Experiment object
         current_varname     ; % The metric currently used
     end
@@ -229,15 +229,15 @@ classdef Recording < handle
             obj.videos(video_type_idx) = [];
         end
 
-        function analyze(obj, force, display)
+        function analyse(obj, force, display)
             %% Extract results for current recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   Recording.analyze(force, display)
+            %   Recording.analyse(force, display)
             % -------------------------------------------------------------
             % Inputs:
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous results. If false, only analyze
+            %   	If true, reanalyse previous results. If false, only analyse
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
@@ -252,14 +252,14 @@ classdef Recording < handle
             % Extra Notes:
             % -------------------------------------------------------------
             % Examples:
-            % * Analyze all ROIs where an un-analysed ROI is set
-            %   Experiment.analyze()
+            % * Analyse all ROIs where an un-analysed ROI is set
+            %   Experiment.analyse()
             %
-            % * Analyze all ROIs. Reanalyse old ones.
-            %   Experiment.analyze(true)
+            % * Analyse all ROIs. Reanalyse old ones.
+            %   Experiment.analyse(true)
             %
-            % * Analyze missing ROIs, plot result
-            %   Experiment.analyze('', true)
+            % * Analyse missing ROIs, plot result
+            %   Experiment.analyse('', true)
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -267,7 +267,7 @@ classdef Recording < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Experiment.analyze
+            % See also: Experiment.analyse
             
             if nargin < 2 || isempty(force)
                 force = false;
@@ -278,7 +278,7 @@ classdef Recording < handle
 
             %% Go through video, and extract result when required
             for vid = 1:obj.n_vid    
-                obj.videos(vid).analyze('', force, display);
+                obj.videos(vid).analyse('', force, display);
             end 
         end
         
@@ -730,7 +730,7 @@ classdef Recording < handle
             %   extracted_results (N CELL ARRAY of M CELL Array of
             %                       T x 2 MATRIX)
             %   	1 cell for each N video, in which one 1 cell for each
-            %       M ROI. If motion indexes were extracted, T x 2 Matrix
+            %       M ROI. If some results were extracted, T x 2 Matrix
             %       (values, time). Cell is empty is no ROI was extracted.
             % -------------------------------------------------------------
             % Extra Notes:
@@ -824,16 +824,16 @@ classdef Recording < handle
             t_start = nanmin(t_start);
         end
         
-        function analyzed = get.analyzed(obj)
-            %% Returns the analyzis status of the recording
+        function analysed = get.analysed(obj)
+            %% Returns the analysis status of the recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   analyzed = Analysis_Set.analyzed
+            %   analysed = Analysis_Set.analysed
             % -------------------------------------------------------------
             % Inputs:
             % -------------------------------------------------------------
             % Outputs: 
-            %   analyzed (BOOL)
+            %   analysed (BOOL)
             %   	true if all ROIs were extracted, false otherwise
             % -------------------------------------------------------------
             % Extra Notes:
@@ -846,10 +846,10 @@ classdef Recording < handle
             % Revision Date:
             %   21-05-2020
             
-            analyzed = true;
+            analysed = true;
             for vid = 1:obj.n_vid
                 if obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).extracted_results{:}}))
-                    analyzed = false;
+                    analysed = false;
                     break
                 end
             end

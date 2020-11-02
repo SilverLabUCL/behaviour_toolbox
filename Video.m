@@ -22,12 +22,12 @@
 %
 % * Get timestamps and extract result or run any function set in func for all
 %   ROIs
-%   Video.analyze(func)
+%   Video.analyse(func)
 %
 % * Extract absolute and relative timestamps
 %   Video.set_timestamps()
 %
-% * Plot Motion indices for selected recordings
+% * Plot Results for selected recording using current variable
 %   [all_data, all_t_axes] = Video.plot_results(fig_number, use_subplots,
 %                                               normalize)
 %
@@ -87,7 +87,7 @@ classdef Video < handle
         n_roi           ; % Number of ROIs
         roi_labels      ; % Name of each ROI
         ROI_location    ; % ROI location
-        extracted_results  ; % All Extracted Motion indices
+        extracted_results; % All extracted results
         video_offset    ; % Video offset relative to first experiment recording
         position        ; % Camera Position?
         name            ; % ---
@@ -149,11 +149,11 @@ classdef Video < handle
             end
         end
         
-        function metric = analyze(obj, func, force, display, varname, ROI_filter, varargin)
+        function metric = analyse(obj, func, force, display, varname, ROI_filter, varargin)
             %% Store and format absolute timestamps for the current video
             % -------------------------------------------------------------
             % Syntax: 
-            %   metric = Video.analyze(func, force, display, varname)
+            %   metric = Video.analyse(func, force, display, varname)
             % -------------------------------------------------------------
             % Inputs:
             %   func (FUNCTION HANDLE) - Optional - default is
@@ -162,7 +162,7 @@ classdef Video < handle
             %       ROI coordinates
             %
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous results. If false, only analyze
+            %   	If true, reanalyse previous results. If false, only analyse
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
@@ -181,8 +181,8 @@ classdef Video < handle
             % -------------------------------------------------------------
             % Outputs:
             %   metric (FUNCTION HANDLE OUTPUT) - defaut is T x 2 Matrix of
-            %       Motion indices
-            %       The output of the function.
+            %       Motion indices. The output of the function depends on
+            %       current_varname
             % -------------------------------------------------------------
             % Extra Notes:
             % -------------------------------------------------------------

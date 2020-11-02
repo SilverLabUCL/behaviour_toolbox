@@ -113,14 +113,14 @@ For filtering using experiment paths, see [Analysis_set.select_ROIs](Analysis_Se
 You can extract all the motion indexes at once once the ROI location was defined
 
 ```matlab
-%% Analyze all un-analysed ROIs for experiment 1
-my_analysis.experiments(1).analyze()
+%% Analyse all un-analysed ROIs for experiment 1
+my_analysis.experiments(1).analyse()
 
-%% Analyze all ROIs, reanalyse the ones that were already extracted
-my_analysis.experiments(1).analyze(true)
+%% Analyse all ROIs, reanalyse the ones that were already extracted
+my_analysis.experiments(1).analyse(true)
 
 %% Display result for experiment 1
-my_analysis.experiments(1).analyze('', true)
+my_analysis.experiments(1).analyse('', true)
 ```
 
 ### Plot MIs

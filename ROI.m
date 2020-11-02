@@ -13,7 +13,7 @@
 %   this (ROI object)
 % -------------------------------------------------------------------------
 % Class Methods (ignoring get()/set() methods):
-% * Plot Motion indices for selected ROI
+% * Plot Results for selected ROI using current variable
 %   f = plot_result(obj, fig_number, use_norm) 
 % -------------------------------------------------------------------------
 % Extra Notes:
@@ -175,7 +175,7 @@ classdef ROI < handle
                 if type == 1
                     n_plot = numel(f.Children(end).Children);
                     if n_plot == numel(obj)
-                        ylabel('Motion Index (A.U.)')
+                        ylabel('Result (A.U.)')
                         xlabel('Frames');
                         legend(obj.name)
                     else

@@ -213,7 +213,7 @@ Existing analysis will be kept, new files will be added (in alphabetical order) 
 
 > Note : This process will take as long as the initial listing, which can last seconds to minutes depending on the location and number of the files.
 
-In the rare case where you (re)-add videos in an experiment where ROIs were already selected, you need to regenerate Motion Indices for all recordings by clicking on the [Select/Browse ROIs] Button again. The Missing MIs will be calculated next tie you click on the [Show/Analyze] button. 
+In the rare case where you (re)-add videos in an experiment where ROIs were already selected, you need to regenerate Motion Indices for all recordings by clicking on the [Select/Browse ROIs] Button again. The Missing MIs will be calculated next tie you click on the [Show/Analyse] button. 
 
 Select ROIs
 ===========
@@ -263,7 +263,7 @@ Once selected, the number of ROIs in the selection is displayed in the table.
 Analysis
 ========
 
-Once defined, you can calculate motion index for each ROI. Select the experiment/Group of experiment to process in the "experiments" column, then click on the [Show/Analyze] button to start the analysis process. .![](./media/image19.png)
+Once defined, you can calculate motion index for each ROI. Select the experiment/Group of experiment to process in the "experiments" column, then click on the [Show/Analyse] button to start the analysis process. .![](./media/image19.png)
 
 > By default, the metric extracted is the Motion Index (MI), which is the main example covered in this manual. However, you can choose to run different analysis functions based on your needs. See the [Custom Function](#Run-custom-functions-on-ROIs) section.
 
@@ -362,7 +362,7 @@ When selecting the ROIs, you can have a preview of the signal obtained from the 
 
 ![image-20200430102958106](media/image-20200430102958106.png)
 
-Note than Motion indexes are not saved to the database when using preview. They will be extracted only when clicking on the [Show/Analyze] button.
+Note than Motion indexes are not saved to the database when using preview. They will be extracted only when clicking on the [Show/Analyse] button.
 
 ### For the whole experiment, after extraction
 
@@ -405,7 +405,7 @@ my_analysis = my_analysis.update();
 my_analysis.experiments(1).select_ROIs();
 
 %% Extract MI's
-my_analysis.analyze();
+my_analysis.analyse();
 
 %% Display MI's and get output values
 [data, t] = my_analysis.experiments(end).plot_results();
@@ -516,11 +516,11 @@ expe.recordings(2).extracted_results
 
 ```matlab
 %% To extract MI for a specific video. 
-my_analysis.experiments(6).recordings(2).videos(1).analyze();
+my_analysis.experiments(6).recordings(2).videos(1).analyse();
 
 %% Same, but using a handle
 vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
-vid = vid.analyze();
+vid = vid.analyse();
 
 %% Plot MI for ROI # 2
 figure();plot(vid.extracted_results{2}(:,2), vid.extracted_results{2}(:,1));
@@ -540,7 +540,7 @@ For this example, we are starting from the video defined in the [previous sectio
 ```matlab
 %% Demo Script : to extract mean image for a set of recordings
 vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
-im = vid.analyze(@(~,~) get_mean_proj(vid.path, vid.ROI_location{1}));
+im = vid.analyse(@(~,~) get_mean_proj(vid.path, vid.ROI_location{1}));
 figure();imagesc(im);axis image
 
 function im = get_mean_proj(file_path_or_data, ROI)
@@ -580,13 +580,13 @@ for exp_idx = usable
     end
 end
 
-%% Method 2, using analyze() method and function callback
+%% Method 2, using analyse() method and function callback
 for exp_idx = usable
     for rec_idx = 1:my_analysis.experiments(idx).n_rec
         rec = my_analysis.experiments(exp_idx).recordings(rec_idx);
         for vid_idx = 1:rec.n_vid
             vid = rec.videos(vid_idx);
-            data = vid.analyze(@(~,~) pupil_analysis(vid.path,...
+            data = vid.analyse(@(~,~) pupil_analysis(vid.path,...
             										rendering,...
                                                     thresh_factor,...
                                                     dark_prctile,...

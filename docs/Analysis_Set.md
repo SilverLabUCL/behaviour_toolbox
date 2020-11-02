@@ -106,18 +106,18 @@ my_analysis.select_ROIs('2018-12-05')
 You can extract all the motion indexes at once once the ROI location was defined
 
 ```matlab
-%% Analyze all un-analysed ROIs for all experiments
-my_analysis.analyze()
+%% Analyse all un-analysed ROIs for all experiments
+my_analysis.analyse()
 
-%% Analyze all un-analysed ROIs for a subset of experiment using a filter
-my_analysis.analyze('2018-12-05')
+%% Analyse all un-analysed ROIs for a subset of experiment using a filter
+my_analysis.analyse('2018-12-05')
 
-%% Analyze all ROIs, reanalyse the ones that were already extracted
-my_analysis.analyze('', true)
+%% Analyse all ROIs, reanalyse the ones that were already extracted
+my_analysis.analyse('', true)
 
 %% Display result for each experiment
-my_analysis.analyze('', '', true)
+my_analysis.analyse('', '', true)
 
 %% Display result for each experiment, but pause until window is closed
-my_analysis.analyze('', '', 'auto')
+my_analysis.analyse('', '', 'auto')
 ```

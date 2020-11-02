@@ -39,7 +39,7 @@
 %               Analysis_Set.check_if_new_expe(expe_path)
 %
 % * Select location of ROIs for all/some recordings
-%   analyzed_idx = Analysis_Set.select_ROIs(filter_list)
+%   analysed_idx = Analysis_Set.select_ROIs(filter_list)
 %
 % -------------------------------------------------------------------------
 % Extra Notes:
@@ -120,7 +120,7 @@ classdef Analysis_Set < handle
             % -------------------------------------------------------------
             % Outputs: 
             %   this (Analysis_Set)
-            %   	The container for all the analyzed data
+            %   	The container for all the analysed data
             % -------------------------------------------------------------
             % Extra Notes:
             % -------------------------------------------------------------
@@ -468,13 +468,13 @@ classdef Analysis_Set < handle
             end
         end
         
-        function analyzed_idx = select_ROIs(obj, filter_list)
+        function analysed_idx = select_ROIs(obj, filter_list)
             %% Check if this experiment has already be listed somewhere.
             % If yes, return the correct index
             % If not, return a new, unused index
             % -------------------------------------------------------------
             % Syntax: 
-            %   analyzed_idx = Analysis_Set.select_ROIs(filter_list)
+            %   analysed_idx = Analysis_Set.select_ROIs(filter_list)
             % -------------------------------------------------------------
             % Inputs:
             %   filter_list (STR or CELL ARRAY of STR) - Optional - default
@@ -483,7 +483,7 @@ classdef Analysis_Set < handle
             %   	will be updated and displayed
             % -------------------------------------------------------------
             % Outputs: 
-            %   analyzed_idx (the indexes of the experiments that 
+            %   analysed_idx (the indexes of the experiments that 
             %   	The idndexes of the experiments that were updated
             % -------------------------------------------------------------
             % Extra Notes:
@@ -512,23 +512,23 @@ classdef Analysis_Set < handle
             %% Update required fields
             obj.update(filter_list);
             if ~isempty(filter_list)
-                analyzed_idx   	= find(contains({obj.experiments.path}, filter_list));
+                analysed_idx   	= find(contains({obj.experiments.path}, filter_list));
             else
-                analyzed_idx   	= 1:obj.n_expe;
+                analysed_idx   	= 1:obj.n_expe;
             end
 
             %% Now extract ROIs
-            for experiment_idx = analyzed_idx
+            for experiment_idx = analysed_idx
                 %% Now that all recordings were added, we can select ROIs
                 obj.experiments(experiment_idx).select_ROIs('', obj.default_tags);
             end
         end
 
-        function analyze(obj, filter_list, force, display)
+        function analyse(obj, filter_list, force, display)
             %% Extract results for all experiments
             % -------------------------------------------------------------
             % Syntax: 
-            %   Analysis_Set.analyze(filter_list, force, display)
+            %   Analysis_Set.analyse(filter_list, force, display)
             % -------------------------------------------------------------
             % Inputs:
             %   filter_list (STR or CELL ARRAY of STR) - Optional - default
@@ -537,7 +537,7 @@ classdef Analysis_Set < handle
             %   	will be updated and displayed
             %
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous results. If false, only analyze
+            %   	If true, reanalyse previous results. If false, only analyse
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
@@ -552,13 +552,13 @@ classdef Analysis_Set < handle
             % Extra Notes:
             % -------------------------------------------------------------
             % Examples:
-            % * Analyze all ROIs where an un-analysed ROI is set
-            %   my_analysis.analyze()
+            % * Analyse all ROIs where an un-analysed ROI is set
+            %   my_analysis.analyse()
             %
-            % * Analyze all ROIs. Reanalyse old ones.
-            %   my_analysis.analyze('',true)
+            % * Analyse all ROIs. Reanalyse old ones.
+            %   my_analysis.analyse('',true)
             %
-            % * Analyze/Re-analyze all ROIs in a specific experiment
+            % * Analyse/Re-analyse all ROIs in a specific experiment
             %   my_analysis.select_ROIs('2018-12-05', true)
             % -------------------------------------------------------------
             % Author(s):
@@ -567,7 +567,7 @@ classdef Analysis_Set < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Experiment.analyze
+            % See also: Experiment.analyse
 
             if nargin < 2 || isempty(filter_list)
                 filter_list = {''};
@@ -582,14 +582,14 @@ classdef Analysis_Set < handle
             %% Update required fields
             obj.update(filter_list);
             if ~isempty(filter_list)
-                analyzed_idx   	= find(contains({obj.experiments.path}, filter_list));
+                analysed_idx   	= find(contains({obj.experiments.path}, filter_list));
             else
-                analyzed_idx   	= 1:obj.n_expe;
+                analysed_idx   	= 1:obj.n_expe;
             end
 
-            %% Now that all Videos are ready, get the motion index if the result section is empty
-            for experiment_idx = analyzed_idx
-                obj.experiments(experiment_idx).analyze(force, display);
+            %% Now that all Videos are ready, extract results if the section is empty
+            for experiment_idx = analysed_idx
+                obj.experiments(experiment_idx).analyse(force, display);
             end    
         end
 

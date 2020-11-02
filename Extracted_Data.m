@@ -82,7 +82,6 @@ classdef Extracted_Data < handle & dynamicprops
             % See also:
             
             obj.parent_h            = parent;
-            %obj.function_used       = {};
         end
     end
 end
