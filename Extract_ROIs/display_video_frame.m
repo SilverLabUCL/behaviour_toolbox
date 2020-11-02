@@ -43,7 +43,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     video_path          = fileparts(fileparts(fileparts(video_paths{last_valid_videorec})));
     
     ROI_window          = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
-    link.existing_MI    = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).motion_indexes;
+    link.existing_result= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).extracted_results;
     link.n_vid          = size(all_frames, 3);
     link.auto_offsets   = autoestimate_offsets('', '', all_frames);
 
@@ -96,7 +96,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     end
     
     %% Add extra button
-    uicontrol('Style', 'pushbutton', 'String', 'Measure MIs', 'Units','normalized','Position',[0.9 0.2 0.08 0.04], 'Callback', @(event, src) MI_preview(event, src, im_handle));
+    uicontrol('Style', 'pushbutton', 'String', 'Measure', 'Units','normalized','Position',[0.9 0.2 0.08 0.04], 'Callback', @(event, src) result_preview(event, src, im_handle));
     uicontrol('Style', 'pushbutton', 'String', 'Clear offset', 'BackgroundColor', [1,0.5,0.5], 'Units','normalized','Position',[0.9 0.1 0.08 0.04], 'Callback', @(event, src) clear_offsets(src, event));
     uicontrol('Style', 'pushbutton', 'String', 'Auto-estimate offset', 'Units','normalized','Position',[0.9 0.3 0.08 0.04], 'Callback', @(event, src) autoestimate_offsets(src, event, all_frames));
 
@@ -359,21 +359,21 @@ function delete_rect(src, eventdata, obj)
     end
 end
 
-function MI_preview(~, ~, im_handle)
+function result_preview(~, ~, im_handle)
     %% For a given frame, display a quick preview of the current ROIs
     global current_pos current_offsets current_video link
     if current_video
         video_path = get(im_handle.Parent, 'title');
         video_path = video_path.String{2};
         video_path = fix_path(video_path, true);
-        MIs = get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) ;
-        t = MIs{1}(:, 2);
-        MIs = cell2mat(cellfun(@(x) x(:, 1), MIs, 'UniformOutput', false));
-        figure();plot(t, MIs + ones(size(MIs)).*(1:numel(link.name)).*-1 + numel(link.name)); hold on;
+        results = get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) ;
+        t = results{1}(:, 2);
+        results = cell2mat(cellfun(@(x) x(:, 1), results, 'UniformOutput', false));
+        figure();plot(t, results + ones(size(results)).*(1:numel(link.name)).*-1 + numel(link.name)); hold on;
         legend(link.name)
     else
-        error_box('MI preview only works for individual recordings',1)
+        error_box('result preview only works for individual recordings',1)
     end
     %     data = single(squeeze(load_stack(video_path, '', '', 20))); % one every 20 frames
-    %     multiple_motion_indexes(data, '', true, current_pos);
+    %     multiple_extracted_results(data, '', true, current_pos);
 end

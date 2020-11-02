@@ -32,8 +32,8 @@
 %                               output_filter, regroup, ROI_filter,
 %                               normalize)
 %
-% * Clear MIs or delete specifc ROIS
-%   Recording.clear_MIs(videotype_filter, ROI_filter, delete_ROI)
+% * Clear results or delete specifc ROIS
+%   Recording.clear_results(videotype_filter, ROI_filter, delete_ROI)
 % -------------------------------------------------------------------------
 % Extra Notes:
 % * Recording is a handle. You can assign a set of Recording to a variable
@@ -94,7 +94,7 @@ classdef Recording < handle
         t_start             ; % recording t start
         t_stop              ; % recording t stop
         trial_number        ; % number of trials in the recording
-        motion_indexes      ; % MI per video per ROI
+        extracted_results      ; % result per video per ROI
         comment             ; % User comment
         default_video_types = {'EyeCam'           ,...
                                'BodyCam'          ,...
@@ -165,7 +165,7 @@ classdef Recording < handle
             %   full_update (BOOL) - Optional - default is falif true,
             %   video timestamps will be computed too. This will slow down
             %   refresh for a big database, and can be handled when
-            %   extracting MIs
+            %   extracting results
             % -------------------------------------------------------------
             % Outputs: 
             % -------------------------------------------------------------
@@ -230,21 +230,21 @@ classdef Recording < handle
         end
 
         function analyze(obj, force, display)
-            %% Extract MIs for current recording
+            %% Extract results for current recording
             % -------------------------------------------------------------
             % Syntax: 
             %   Recording.analyze(force, display)
             % -------------------------------------------------------------
             % Inputs:
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous MIs. If false, only analyze
+            %   	If true, reanalyze previous results. If false, only analyze
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
-            %   	- If true or 'auto', MIs are displayed for each 
+            %   	- If true or 'auto', results are displayed for each 
             %   	recording (after extraction). If extraction was already
-            %   	done, MIs are also shown.
-            %       - If 'pause' MIs display will pause until the figure
+            %   	done, results are also shown.
+            %       - If 'pause' results display will pause until the figure
             %   	 is closed
             % -------------------------------------------------------------
             % Outputs:
@@ -276,7 +276,7 @@ classdef Recording < handle
                 display = false;
             end
 
-            %% Go through video, and extract MI when required
+            %% Go through video, and extract result when required
             for vid = 1:obj.n_vid    
                 obj.videos(vid).analyze('', force, display);
             end 
@@ -284,7 +284,7 @@ classdef Recording < handle
         
            
         function [all_data, all_taxis] = plot_results(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
-            %% Display and return MIs for current Recording
+            %% Display and return results for current Recording
             % -------------------------------------------------------------
             % Syntax: 
             %   [all_data, all_t_axes] = Recording.plot_results(fig_number, 
@@ -304,7 +304,7 @@ classdef Recording < handle
             %   	Recording.t_start documentation for more information.
             %
             %   manual_browsing (BOOL) - Optional - default is false
-            %   	If true, MIs display will pause until the figure is 
+            %   	If true, results display will pause until the figure is 
             %   	closed
             %
             %   videotype_filter (STR or CELL ARRAY of STR) - Optional - 
@@ -313,7 +313,7 @@ classdef Recording < handle
             %
             %   output_filter (function handle) - Optional - default is ''
             %   	if a function hande is provided, the function is
-            %   	applied to each MI array during extraction. see
+            %   	applied to each result array during extraction. see
             %   	Recording.plot_result for more information
             %
             %   regroup (BOOL) - Optional - default is true
@@ -325,12 +325,12 @@ classdef Recording < handle
             %
             %   normalize (STR) - Optional - any in {'none','local',
             %       'global'} - Default is 'global'
-            %   	Define if MIs are normalized or not, and if
+            %   	Define if results are normalized or not, and if
             %   	normalization is done per recording
             % -------------------------------------------------------------
             % Outputs:
             %   all_data ([1 x n_vid] CELL ARRAY of [T x n_roi] MATRIX) - 
-            %   	For all recordings, returns the MI for the selected
+            %   	For all recordings, returns the result for the selected
             %   	videos. Videos that are filtered out return an empty
             %   	cell. Recordings are concatenated.
             %
@@ -347,8 +347,8 @@ classdef Recording < handle
             % * See general documentation for examples
             % -------------------------------------------------------------
             % Examples:
-            % * Get and Plot MI for current recording
-            %   [MI, t] = Recording.plot_results()
+            % * Get and Plot result for current recording
+            %   [result, t] = Recording.plot_results()
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 
@@ -384,38 +384,38 @@ classdef Recording < handle
             end
             
             
-            %% Regroup MIs in a matrix and fill missing cells
+            %% Regroup results in a matrix and fill missing cells
             type_list = unique(horzcat(obj.videotypes));
             all_types = cell(numel(obj), numel(type_list));
-            all_MIs   = cell(numel(obj), numel(type_list));
+            all_results   = cell(numel(obj), numel(type_list));
             all_labels= cell(numel(obj), numel(type_list));
             for rec = 1:numel(obj)
                 for vid = 1:numel(type_list)
                     match = find(ismember(obj(rec).videotypes, type_list(vid)));
                     if ~isempty(match)
                         all_types(rec, vid) = type_list(vid);
-                        all_MIs(rec, vid)   = obj(rec).motion_indexes(match)   ;
+                        all_results(rec, vid)   = obj(rec).extracted_results(match)   ;
                         if strcmp(normalize, 'local')
-                            for roi = 1:numel(all_MIs{rec, vid})
-                                all_MIs{rec, vid}{roi}(:,1) = all_MIs{rec, vid}{roi}(:,1) - prctile(all_MIs{rec, vid}{roi}(:,1), 1);
-                                all_MIs{rec, vid}{roi}(:,1) = all_MIs{rec, vid}{roi}(:,1) ./ nanmax(all_MIs{rec, vid}{roi}(:,1));
+                            for roi = 1:numel(all_results{rec, vid})
+                                all_results{rec, vid}{roi}(:,1) = all_results{rec, vid}{roi}(:,1) - prctile(all_results{rec, vid}{roi}(:,1), 1);
+                                all_results{rec, vid}{roi}(:,1) = all_results{rec, vid}{roi}(:,1) ./ nanmax(all_results{rec, vid}{roi}(:,1));
                             end
                         end
                         all_labels(rec, vid)= {obj(rec).videos(match).roi_labels};
                     else
                         all_types(rec, vid) = {''};
-                        all_MIs(rec, vid)   = {cell(1,0)};
+                        all_results(rec, vid)   = {cell(1,0)};
                         all_labels(rec, vid)= {cell(1,0)};
                     end
                 end
             end
-            all_MIs(cellfun(@(x) isempty(x), all_MIs)) = {[]};
+            all_results(cellfun(@(x) isempty(x), all_results)) = {[]};
 
             %% Filter video types by name if required, and flag NaN type (missing videos)
             to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isempty(x)), all_types);
-            all_MIs(~to_use)    = {[]}; % clear content for ignored MI's
-            all_labels(~to_use) = {[]}; % clear content for ignored MI's 
-            all_MIs             = reshape(all_MIs   , size(to_use));
+            all_results(~to_use)    = {[]}; % clear content for ignored result's
+            all_labels(~to_use) = {[]}; % clear content for ignored result's 
+            all_results             = reshape(all_results   , size(to_use));
             all_labels          = reshape(all_labels, size(to_use));
             
             %% Remove t 0
@@ -437,12 +437,12 @@ classdef Recording < handle
                 if contains(type_list(videotype_idx), videotype_filter) % ignore filters videos
                     all_data{videotype_idx} = [];
                     all_taxis{videotype_idx} = [];
-                    current_MIs     = all_MIs(:,videotype_idx);
+                    current_results     = all_results(:,videotype_idx);
                     current_labels  = all_labels(:,videotype_idx);
-                    if all(cellfun(@isempty, current_MIs)) %% If all MI are missing, we set all_rois to [];
+                    if all(cellfun(@isempty, current_results)) %% If all result are missing, we set all_rois to [];
                         all_rois    = [];
-                    elseif any(cellfun(@isempty, [current_MIs{:}])) %% If some MI are missing, we set a NaN array of the same size instead
-                        all_rois    = vertcat(current_MIs{:});
+                    elseif any(cellfun(@isempty, [current_results{:}])) %% If some result are missing, we set a NaN array of the same size instead
+                        all_rois    = vertcat(current_results{:});
                         to_fix      = cellfun(@isempty, all_rois);
                         if any(to_fix(:))
                             [~, ref] = max(~to_fix, [], 2);
@@ -453,7 +453,7 @@ classdef Recording < handle
                         end
                         all_rois = cell2mat(all_rois);
                     else %% Optimal case
-                        all_rois = vertcat(current_MIs{:});
+                        all_rois = vertcat(current_results{:});
                         all_rois = cell2mat(all_rois);
                     end
 
@@ -534,11 +534,11 @@ classdef Recording < handle
             end
         end
 
-        function clear_MIs(obj, videotype_filter, ROI_filter, delete_ROI)
-            %% Clear MIs matching ROI_filter, or delete ROI
+        function clear_results(obj, videotype_filter, ROI_filter, delete_ROI)
+            %% Clear results matching ROI_filter, or delete ROI
             % -------------------------------------------------------------
             % Syntax: 
-            %   Recording.clear_MIs(videotype_filter, ROI_filter, delete_ROI)
+            %   Recording.clear_results(videotype_filter, ROI_filter, delete_ROI)
             % -------------------------------------------------------------
             % Inputs:
             %   videotype_filter (STR or CELL ARRAY of STR) - Optional 
@@ -566,7 +566,7 @@ classdef Recording < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Video.clear_MIs, Experiment.clear_MIs
+            % See also: Video.clear_results, Experiment.clear_results
             
             if nargin < 2 || isempty(videotype_filter)
                 videotype_filter = obj.videotypes;
@@ -579,7 +579,7 @@ classdef Recording < handle
             end
 
             for vid = find(contains(obj.videotypes, videotype_filter))
-                obj.videos(vid).clear_MIs(ROI_filter, delete_ROI);
+                obj.videos(vid).clear_results(ROI_filter, delete_ROI);
             end
         end
 
@@ -718,16 +718,16 @@ classdef Recording < handle
             end
         end
         
-        function motion_indexes = get.motion_indexes(obj)
-            %% Get MIs for each video
+        function extracted_results = get.extracted_results(obj)
+            %% Get results for each video
             % -------------------------------------------------------------
             % Syntax: 
-            %   motion_indexes = Analysis_Set.motion_indexes
+            %   extracted_results = Analysis_Set.extracted_results
             % -------------------------------------------------------------
             % Inputs:
             % -------------------------------------------------------------
             % Outputs: 
-            %   motion_index (N CELL ARRAY of M CELL Array of
+            %   extracted_results (N CELL ARRAY of M CELL Array of
             %                       T x 2 MATRIX)
             %   	1 cell for each N video, in which one 1 cell for each
             %       M ROI. If motion indexes were extracted, T x 2 Matrix
@@ -743,9 +743,9 @@ classdef Recording < handle
             % Revision Date:
             %   21-05-2020
             
-            motion_indexes = {};
+            extracted_results = {};
             for vid = 1:obj.n_vid
-                motion_indexes = [motion_indexes, {obj.videos(vid).motion_indexes}];
+                extracted_results = [extracted_results, {obj.videos(vid).extracted_results}];
             end
         end
 
@@ -814,7 +814,7 @@ classdef Recording < handle
             for vid = 1:obj.n_vid
                 if obj.videos(vid).n_roi && ~isempty(obj.videos(vid).absolute_times)
                     if isdatetime(obj.videos(vid).absolute_times(1))
-                        t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to MI time column
+                        t = posixtime(obj.videos(vid).absolute_times(1)) + rem(second(obj.videos(vid).absolute_times(1)),1); % similar to result time column
                     else
                         t = obj.videos(vid).absolute_times(1);
                     end
@@ -848,7 +848,7 @@ classdef Recording < handle
             
             analyzed = true;
             for vid = 1:obj.n_vid
-                if obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).motion_indexes{:}}))
+                if obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).extracted_results{:}}))
                     analyzed = false;
                     break
                 end

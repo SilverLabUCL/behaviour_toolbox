@@ -525,7 +525,7 @@ classdef Analysis_Set < handle
         end
 
         function analyze(obj, filter_list, force, display)
-            %% Extract MIs for all experiments
+            %% Extract results for all experiments
             % -------------------------------------------------------------
             % Syntax: 
             %   Analysis_Set.analyze(filter_list, force, display)
@@ -537,14 +537,14 @@ classdef Analysis_Set < handle
             %   	will be updated and displayed
             %
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous MIs. If false, only analyze
+            %   	If true, reanalyze previous results. If false, only analyze
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
-            %   	- If true or 'auto', MIs are displayed for each 
+            %   	- If true or 'auto', results are displayed for each 
             %   	recording (after extraction). If extraction was already
-            %   	done, MIs are also shown.
-            %       - If 'pause' MIs display will pause until the figure
+            %   	done, results are also shown.
+            %       - If 'pause' results display will pause until the figure
             %   	 is closed
             % -------------------------------------------------------------
             % Outputs:
@@ -587,7 +587,7 @@ classdef Analysis_Set < handle
                 analyzed_idx   	= 1:obj.n_expe;
             end
 
-            %% Now that all Videos are ready, get the motion index if the MI section is empty
+            %% Now that all Videos are ready, get the motion index if the result section is empty
             for experiment_idx = analyzed_idx
                 obj.experiments(experiment_idx).analyze(force, display);
             end    

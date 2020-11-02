@@ -39,15 +39,15 @@
 %   Experiment.analyze(force, display)
 %
 % * Remove empty/missing experiments
-%   Experiment.clear_MIs(clear_missing)
+%   Experiment.clear_results(clear_missing)
 %
 % * Plot Motion indices
 %   [all_data, all_t_axes] = Experiment.plot_results(fig_number, zero_t, 
 %                               manual_browsing, videotype_filter, 
 %                               output_filter, regroup, ROI_filter)
 %
-% * Clear MIs or delete specifc ROIS
-%   Experiment.clear_MIs(   idx_to_clear, videotype_filter,
+% * Clear results or delete specifc ROIS
+%   Experiment.clear_results(   idx_to_clear, videotype_filter,
 %                           ROI_filter, delete_ROI)
 % -------------------------------------------------------------------------
 % Extra Notes:
@@ -411,18 +411,18 @@ classdef Experiment < handle
                     current_pos         = {}; 
 
                     existing_windows    = false(1, obj.n_rec);
-                    existing_motion_indexes = false(1, obj.n_rec);
+                    existing_extracted_results = false(1, obj.n_rec);
                     for rec = 1:obj.n_rec
                         if obj.recordings(rec).n_vid % for non empty-folders
                             real_idx = find(contains({obj.recordings(rec).videos.path}, list_of_videotypes{video_type_idx}));
                             if real_idx % When one video is missing for a specific recording
                                 existing_windows(1, rec)        = ~isempty(obj.recordings(rec).videos(real_idx).ROI_location); % no nested indexing method available as far as i know
-                                existing_motion_indexes(1, rec) = ~all(cellfun(@isempty, obj.recordings(rec).videos(real_idx).motion_indexes)); % no nested indexing method available as far as i know
+                                existing_extracted_results(1, rec) = ~all(cellfun(@isempty, obj.recordings(rec).videos(real_idx).extracted_results)); % no nested indexing method available as far as i know
                             end
                         end
                     end
 
-                    if all(existing_motion_indexes)
+                    if all(existing_extracted_results)
                         obj.recordings.plot_results(123, true, '', list_of_videotypes{video_type_idx});
                     end
 
@@ -507,7 +507,7 @@ classdef Experiment < handle
 
                                             if isempty(to_pop)
                                                 %% Then it's an update (or the same location)
-                                                obj.recordings(rec).videos(local_video_type_idx).motion_indexes{roi} = {}; % Clear any MI content
+                                                obj.recordings(rec).videos(local_video_type_idx).extracted_results{roi} = {}; % Clear any result content
                                                 obj.recordings(rec).videos(local_video_type_idx).rois(roi).ROI_location = current_pos{roi}; % update location
                                                 obj.recordings(rec).videos(local_video_type_idx).rois(roi).name = names{roi};
                                             else
@@ -609,21 +609,21 @@ classdef Experiment < handle
         end
 
         function analyze(obj, force, display)
-            %% Extract MIs for current experiments
+            %% Extract results for current experiments
             % -------------------------------------------------------------
             % Syntax: 
             %   Experiment.analyze(force, display)
             % -------------------------------------------------------------
             % Inputs:
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous MIs. If false, only analyze
+            %   	If true, reanalyze previous results. If false, only analyze
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
-            %   	- If true or 'auto', MIs are displayed for each 
+            %   	- If true or 'auto', results are displayed for each 
             %   	recording (after extraction). If extraction was already
-            %   	done, MIs are also shown.
-            %       - If 'pause' MIs display will pause until the figure
+            %   	done, results are also shown.
+            %       - If 'pause' results display will pause until the figure
             %   	 is closed
             % -------------------------------------------------------------
             % Outputs:
@@ -664,11 +664,11 @@ classdef Experiment < handle
             end
         end
 
-        function clear_MIs(obj, idx_to_clear, videotype_filter, ROI_filter, delete_ROI)
-            %% Clear MIs matching ROI_filter, or delete ROI
+        function clear_results(obj, idx_to_clear, videotype_filter, ROI_filter, delete_ROI)
+            %% Clear results matching ROI_filter, or delete ROI
             % -------------------------------------------------------------
             % Syntax: 
-            %   Experiment.clear_MIs(   idx_to_clear, videotype_filter,
+            %   Experiment.clear_results(   idx_to_clear, videotype_filter,
             %                           ROI_filter, delete_ROI)
             % -------------------------------------------------------------
             % Inputs:
@@ -702,7 +702,7 @@ classdef Experiment < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Video.clear_MIs, Experiment.clear_MIs
+            % See also: Video.clear_results, Experiment.clear_results
             
             if nargin < 2 || isempty(idx_to_clear)
                 idx_to_clear = 1:obj.n_rec;
@@ -718,12 +718,12 @@ classdef Experiment < handle
             end
             
             for rec = idx_to_clear
-                obj.recordings(rec).clear_MIs(videotype_filter, ROI_filter, delete_ROI);
+                obj.recordings(rec).clear_results(videotype_filter, ROI_filter, delete_ROI);
             end
         end
         
         function [all_data, all_t_axes] = plot_results(obj, fig_number, zero_t, manual_browsing, videotype_filter, output_filter, regroup, ROI_filter, normalize)
-            %% Display and return MIs for all recordings in the experiment
+            %% Display and return results for all recordings in the experiment
             % -------------------------------------------------------------
             % Syntax: 
             %   [all_data, all_t_axes] = Experiment.plot_results(fig_number, 
@@ -743,7 +743,7 @@ classdef Experiment < handle
             %   	Recording.t_start documentation for more information.
             %
             %   manual_browsing (BOOL) - Optional - default is false
-            %   	If true, MIs display will pause until the figure is 
+            %   	If true, results display will pause until the figure is 
             %   	closed
             %
             %   videotype_filter (STR or CELL ARRAY of STR) - Optional - 
@@ -752,7 +752,7 @@ classdef Experiment < handle
             %
             %   output_filter (function handle) - Optional - default is ''
             %   	if a function hande is provided, the function is
-            %   	applied to each MI array during extraction. see
+            %   	applied to each result array during extraction. see
             %   	Recording.plot_result for more information
             %
             %   regroup (BOOL) - Optional - default is true
@@ -764,13 +764,13 @@ classdef Experiment < handle
             %
             %   normalize (STR) - Optional - any in {'none','local',
             %       'global'} - Default is 'global'
-            %   	Define if MIs are normalized or not, and if
+            %   	Define if results are normalized or not, and if
             %   	normalization is done per recording
             % -------------------------------------------------------------
             % Outputs:
             %   all_data ([1 x n_expe] CELL ARRAY of [1 x n_vid] CELL ARRAY
             %                of [T x n_roi] MATRIX) - 
-            %   	For all experiments, returns the MI for the selected
+            %   	For all experiments, returns the result for the selected
             %   	videos. Videos that are filtered out return an empty
             %   	cell. Recordings are concatenated.
             %
@@ -788,8 +788,8 @@ classdef Experiment < handle
             % * See general documentation for examples
             % -------------------------------------------------------------
             % Examples:
-            % * Get and Plot MI for current experiment
-            %   [MI, t] = Experiment.plot_results()
+            % * Get and Plot result for current experiment
+            %   [result, t] = Experiment.plot_results()
             % -------------------------------------------------------------
             % Author(s):
             %   Antoine Valera. 

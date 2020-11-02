@@ -49,7 +49,7 @@ my_set = arrayfun(@(x) {x.videos.path}, [my_analysis.experiments(1).recordings([
 
 Similar to the `videos.path` property above, and once extracted you can collect
 
-`recordings.motion_indexes`
+`recordings.extracted_results`
 
 `recordings.reference_images`
 

@@ -92,11 +92,11 @@ classdef ROI < handle
             obj.extracted_data  = Extracted_Data(obj);
         end
         
-        function [f, MI] = plot_result(obj, fig_number, normalize) 
-            %% Display and return MIs for current Recording
+        function [f, result] = plot_result(obj, fig_number, normalize) 
+            %% Display and return results for current Recording
             % -------------------------------------------------------------
             % Syntax: 
-            %   [fh, MI] = Video.plot_results(fig_number, normalize)
+            %   [fh, result] = Video.plot_results(fig_number, normalize)
             % -------------------------------------------------------------
             % Inputs:
             %   fig_number (INT or FIGURE HANDLE or AXIS HANDLE) - 
@@ -106,27 +106,27 @@ classdef ROI < handle
             %       HANDLE
             %
             %   normalize (BOOL) - Optional - default is false
-            %   	If true, uses normalized MI, otherwise used default MI.
+            %   	If true, uses normalized result, otherwise used default result.
             % -------------------------------------------------------------
             % Outputs:            
             %   fh (Figure HANDLE) - 
             %   	current figure or axis handle (axis handle only if
             %   	fig_number was an axis handle itself
             %            
-            %   MI ([T x 2] MATRIX or [T x N] Matrix) - optional 
-            %   	- By default, returns MI and timescale for current ROI.
+            %   result ([T x 2] MATRIX or [T x N] Matrix) - optional 
+            %   	- By default, returns result and timescale for current ROI.
             %       Column 1 is the metric and column 2 is the timestamp 
-            %       extracted when running the MI extraction code.
+            %       extracted when running the result extraction code.
             %       - If you run a custom function handle for extraction
             %       then all the data extracted is output.
             % -------------------------------------------------------------
             % Extra Notes:
             % -------------------------------------------------------------
             % Examples:
-            % * Plot MI for current ROI
+            % * Plot result for current ROI
             %   ROI.plot_results()
             %
-            % * Plot normalized MI
+            % * Plot normalized result
             %   ROI.plot_results(true)
             % -------------------------------------------------------------
             % Author(s):
@@ -143,31 +143,31 @@ classdef ROI < handle
 
             %% Get single or multiple extracted variable
             if numel(obj) == 1
-                MI = obj.extracted_data.(obj.current_varname)(:,1);
+                result = obj.extracted_data.(obj.current_varname)(:,1);
             else
-                MI = cell2mat(arrayfun(@(x) x.extracted_data.(obj.current_varname)(:,1), obj, 'UniformOutput', false));
+                result = cell2mat(arrayfun(@(x) x.extracted_data.(obj.current_varname)(:,1), obj, 'UniformOutput', false));
             end
             
             %% Normalize variable if required
             if normalize
-                MI = MI - prctile(MI, 1);
-                MI = MI ./ nanmax(MI);
+                result = result - prctile(result, 1);
+                result = result ./ nanmax(result);
             end
-            optimal_y_lim = [min(MI(:)) - range(MI(:))/20, max(MI(:)) + range(MI(:))/20];
+            optimal_y_lim = [min(result(:)) - range(result(:))/20, max(result(:)) + range(result(:))/20];
             
             %% Set correct figure handle
             if ~all(arrayfun(@isempty ,obj))
                 if nargin < 2 || isempty(fig_number)
                     %% New figure
-                    f = figure();hold on;plot(MI);
+                    f = figure();hold on;plot(result);
                     type = 1;
                 elseif isa(fig_number, 'matlab.graphics.axis.Axes')
                     %% Subplot
-                    f = fig_number;hold on;plot(MI);
+                    f = fig_number;hold on;plot(result);
                     type = 2;
                 else
                     %% Set figure
-                    f = figure(fig_number);hold on;plot(MI);
+                    f = figure(fig_number);hold on;plot(result);
                     type = 1;
                 end  
                 
@@ -189,7 +189,7 @@ classdef ROI < handle
             end
             
             if nargout > 1
-                MI = [MI, obj.parent_h.t];
+                result = [result, obj.parent_h.t];
             end
         end
         

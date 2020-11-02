@@ -20,7 +20,7 @@
 % -------------------------------------------------------------------------
 % Class Methods (ignoring get()/set() methods):
 %
-% * Get timestamps and extract MI or run any function set in func for all
+% * Get timestamps and extract result or run any function set in func for all
 %   ROIs
 %   Video.analyze(func)
 %
@@ -31,8 +31,8 @@
 %   [all_data, all_t_axes] = Video.plot_results(fig_number, use_subplots,
 %                                               normalize)
 %
-% * Clear MIs or delete specifc ROIS
-%   Video.clear_MIs(ROI_filter, delete_ROI)
+% * Clear results or delete specifc ROIS
+%   Video.clear_results(ROI_filter, delete_ROI)
 % -------------------------------------------------------------------------
 % Extra Notes:
 % * Video is a handle. You can assign a set of Videos to a variable
@@ -87,7 +87,7 @@ classdef Video < handle
         n_roi           ; % Number of ROIs
         roi_labels      ; % Name of each ROI
         ROI_location    ; % ROI location
-        motion_indexes  ; % All Extracted Motion indices
+        extracted_results  ; % All Extracted Motion indices
         video_offset    ; % Video offset relative to first experiment recording
         position        ; % Camera Position?
         name            ; % ---
@@ -162,14 +162,14 @@ classdef Video < handle
             %       ROI coordinates
             %
             %   force (BOOL) - Optional - default is false
-            %   	If true, reanalyze previous MIs. If false, only analyze
+            %   	If true, reanalyze previous results. If false, only analyze
             %   	missing ones
             %
             %   display (BOOL or STR) - Optional - default is false
-            %   	- If true or 'auto', MIs are displayed for each 
+            %   	- If true or 'auto', results are displayed for each 
             %   	video (after extraction). If extraction was already
-            %   	done, MIs are also shown.
-            %       - If 'pause' MIs display will pause until the figure
+            %   	done, results are also shown.
+            %       - If 'pause' results display will pause until the figure
             %   	 is closed            
             %
             %   varname (STR) - Optional - default is 'motion_index'
@@ -228,7 +228,7 @@ classdef Video < handle
 
                 %% If you didn't pass an ROI filter and some data is missing (or you force re-analysis), run the function at the video level
                 available = false;
-                if isempty(ROI_filter) && (force || any(cellfun(@isempty, obj.motion_indexes)))
+                if isempty(ROI_filter) && (force || any(cellfun(@isempty, obj.extracted_results)))
                     metric = func();
                     if ~iscell(metric)
                         metric = repmat({metric}, 1, obj.n_roi);
@@ -299,7 +299,7 @@ classdef Video < handle
             %   posix time and a video sampling rate value
             % -------------------------------------------------------------
             % Examples:
-            % * Plot MI for current Video in a single plot
+            % * Plot result for current Video in a single plot
             %   Video.set_timestamps()
             % -------------------------------------------------------------
             % Author(s):
@@ -366,7 +366,7 @@ classdef Video < handle
         end
         
         function [all_data, all_taxis] = plot_results(obj, fig_number, use_subplots, normalize)
-            %% Display and return MIs for current Recording
+            %% Display and return results for current Recording
             % -------------------------------------------------------------
             % Syntax: 
             %   [all_data, all_taxis] = Video.plot_results(fig_number, 
@@ -378,17 +378,17 @@ classdef Video < handle
             %   	This defines the figures/figure handles to use. 
             %
             %   use_subplots (BOOL) - Optional - default is false
-            %   	If true, each MI is displayed on a different subplot,
+            %   	If true, each result is displayed on a different subplot,
             %   	otherwise they are all superimposed for a given Video
             %
             %   normalize (STR) - Optional - any in {'none','local',
             %       'global'} - Default is 'global'
-            %   	Define if MIs are normalized or not, and if
+            %   	Define if results are normalized or not, and if
             %   	normalization is done per recording
             % -------------------------------------------------------------
             % Outputs:
             %   all_data ([1 x n_vid] CELL ARRAY of [T x n_roi] MATRIX) - 
-            %   	For video(s), returns the MI for the selected rois
+            %   	For video(s), returns the result for the selected rois
             %
             %   all_t_axes ([1 x n_vid] CELL ARRAY of [T x 1] MATRIX) - 
             %   	For video(s), return time axis. Videos that are 
@@ -397,10 +397,10 @@ classdef Video < handle
             % Extra Notes:
             % -------------------------------------------------------------
             % Examples:
-            % * Plot MI for current Video in a single plot
+            % * Plot result for current Video in a single plot
             %   Video.plot_results()
             %
-            % * Plot MI for current Video in a subplots
+            % * Plot result for current Video in a subplots
             %   Video.plot_results('', true)
             % -------------------------------------------------------------
             % Author(s):
@@ -423,7 +423,7 @@ classdef Video < handle
                 normalize = false;
             end
               
-            %% Prepare figure handle to plot MIs
+            %% Prepare figure handle to plot results
             if use_subplots && ~isempty(fig_number) && (~iscell(fig_number) || ~any(cellfun(@isempty, fig_number)))
             	fig_number = figure(fig_number);
             else
@@ -445,12 +445,12 @@ classdef Video < handle
                         fig_number{vid} = subplot('Position',[0.1, 0.95 - sz*el, 0.85, sz - 0.01]);
                         fig_number{vid}.XAxis.Visible = 'off';
                     end
-                    [fig_number{vid}, MI] = obj(vid).rois(el).plot_result(fig_number{vid}, normalize);                    
-                    all_data{vid} = [all_data{vid}, MI(:, 1)];
+                    [fig_number{vid}, result] = obj(vid).rois(el).plot_result(fig_number{vid}, normalize);                    
+                    all_data{vid} = [all_data{vid}, result(:, 1)];
                 end
 
                 %% When using subplot, link x axes
-                all_taxis{vid} = MI(:, 2);
+                all_taxis{vid} = result(:, 2);
                 if use_subplots
                     fig_number{vid}.XAxis.Visible = 'on';
                     xlabel('Frames');
@@ -459,11 +459,11 @@ classdef Video < handle
             end
         end
         
-        function clear_MIs(obj, ROI_filter, delete_ROI, varname)
-            %% Clear MIs matching ROI_filter, or delete ROI
+        function clear_results(obj, ROI_filter, delete_ROI, varname)
+            %% Clear results matching ROI_filter, or delete ROI
             % -------------------------------------------------------------
             % Syntax: 
-            %   Video.clear_MIs(ROI_filter, delete_ROI, varname)
+            %   Video.clear_results(ROI_filter, delete_ROI, varname)
             % -------------------------------------------------------------
             % Inputs:
             %   ROI_filter (STR or CELL ARRAY of STR) - Optional - Default
@@ -489,7 +489,7 @@ classdef Video < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Recording.clear_MIs, Experiment.clear_MIs
+            % See also: Recording.clear_results, Experiment.clear_results
             
             if nargin < 4 || isempty(varname)
                 varname = 'motion_index';
@@ -531,7 +531,7 @@ classdef Video < handle
             % Outputs: 
             % -------------------------------------------------------------
             % Extra Notes:
-            % * For name-based deletion, see clear_MIs()
+            % * For name-based deletion, see clear_results()
             % -------------------------------------------------------------
             % Examples:
             % -------------------------------------------------------------
@@ -541,7 +541,7 @@ classdef Video < handle
             % Revision Date:
             %   22-05-2020
             %
-            % See also: Video.clear_MIs
+            % See also: Video.clear_results
             
             obj.rois(roi_idx) = [];
         end
@@ -573,21 +573,21 @@ classdef Video < handle
             obj.path = fix_path(video_path);
         end
 
-        function set.motion_indexes(obj, motion_indexes)
+        function set.extracted_results(obj, extracted_results)
             %% Set the Motion indices
             % -------------------------------------------------------------
             % Syntax: 
-            %   Video.motion_indexes = motion_indexes;
+            %   Video.extracted_results = extracted_results;
             % -------------------------------------------------------------
             % Inputs:
             % -------------------------------------------------------------
             % Outputs: 
-            %   motion_indexes (1 x N CELL ARRAY of T x 2 MATRIX)
+            %   extracted_results (1 x N CELL ARRAY of T x 2 MATRIX)
             %   	For each N ROI, a CELL with a T x 2 Matrix (values, 
             %   	time).
             % -------------------------------------------------------------
             % Extra Notes:
-            % * The number of cell in motion_indexes must match
+            % * The number of cell in extracted_results must match
             %   Video.n_roi
             % -------------------------------------------------------------
             % Examples:
@@ -598,13 +598,13 @@ classdef Video < handle
             % Revision Date:
             %   21-05-2020
             
-            if numel(motion_indexes) == 1 && isempty(motion_indexes)
-                obj.clear_MIs();
-            elseif numel(motion_indexes) ~= obj.n_roi
-                error('Number of MIs provided does not match the number of MIs available. Use ')        
+            if numel(extracted_results) == 1 && isempty(extracted_results)
+                obj.clear_results();
+            elseif numel(extracted_results) ~= obj.n_roi
+                error('Number of results provided does not match the number of results available. Use ')        
             else
                 for roi = 1:obj.n_roi
-                    obj.rois(roi).extracted_data.(obj.rois(roi).current_varname) = motion_indexes{roi};
+                    obj.rois(roi).extracted_data.(obj.rois(roi).current_varname) = extracted_results{roi};
                 end
             end
         end
@@ -699,16 +699,16 @@ classdef Video < handle
             end
         end
 
-        function motion_indexes = get.motion_indexes(obj)
-            %% Return MI for each ROI
+        function extracted_results = get.extracted_results(obj)
+            %% Return result for each ROI
             % -------------------------------------------------------------
             % Syntax: 
-            %   motion_indexes = Video.motion_indexes
+            %   extracted_results = Video.extracted_results
             % -------------------------------------------------------------
             % Inputs:
             % -------------------------------------------------------------
             % Outputs: 
-            %   motion_indexes (1 x N CELL ARRAY of T x 2 MATRIX)
+            %   extracted_results (1 x N CELL ARRAY of T x 2 MATRIX)
             %   	For each N ROI, a CELL with a T x 2 Matrix (values, 
             %   	time).
             % -------------------------------------------------------------
@@ -722,12 +722,12 @@ classdef Video < handle
             % Revision Date:
             %   21-05-2020
             
-            motion_indexes    = cell(1, obj.n_roi);
+            extracted_results    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
                 if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
-                    motion_indexes{roi} = obj.rois(roi).extracted_data.(obj.rois(roi).current_varname);
+                    extracted_results{roi} = obj.rois(roi).extracted_data.(obj.rois(roi).current_varname);
                 else
-                    motion_indexes{roi} = [];
+                    extracted_results{roi} = [];
                 end
             end
         end

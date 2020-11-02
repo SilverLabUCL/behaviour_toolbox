@@ -480,7 +480,7 @@ roi = expe.recordings(2).videos(1).rois(1)
      ROI with properties:
                n_ROI: []
         ROI_location: [585.0909 174.5455 20 20 7513]
-        motion_index: {}
+              result: {}
                 name: 'Label # 1'
 
 % ROI_location  
@@ -505,7 +505,7 @@ round(roi.ROI_location)
 % Look at selected motion indices (one per ROI) for recording 2:
 % First video has 2 MIs (because there were 2 ROIs)
 % Second video has 1 MI (because there was 1 ROIs)
-expe.recordings(2).motion_indexes
+expe.recordings(2).extracted_results
 >> ans =
      1×2 cell array
         {1×2 cell}    {1×1 cell} 
@@ -523,7 +523,7 @@ vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
 vid = vid.analyze();
 
 %% Plot MI for ROI # 2
-figure();plot(vid.motion_indexes{2}(:,2), vid.motion_indexes{2}(:,1));
+figure();plot(vid.extracted_results{2}(:,2), vid.extracted_results{2}(:,1));
 xlabel('time (ms)')
 ```
 

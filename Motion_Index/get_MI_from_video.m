@@ -41,7 +41,7 @@
 %
 % -------------------------------------------------------------------------
 % Outputs :
-%   motion_indexes ({1 * N} CELL ARRAY of [Tx2] ARRAY)
+%   extracted_results ({1 * N} CELL ARRAY of [Tx2] ARRAY)
 %                       For each of N ROI input, we get one motion index
 %                       measurment. For each cell :
 %                       First column is motion index (between 0 and 1).
