@@ -197,7 +197,7 @@ classdef Video < handle
             % See also:   
             
             if nargin < 2 || isempty(func)
-                func = @(~,~) get_MI_from_video(obj.path, obj.ROI_location, '', false, false, '', obj.video_offset);
+                func = @(~,~) get_MI_from_video(obj.path, obj.ROI_location, false, false, '', obj.video_offset);
             end
             if nargin < 3 || isempty(force)
                 force = false;

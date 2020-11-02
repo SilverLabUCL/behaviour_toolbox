@@ -366,7 +366,7 @@ function result_preview(~, ~, im_handle)
         video_path = get(im_handle.Parent, 'title');
         video_path = video_path.String{2};
         video_path = fix_path(video_path, true);
-        results = get_MI_from_video(video_path, current_pos, '', true, true, '', current_offsets) ;
+        results = get_MI_from_video(video_path, current_pos, true, true, '', current_offsets) ;
         t = results{1}(:, 2);
         results = cell2mat(cellfun(@(x) x(:, 1), results, 'UniformOutput', false));
         figure();plot(t, results + ones(size(results)).*(1:numel(link.name)).*-1 + numel(link.name)); hold on;

@@ -1,7 +1,7 @@
 %% Load Video and measure Motion index from selected ROIs
 % -------------------------------------------------------------------------
 % Model : 
-%   [motion_indexes, video] = get_MI_from_video(file_path, ROI, timestamp, 
+%   [motion_indexes, video] = get_MI_from_video(file_path, ROI, 
 %                               rendering, normalize, dump_data,
 %                               video_offsets)
 %
@@ -24,8 +24,6 @@
 %                       If empty, the whole image is used (in case you
 %                       cropped the video beforehand)
 %
-%   timestamp(1 * T ARRAY) - Optional - Default 1:Npoints of loaded file
-%
 %   rendering(BOOL) - Optional - Default true
 %                       If true, final result is shown
 %
@@ -41,12 +39,10 @@
 %
 % -------------------------------------------------------------------------
 % Outputs :
-%   extracted_results ({1 * N} CELL ARRAY of [Tx2] ARRAY)
+%   extracted_results ({1 * N} CELL ARRAY of [Txa] ARRAY)
 %                       For each of N ROI input, we get one motion index
 %                       measurment. For each cell :
-%                       First column is motion index (between 0 and 1).
-%                       Second column are timestamps copied from given 
-%                       Timestamp vector.
+%                       First column is motion index (between 0 and 1)..
 %
 %   video (X * Y * T)
 %                       The video used for motion index. If you passed the
@@ -75,7 +71,7 @@
 % See also load_stack
 %
 
-function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, timestamp, rendering, normalize, dump_data, video_offsets)
+function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, rendering, normalize, dump_data, video_offsets)
     
     %% Open stack
     if isnumeric(file_path_or_data)
@@ -128,19 +124,14 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
         nFrames             = size(file_path_or_data, 3);
         file_path_or_data   = {file_path_or_data};
         n_src = 1; % When not dumping data, batch size is 1;
-        if nargin < 3 || isempty(timestamp)
-            timestamp       = (1:nFrames)';
-        end
     else
         %% When video data is available by batch (memory saving)
         [~, n_src]          = size(file_path_or_data,'video_full');
-        timestamp           = [];
         nFrames             = [];
     end
     
     %% Now collect data, batch by batch
-    time_offset = 0;
-    
+    time_offset = 0;    
     for batch_idx = 1:n_src  
         %% Setup current batch
         if ~dump_data
@@ -205,7 +196,7 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
             local_data = video{MI_idx};
             
             %% Preallocate output
-            MI = nan(nFrames, 2);
+            MI = nan(nFrames, 1);
             
             if ~isempty(local_data) % normal case
 
@@ -214,31 +205,27 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
                     X  = interbatch_holder{MI_idx};
                     X1 = local_data(:,:,1);
                     FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
-                    MI(1,1) = (sum(sum(FrameDiff.*FrameDiff)));
+                    MI(1) = (sum(sum(FrameDiff.*FrameDiff)));
                 end
                 %% Compute motion index for the rest
                 for i = 2:nFrames
                     X  = local_data(:,:,i-1);
                     X1 = local_data(:,:,i);
                     FrameDiff = squeeze(X1(:,:,1)-X(:,:,1));
-                    MI(i,1) = (sum(sum(FrameDiff.*FrameDiff)));            
+                    MI(i) = (sum(sum(FrameDiff.*FrameDiff)));            
                     % FrameDiff = diff(local_data(:,:,i-1:i),1,3).^2;
-                    % MI(i,1) = sum(FrameDiff(:));
+                    % MI(i) = sum(FrameDiff(:));
                 end
                 interbatch_holder{MI_idx} = local_data(:,:,end);
 
 
                 %% Normalize
                 if normalize
-                    m = prctile(MI(:,1),5);
-                    M = max(MI(:,1));
-                    MI(:,1) = (MI(:,1)-m) ./ (M-m); 
+                    m = prctile(MI,5);
+                    M = max(MI);
+                    MI = (MI-m) ./ (M-m); 
                 end
             end
-            
-            %% Set time axis
-            MI(:,2) = timestamp(1:nFrames,end); 
-            %MI = MI(2:end,:); 
 
             %% Stitch to any previous batch. If ROI was invalid, we'll have NaNs
             motion_indexes{MI_idx} = cat(1, motion_indexes{MI_idx}, MI);
@@ -249,8 +236,8 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, tim
     if rendering 
         figure();hold on
         for el = 1:numel(motion_indexes)
-            plot(motion_indexes{el}(:,2),motion_indexes{el}(:,1));hold on;
+            plot(motion_indexes{el});hold on;
         end
-        %plot(mean(cell2mat(cellfun(@(x) x(:,1), motion_indexes, 'UniformOutput', false)), 2), 'k')
+        %plot(mean(cell2mat(cellfun(@(x) x, motion_indexes, 'UniformOutput', false)), 2), 'k')
     end
 end

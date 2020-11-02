@@ -194,7 +194,7 @@ classdef ROI < handle
         end
         
         function extracted_data = get.extracted_data(obj)
-            %% Now get the correct value if possible, and attach timestamp
+            %% Now get the correct value if possible, and attach timestamp (frame # or real t)
             extracted_data = obj.extracted_data;
             if isprop(extracted_data, obj.current_varname) && ~isempty(extracted_data.(obj.current_varname))
                 if size(extracted_data.(obj.current_varname), 2) == 1
