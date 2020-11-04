@@ -42,10 +42,15 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     last_valid_videorec = find(~strcmp(video_paths, ''), 1, 'last');
     video_path          = fileparts(fileparts(fileparts(video_paths{last_valid_videorec})));
     
+    pre_existing_offset = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).video_offset;
     ROI_window          = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
+    ROI_window          = cellfun(@(x) [x(1:2) - pre_existing_offset, x(3:end)], ROI_window, 'UniformOutput', false); % This is to cancel the correction from the get method of ROI_location, otherwise you would get a double correction
     link.existing_result= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).extracted_results;
     link.n_vid          = size(all_frames, 3);
     link.auto_offsets   = autoestimate_offsets('', '', all_frames);
+    if ~all(all(isnan(cell2mat(ROI_offsets)))) % reload previous offsets if available
+        link.auto_offsets = {cell2mat(ROI_offsets)};
+    end
 
     %% Preview figure
     set(fig_handle, 'Units','normalized','Position',[0 0 1 1]);

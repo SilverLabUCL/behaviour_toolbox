@@ -49,11 +49,10 @@
 %
 % See also Analysis_Set, Experiment, Recordings, Video, ROI
 
-classdef Extracted_Data < handle & dynamicprops
+classdef Extracted_Data < dynamicprops
     properties
         parent_h                ; % handle to parent ROI object
         current_varname         ; % The metric currently used
-        %function_used                   ; % a list of function used to extract the data
     end
     
     methods
@@ -83,6 +82,14 @@ classdef Extracted_Data < handle & dynamicprops
             
             obj.parent_h            = parent;
         end
+        
+        function current_varname = get.current_varname(obj)
+            current_varname = obj.parent_h.parent_h.parent_h.parent_h.parent_h.current_varname;
+        end
+        
+        function set.current_varname(obj, current_varname)
+            obj.parent_h.parent_h.parent_h.parent_h.parent_h.current_varname = current_varname;
+        end        
     end
 end
 

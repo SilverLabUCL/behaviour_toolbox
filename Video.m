@@ -255,15 +255,12 @@ classdef Video < handle
                             else
                                 p = current_roi.extracted_data.findprop(obj.current_varname);
                             end
-
-                            p.Description   = func2str(func);
-                            current_roi.extracted_data.(obj.current_varname)               = metric{roi};
-
+                            
                             if ~isempty(callback)
                                 p.GetMethod = str2func(callback);
                             end
-                        else
-                             metric{roi} = obj.rois(roi).extracted_data.(obj.current_varname);
+                            p.Description   = func2str(func);
+                            current_roi.extracted_data.(obj.current_varname)               = metric{roi};
                         end
                     end
                 end
@@ -272,8 +269,11 @@ classdef Video < handle
                 if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
                     obj.plot_results();
                 end
+                
+                %% Now, use get method to retreive data
+                metric = obj.rois.extracted_data.(obj.current_varname);
             else
-                fprintf(['No analysis required for ',obj.path,'. Skipping extraction\n']);
+                fprintf(['No ROI selected/present in ',obj.path,'. Skipping extraction/rendering \n']);
                 metric = {};
             end
         end
@@ -326,6 +326,10 @@ classdef Video < handle
 
                 %% Get camera timestamps
                 obj.timestamps      = timescale{2}/1000;
+                if obj.timestamps > 0
+                    fprintf(['TIMESTAMP BUG IN FILE ',timepstamp_path,'. CORRECTED ASSUMEING T0 = 0\n'])
+                    obj.timestamps = obj.timestamps - obj.timestamps(1);
+                end
                 obj.sampling_rate   = 1/mean(diff(obj.timestamps));
             else
                 fprintf(['timestamps not found for video ',obj.path,' \n']);
@@ -459,11 +463,11 @@ classdef Video < handle
             end
         end
         
-        function clear_results(obj, ROI_filter, delete_ROI, varname)
+        function clear_results(obj, ROI_filter, delete_ROI)
             %% Clear results matching ROI_filter, or delete ROI
             % -------------------------------------------------------------
             % Syntax: 
-            %   Video.clear_results(ROI_filter, delete_ROI, varname)
+            %   Video.clear_results(ROI_filter, delete_ROI)
             % -------------------------------------------------------------
             % Inputs:
             %   ROI_filter (STR or CELL ARRAY of STR) - Optional - Default
@@ -473,9 +477,6 @@ classdef Video < handle
             %
             %   delete_ROI (BOOL) - Default is false
             %   	If true, the whole ROI is deleted
-            %
-            %   varname (STR) - Optional - default is 'motion_index'
-            %   	Set the variable name used for extraction
             % -------------------------------------------------------------
             % Outputs: 
             % -------------------------------------------------------------
@@ -490,11 +491,7 @@ classdef Video < handle
             %   22-05-2020
             %
             % See also: Recording.clear_results, Experiment.clear_results
-            
-            if nargin < 4 || isempty(varname)
-                varname = 'motion_index';
-            end
-            
+                       
             if nargin < 2 || isempty(ROI_filter)
                 ROI_filter = obj.roi_labels;
             elseif ~iscell(ROI_filter)
@@ -512,7 +509,9 @@ classdef Video < handle
                 obj.pop(to_clear);
             else
                 for el = sort(unique(to_clear))
-                    obj.rois(el).extracted_data.(varname)   = [];
+                    if isprop(obj.rois(el).extracted_data, obj.current_varname)
+                        obj.rois(el).extracted_data.(obj.current_varname) = [];
+                    end
                 end
             end
         end
@@ -604,7 +603,9 @@ classdef Video < handle
                 error('Number of results provided does not match the number of results available. Use ')        
             else
                 for roi = 1:obj.n_roi
-                    obj.rois(roi).extracted_data.(obj.rois(roi).current_varname) = extracted_results{roi};
+                    if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
+                        obj.rois(roi).extracted_data.(obj.rois(roi).current_varname) = extracted_results{roi};
+                    end
                 end
             end
         end
@@ -660,12 +661,8 @@ classdef Video < handle
             
             ROI_location    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
-                try
-                	ROI_location{roi} = obj.rois(roi).ROI_location + obj.video_offset;
-                catch
-                    obj.video_offset = [0, 0];
-                    ROI_location{roi} = obj.rois(roi).ROI_location;
-                end
+                ROI_location{roi} = obj.rois(roi).ROI_location;
+                ROI_location{roi}(1:2) = ROI_location{roi}(1:2) + obj.video_offset;
             end
         end
         
@@ -754,7 +751,7 @@ classdef Video < handle
             % Revision Date:
             %   25-05-2020
             
-            if isempty(obj.reference_image)
+            if isempty(obj.reference_image) && ~any(arrayfun(@(x) contains(x.name, 'uisave'), dbstack))
                 video = VideoReader(obj.path);                
                 video.CurrentTime = 1;
                 vidFrame = readFrame(video);
@@ -794,15 +791,22 @@ classdef Video < handle
         function t = get.t(obj)
             %% Set timing info if missing
             if isempty(obj.timestamps) 
+                if any(arrayfun(@(x) contains(x.name, 'uisave'), dbstack))
+                    t = NaN;
+                    return
+                end
                 set_timestamps(obj);
             end
             
             %% Return t
             if isdatetime(obj.absolute_times(1))
+                if obj.timestamps(1) > 0
+                    set_timestamps(obj);
+                end
                 t = obj.timestamps + posixtime(obj.absolute_times(1)) + rem(second(obj.absolute_times(1)),1); % posixtime in seconds
             else
                 t = obj.absolute_times(1);
-            end  
+            end 
         end
         
 

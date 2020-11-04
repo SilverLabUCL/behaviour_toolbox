@@ -586,8 +586,10 @@ classdef Recording < handle
                 delete_ROI = false;
             end
 
-            for vid = find(contains(obj.videotypes, videotype_filter))
-                obj.videos(vid).clear_results(ROI_filter, delete_ROI);
+            for rec = 1:numel(obj)
+                for vid = find(contains(obj(rec).videotypes, videotype_filter))
+                    obj(rec).videos(vid).clear_results(ROI_filter, delete_ROI);
+                end
             end
         end
 

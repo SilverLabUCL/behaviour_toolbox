@@ -494,7 +494,7 @@ classdef Experiment < handle
                                         %% Check if it is a new ROI
                                         if isempty(previous_ids) || isempty(find(previous_ids(:,5) == current_pos{roi}(5)))                   
                                             n_roi = obj.recordings(rec).videos(local_video_type_idx).n_roi;
-                                            if n_roi == 0 %% QQ NEED TO CREATE AMETHOD FOR THAT
+                                            if n_roi == 0 %% QQ NEED TO CREATE A METHOD FOR THAT
                                                 obj.recordings(rec).videos(local_video_type_idx).rois = ROI(obj.recordings(rec).videos(local_video_type_idx));
                                             else
                                                 obj.recordings(rec).videos(local_video_type_idx).rois(n_roi + 1) = ROI(obj.recordings(rec).videos(local_video_type_idx));
@@ -659,11 +659,11 @@ classdef Experiment < handle
             end
             
             for rec = 1:obj.n_rec
-                obj.recordings(rec).analyse(force, display);
+                obj.recordings(rec).analyse(force, false);
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)
-                obj.recordings.plot_results(123, '', strcmp(display, 'pause'));
+                obj.plot_results(123, '', strcmp(display, 'pause'));
             end
         end
 
