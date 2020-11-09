@@ -250,12 +250,7 @@ classdef Video < handle
                         if ~available    
                             %% Store the result in the correct field
                             current_roi = obj.rois(roi);
-                            if ~isprop(current_roi.extracted_data, obj.current_varname)
-                                p = addprop(current_roi.extracted_data, obj.current_varname);
-                            else
-                                p = current_roi.extracted_data.findprop(obj.current_varname);
-                            end
-                            
+                            p = findprop(current_roi.extracted_data,(obj.current_varname));
                             if ~isempty(callback)
                                 p.GetMethod = str2func(callback);
                             end
@@ -271,7 +266,7 @@ classdef Video < handle
                 end
                 
                 %% Now, use get method to retreive data
-                metric = obj.rois.extracted_data.(obj.current_varname);
+                metric = obj.extracted_results; % equialent of obj.rois.extracted_data.(obj.current_varname), for all rois;
             else
                 fprintf(['No ROI selected/present in ',obj.path,'. Skipping extraction/rendering \n']);
                 metric = {};
@@ -723,6 +718,9 @@ classdef Video < handle
             for roi = 1:obj.n_roi
                 if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
                     extracted_results{roi} = obj.rois(roi).extracted_data.(obj.rois(roi).current_varname);
+                    if ~isempty(extracted_results{roi})
+                    	extracted_results{roi} = [extracted_results{roi}, obj.t]; 
+                    end
                 else
                     extracted_results{roi} = [];
                 end

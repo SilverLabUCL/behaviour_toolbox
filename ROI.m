@@ -192,19 +192,13 @@ classdef ROI < handle
                 result = [result, obj.parent_h.t];
             end
         end
-        
+
         function extracted_data = get.extracted_data(obj)
-            %% Now get the correct value if possible, and attach timestamp (frame # or real t)
-            extracted_data = obj.extracted_data;
-            if isprop(extracted_data, obj.current_varname) && ~isempty(extracted_data.(obj.current_varname))
-                if size(extracted_data.(obj.current_varname), 2) == 1
-                   extracted_data.(obj.current_varname) = [extracted_data.(obj.current_varname) , obj.parent_h.t];
-                end
+            if ~isfield(obj.extracted_data, obj.current_varname) && ~isprop(obj.extracted_data, obj.current_varname)
+                addprop(obj.extracted_data, obj.current_varname);
             end
-            
-            %% QQ Add warning if no get mthod
+            extracted_data = obj.extracted_data;
         end
-        
         
         function current_varname = get.current_varname(obj)
             current_varname = obj.parent_h.parent_h.parent_h.parent_h.current_varname;

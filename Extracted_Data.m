@@ -49,7 +49,7 @@
 %
 % See also Analysis_Set, Experiment, Recordings, Video, ROI
 
-classdef Extracted_Data < dynamicprops
+classdef Extracted_Data < dynamicprops & matlab.mixin.Copyable
     properties
         parent_h                ; % handle to parent ROI object
         current_varname         ; % The metric currently used

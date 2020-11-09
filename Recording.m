@@ -391,7 +391,6 @@ classdef Recording < handle
                 normalize = 'global';
             end
             
-            
             %% Regroup results in a matrix and fill missing cells
             type_list = unique(horzcat(obj.videotypes));
             all_types = cell(numel(obj), numel(type_list));
@@ -421,7 +420,7 @@ classdef Recording < handle
 
             %% Filter video types by name if required, and flag NaN type (missing videos)
             to_use              = cellfun(@(x) contains(x, videotype_filter), all_types) & ~cellfun(@(x) all(isempty(x)), all_types);
-            all_results(~to_use)    = {[]}; % clear content for ignored result's
+            all_results(~to_use)= {[]}; % clear content for ignored result's
             all_labels(~to_use) = {[]}; % clear content for ignored result's 
             all_results         = reshape(all_results   , size(to_use));
             all_labels          = reshape(all_labels, size(to_use));
@@ -445,7 +444,7 @@ classdef Recording < handle
                 if contains(type_list(videotype_idx), videotype_filter) % ignore filters videos
                     all_data{videotype_idx} = [];
                     all_taxis{videotype_idx} = [];
-                    current_results     = all_results(:,videotype_idx);
+                    current_results = all_results(:,videotype_idx);
                     current_labels  = all_labels(:,videotype_idx);
                     if all(cellfun(@isempty, current_results)) %% If all result are missing, we set all_rois to [];
                         all_rois    = [];
