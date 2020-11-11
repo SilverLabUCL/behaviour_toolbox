@@ -391,7 +391,7 @@ classdef Experiment < handle
             if nargin < 2 || isempty(fig_handle)
                 fig_handle = '';
             end
-            if (nargin < 3 || isempty(default_tags)) && isfield(obj.parent_h, 'default_tags')
+            if (nargin < 3 || isempty(default_tags)) && isprop(obj.parent_h, 'default_tags')
                 default_tags = obj.parent_h.default_tags;
             elseif nargin < 3 || isempty(default_tags)
                 default_tags = '';
