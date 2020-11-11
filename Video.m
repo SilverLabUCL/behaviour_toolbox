@@ -566,6 +566,25 @@ classdef Video < handle
 
             obj.path = fix_path(video_path);
         end
+        
+        function set.ROI_location(obj, ROI_location)
+            obj.rois = ROI(obj);
+
+            for roi = 1:numel(ROI_location)
+                obj.rois(roi) = ROI(obj);
+                obj.rois(roi).ROI_location  = ROI_location{roi};
+            end
+        end
+        
+        function set.roi_labels(obj, roi_labels)
+            if numel(roi_labels) == obj.n_roi
+                for roi = 1:numel(roi_labels)
+                    obj.rois(roi).name  = roi_labels{roi};
+                end
+            else
+                error('You must set a label for each roi')
+            end
+        end
 
         function set.extracted_results(obj, extracted_results)
             %% Set the Motion indices
@@ -657,7 +676,9 @@ classdef Video < handle
             ROI_location    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
                 ROI_location{roi} = obj.rois(roi).ROI_location;
-                ROI_location{roi}(1:2) = ROI_location{roi}(1:2) + obj.video_offset;
+                if ~isempty(ROI_location{roi})
+                    ROI_location{roi}(1:2) = ROI_location{roi}(1:2) + obj.video_offset;
+                end
             end
         end
         
@@ -751,7 +772,7 @@ classdef Video < handle
             
             if isempty(obj.reference_image) && ~any(arrayfun(@(x) contains(x.name, 'uisave'), dbstack))
                 video = VideoReader(obj.path);                
-                video.CurrentTime = 1;
+                video.CurrentTime = 0;
                 vidFrame = readFrame(video);
                 obj.reference_image = double(adapthisteq(rgb2gray(vidFrame))); 
             end
