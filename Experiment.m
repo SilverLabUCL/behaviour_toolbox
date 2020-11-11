@@ -528,7 +528,6 @@ classdef Experiment < handle
             end
         end
         
-        
         function [consensus_frame, all_frames] = get_consensus_frame(obj, videotype, force)
             %% Generate a consensus frame for the whole experiment
             %   Consensus frame is an image build using the first frame of
@@ -609,6 +608,36 @@ classdef Experiment < handle
                                   (3*varimage - nanmin(varimage(:))) / (nanmax(varimage(:)) - nanmin(varimage(:))),...
                                   (3*maximage - nanmin(maximage(:))) / (nanmax(maximage(:)) - nanmin(maximage(:))));
             consensus_frame(imerode(mask, strel('disk',3))) = 0; % blank saturated regions  
+        end
+        
+        function all_offsets = autoestimate_offsets(obj, videotypes)
+            if nargin < 2 || isempty(videotypes)
+                videotypes = obj.videotypes;
+            elseif ischar(videotypes)
+                videotypes = {videotypes};
+            end
+
+            all_offsets = {};
+            for type = 1:numel(videotypes)
+                [~, all_frames] = obj.get_consensus_frame(videotypes{type});
+
+                %% Get some info to help choosing ROIs
+                offsets = {[0, 0]};
+                for rec_idx = 2:size(all_frames, 3)
+                    if ~isnan(mean2(all_frames(:,:,rec_idx)))
+                        offsets{rec_idx} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,rec_idx), 100);
+                        offsets{rec_idx} = offsets{rec_idx}([4,3])*-1;
+                        
+                        local_video_type_idx = find(contains(obj.recordings(rec_idx).videotypes, videotypes{type}));                    
+                        obj.recordings(rec_idx).videos(local_video_type_idx).video_offset = offsets{rec_idx};                        
+                    else
+                        offsets{rec_idx} = [NaN, NaN];
+                    end
+                end
+
+                %% Update ROI position, or return values
+                all_offsets{type} = cell2mat(offsets');
+            end
         end
 
         function analyse(obj, force, display)

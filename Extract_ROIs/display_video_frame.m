@@ -219,6 +219,9 @@ end
 
 function offsets = autoestimate_offsets(~, ~, all_frames)
     %% Get some info to help choosing ROIs
+    
+    %% QQ SEE autoestimate_offsets method
+    
     offsets = {[0, 0]};
     for frame = 2:size(all_frames, 3)
         if ~isnan(mean2(all_frames(:,:,frame)))
