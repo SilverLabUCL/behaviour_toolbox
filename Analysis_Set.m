@@ -510,7 +510,7 @@ classdef Analysis_Set < handle
             % See also: Experiment.select_ROIs
             
             if nargin < 2 || isempty(filter_list)
-                filter_list = {''};
+                filter_list = '';
             end
 
             %% Update required fields
