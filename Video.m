@@ -740,7 +740,13 @@ classdef Video < handle
                 if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
                     extracted_results{roi} = obj.rois(roi).extracted_data.(obj.rois(roi).current_varname);
                     if ~isempty(extracted_results{roi})
-                    	extracted_results{roi} = [extracted_results{roi}, obj.t]; 
+                        if size(extracted_results{roi}, 1) == size(obj.t,1)
+                            extracted_results{roi} = [extracted_results{roi}, obj.t];                         
+                        elseif size(extracted_results{roi}, 1) > size(obj.t,1)
+                            fprintf(['there are more video frames than timestamp values in ',obj.path,' Timestamp export may have failed\n']);
+                        else
+                            fprintf(['there are more timestamp values in ',obj.path,' than video frames.  Video recording or export may have failed\n']);
+                        end
                     end
                 else
                     extracted_results{roi} = [];
