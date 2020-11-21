@@ -44,7 +44,9 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     
     pre_existing_offset = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).video_offset;
     ROI_window          = current_experiment.recordings(last_valid_videorec).videos(idx_to_use).ROI_location;
-    ROI_window          = cellfun(@(x) [x(1:2) - pre_existing_offset, x(3:end)], ROI_window, 'UniformOutput', false); % This is to cancel the correction from the get method of ROI_location, otherwise you would get a double correction
+    if ~any(cellfun(@isempty, ROI_window))
+        ROI_window          = cellfun(@(x) [x(1:2) - pre_existing_offset, x(3:end)], ROI_window, 'UniformOutput', false); % This is to cancel the correction from the get method of ROI_location, otherwise you would get a double correction
+    end
     link.existing_result= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).extracted_results;
     link.n_vid          = size(all_frames, 3);
     link.auto_offsets   = autoestimate_offsets('', '', all_frames);
@@ -69,7 +71,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     
     %% If there are preexisting ROIs, display them
     global current_offset
-    for roi_idx = 1:size(ROI_window,2)
+    for roi_idx = find(~cellfun(@isempty, ROI_window))%1:size(ROI_window,2)
         roi_position    = ROI_window(1,:); %first video is enough
         roi_position    = roi_position{roi_idx};
 

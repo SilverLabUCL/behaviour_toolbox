@@ -594,6 +594,12 @@ classdef Experiment < handle
  
             %% Concatenate
             consensus_frame = cat(3,consensus_frame{:});
+            for im = find(~[1, missing(2:end)])
+                [offset, ~] = dftreg(consensus_frame(1:100,:,first_valid), consensus_frame(1:100,:,im), 100);
+                [~, consensus_frame(:,:,im)] = dftreg(consensus_frame(:,:,first_valid), consensus_frame(:,:,im), 1,'','','','',offset);
+            end
+            
+            %% Preparocessing for consensus frame
             corrimage       = correlation_image(consensus_frame);
             mask            = repmat(isnan(corrimage),1,1,3); % No DATA
 
@@ -623,9 +629,10 @@ classdef Experiment < handle
 
                 %% Get some info to help choosing ROIs
                 offsets = {[0, 0]};
+                ref = find(~isnan(all_frames(1,1,:)),1,'first');
                 for rec_idx = 2:size(all_frames, 3)
                     if ~isnan(mean2(all_frames(:,:,rec_idx)))
-                        offsets{rec_idx} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,rec_idx), 100);
+                        offsets{rec_idx} = dftregistration(all_frames(1:100,:,ref), all_frames(1:100,:,rec_idx), 100);
                         offsets{rec_idx} = offsets{rec_idx}([4,3])*-1;
                         
                         local_video_type_idx = find(contains(obj.recordings(rec_idx).videotypes, videotypes{type}));                    
