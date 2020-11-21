@@ -87,7 +87,7 @@ classdef ROI < handle
             % See also:
             
             obj.ROI_location    = [];
-            obj.name            = [];
+            obj.name            = '';
             obj.parent_h        = parent;
             obj.extracted_data  = Extracted_Data(obj);
         end
