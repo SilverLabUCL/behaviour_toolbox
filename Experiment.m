@@ -743,21 +743,29 @@ classdef Experiment < handle
             %
             % See also: Video.clear_results, Experiment.clear_results
             
-            if nargin < 2 || isempty(idx_to_clear)
-                idx_to_clear = 1:obj.n_rec;
-            end
-            if nargin < 3 || isempty(videotype_filter)
-                videotype_filter = obj.videotypes;
-            end
-            if nargin < 4 || isempty(ROI_filter)
-                ROI_filter = obj.roi_labels;
-            end
-            if nargin < 5 || isempty(delete_ROI)
-                delete_ROI = false;
-            end
-            
-            for rec = idx_to_clear
-                obj.recordings(rec).clear_results(videotype_filter, ROI_filter, delete_ROI);
+            for exp = 1:numel(obj)
+                if nargin < 2 || isempty(idx_to_clear)
+                    idx_to_clear_exp = 1:obj(exp).n_rec;
+                else
+                    idx_to_clear_exp = idx_to_clear;
+                end
+                if nargin < 3 || isempty(videotype_filter)
+                    videotype_filter_exp = obj(exp).videotypes;
+                else
+                    videotype_filter_exp = videotype_filter;
+                end
+                if nargin < 4 || isempty(ROI_filter)
+                    ROI_filter_exp = obj(exp).roi_labels;
+                else
+                    ROI_filter_exp = ROI_filter;
+                end
+                if nargin < 5 || isempty(delete_ROI)
+                    delete_ROI = false;
+                end
+
+                for rec = idx_to_clear_exp
+                    obj(exp).recordings(rec).clear_results(videotype_filter_exp, ROI_filter_exp, delete_ROI);
+                end
             end
         end
         
