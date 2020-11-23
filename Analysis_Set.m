@@ -294,6 +294,10 @@ classdef Analysis_Set < handle
                 error('must pass INT or STR path or CELL ARRAY of STR PATH')
             end
         end
+        
+        function idx = identify(obj, filter)            
+            idx = find(contains({obj.experiments.path}, filter));
+        end
 
         function obj = pop(obj, to_remove)
             %% Delete experiment at index(es) expe_number
