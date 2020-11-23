@@ -647,7 +647,7 @@ classdef Experiment < handle
             end
         end
 
-        function analyse(obj, force, display)
+        function new_data_available = analyse(obj, force, display)
             %% Extract results for current experiments
             % -------------------------------------------------------------
             % Syntax: 
@@ -694,8 +694,9 @@ classdef Experiment < handle
                 display = false;
             end
             
+            new_data_available = false;
             for rec = 1:obj.n_rec
-                obj.recordings(rec).analyse(force, false);
+                new_data_available = new_data_available && obj.recordings(rec).analyse(force, false);
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)

@@ -237,7 +237,7 @@ classdef Recording < handle
             obj.videos(video_type_idx) = [];
         end
 
-        function analyse(obj, force, display)
+        function new_data_available = analyse(obj, force, display)
             %% Extract results for current recording
             % -------------------------------------------------------------
             % Syntax: 
@@ -285,8 +285,10 @@ classdef Recording < handle
             end
 
             %% Go through video, and extract result when required
+            new_data_available = false;
             for vid = 1:obj.n_vid    
-                obj.videos(vid).analyse('', force, display);
+                [~, is_new] = obj.videos(vid).analyse('', force, display);
+                new_data_available = new_data_available && is_new;
             end 
         end
         
@@ -497,7 +499,7 @@ classdef Recording < handle
                             ax          = subplot('Position',[0.1, 0.95 - sz*roi_count, 0.85, sz - 0.01]);
                             if roi_count == 1; title([type_list{videotype_idx},' ; ', fix_path(fileparts(obj(1).path),true)]);hold on; end
                             ax.XAxis.Visible = 'off';
-                            ylabel(ROI_names{roi+1});hold on
+                            ylabel(strrep(ROI_names{roi+1},'_', '\_'));hold on
 
                             %% Select the right column(s)
                             mi_data     = all_rois(:,rois*2 - 1);

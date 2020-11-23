@@ -532,7 +532,7 @@ classdef Analysis_Set < handle
             end
         end
 
-        function analyse(obj, filter_list, force, display)
+        function new_data_available = analyse(obj, filter_list, force, display)
             %% Extract results for all experiments
             % -------------------------------------------------------------
             % Syntax: 
@@ -596,8 +596,10 @@ classdef Analysis_Set < handle
             end
 
             %% Now that all Videos are ready, extract results if the section is empty
+            new_data_available = false;
             for experiment_idx = analysed_idx
-                obj.experiments(experiment_idx).analyse(force, display);
+                is_new =  obj.experiments(experiment_idx).analyse(force, display);
+                new_data_available = new_data_available && is_new;
             end    
         end
 

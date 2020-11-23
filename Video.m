@@ -149,7 +149,7 @@ classdef Video < handle
             end
         end
         
-        function metric = analyse(obj, func, force, display, varname, ROI_filter, varargin)
+        function [metric, new_data_available] = analyse(obj, func, force, display, varname, ROI_filter, varargin)
             %% Store and format absolute timestamps for the current video
             % -------------------------------------------------------------
             % Syntax: 
@@ -222,6 +222,7 @@ classdef Video < handle
             end
             
             %% Extract variable
+            new_data_available = false;
             if ~all(cellfun(@isempty, obj.roi_labels)) && any(contains(obj.roi_labels,ROI_filter))
                 %% If you used a ROI filter, list the ROIs that will need updating
                 valid_for_this_run = contains(obj.roi_labels,ROI_filter);
@@ -229,6 +230,7 @@ classdef Video < handle
                 %% If you didn't pass an ROI filter and some data is missing (or you force re-analysis), run the function at the video level
                 available = false;
                 if isempty(ROI_filter) && (force || any(cellfun(@isempty, obj.extracted_results)))
+                    new_data_available = true;
                     metric = func();
                     if ~iscell(metric)
                         metric = repmat({metric}, 1, obj.n_roi);
@@ -242,6 +244,7 @@ classdef Video < handle
                     if valid_for_this_run(roi) 
                         %% If you run function on a ROI by ROI basis
                         if ~isempty(ROI_filter) &&  (force || isempty(obj.rois(roi).extracted_data.(obj.current_varname)))
+                            new_data_available = true;
                             metric{roi} = func(); % store directly the ouput at the right place
                         elseif ~isempty(ROI_filter)
                             available = true;
