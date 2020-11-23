@@ -103,9 +103,10 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     end
     
     %% Add extra button
-    uicontrol('Style', 'pushbutton', 'String', 'Measure', 'Units','normalized','Position',[0.9 0.2 0.08 0.04], 'Callback', @(event, src) result_preview(event, src, im_handle));
     uicontrol('Style', 'pushbutton', 'String', 'Clear offset', 'BackgroundColor', [1,0.5,0.5], 'Units','normalized','Position',[0.9 0.1 0.08 0.04], 'Callback', @(event, src) clear_offsets(src, event));
+    uicontrol('Style', 'pushbutton', 'String', 'Measure', 'Units','normalized','Position',[0.9 0.2 0.08 0.04], 'Callback', @(event, src) result_preview(event, src, im_handle));
     uicontrol('Style', 'pushbutton', 'String', 'Auto-estimate offset', 'Units','normalized','Position',[0.9 0.3 0.08 0.04], 'Callback', @(event, src) autoestimate_offsets(src, event, all_frames));
+    uicontrol('Style', 'checkbox', 'String', 'Move All ROIs', 'Units','normalized','Position',[0.9 0.4 0.08 0.04], 'BackgroundColor', [1,1,1]);
 
     uicontrol('Style', 'slider',...
               'Units', 'normalized',...
@@ -179,7 +180,6 @@ end
 
 function refresh_rois()
     %% Reposition ROIs for current video
-
     global current_video current_pos current_offset roi_handles
     for roi = 1:numel(current_pos)
         if ~isempty(current_offset{roi}) % empty when deleted
@@ -222,12 +222,12 @@ end
 function offsets = autoestimate_offsets(~, ~, all_frames)
     %% Get some info to help choosing ROIs
     
-    %% QQ SEE autoestimate_offsets method
-    
+    %% QQ SEE autoestimate_offsets method    
+    ref_nb = find(~isnan(all_frames(1,1,:)),1,'first');
     offsets = {[0, 0]};
     for frame = 2:size(all_frames, 3)
         if ~isnan(mean2(all_frames(:,:,frame)))
-            offsets{frame} = dftregistration(all_frames(1:100,:,1), all_frames(1:100,:,frame), 100);
+            offsets{frame} = dftregistration(all_frames(1:100,:,ref_nb), all_frames(1:100,:,frame), 100);
             offsets{frame} = offsets{frame}([4,3])*-1;
         else
             offsets{frame} = [NaN, NaN];
@@ -252,6 +252,8 @@ function add_rect(~, src, position, label, color, n_vid)
     if nargin < 5  || isempty(color)
         color = 'r';
     end
+    
+    label = strrep(label, '_', '\_');
     
     %% Add a new ROI
     global current_pos current_offset link roi_handles current_video
@@ -317,13 +319,31 @@ function read(obj, p)
         %% Read current ROI location and size
         global current_pos current_offset link current_video roi_handles
 
-        id = str2num(get(obj,'userdata'));
+        f = get(obj);
+        id = str2num(f.UserData);
         idx = find(cellfun(@(x) x(end), current_pos) == id);
 
-        if current_video == 0
+
+        if current_video == 0    
+            displacement = p(1:2) - current_pos{idx}(1:2);
             current_pos{idx} = [p, id(1)];
-            link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;
-            if all(link.label{idx}.Color == [0 1 0])
+            link.label{idx}.Position(1:2) = current_pos{idx}(1:2)-5;            
+            force_move_all = findobj(f.Parent.Parent.Children, '-depth',1, 'String','Move All ROIs');
+            force_move_all = force_move_all.Value; % if check box ticked, then move all ROI's at once
+            if force_move_all
+                all_idx = 1:numel(current_pos);
+                all_idx = all_idx(all_idx ~= idx);
+                for roi = all_idx
+                    p = current_pos{roi}(1:2) + displacement;
+                    current_pos{roi}(1:2) = p;
+                    link.label{roi}.Position(1:2) = current_pos{roi}(1:2)-5;
+                    if ~isempty(current_pos{roi}) % empty when deleted
+                        roi_handles(roi).setPosition(current_pos{roi}(1:4));
+                    end
+                end
+            end
+           
+            if any(displacement) && all(link.label{idx}.Color == [0 1 0])
                 link.label{idx}.Color = [1 1 0];
             end
         elseif ~contains([stackcall.name],'change_image')
