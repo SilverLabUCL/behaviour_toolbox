@@ -476,6 +476,12 @@ classdef Recording < handle
 
                     %% Create subplot
                     axes            = [];
+                    for label = 1:numel(current_labels)
+                        if iscell(current_labels{label})
+                            current_labels{label}  = cellfun(@(x) char(x),current_labels{label}, 'UniformOutput', false); % that's because sometimes empty label is a double instead of char
+                        end
+                    end
+                            
                     if regroup
                         n_rois      = sum(contains(unique(current_labels{1}), ROI_filter)); 
                     else

@@ -295,7 +295,7 @@ classdef Analysis_Set < handle
             end
         end
         
-        function idx = identify(obj, filter)            
+        function idx = identify(obj, filter)    
             idx = find(contains({obj.experiments.path}, filter));
         end
 
