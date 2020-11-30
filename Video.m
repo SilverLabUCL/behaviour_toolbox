@@ -173,7 +173,11 @@ classdef Video < handle
             %   	 is closed            
             %
             %   varname (STR) - Optional - default is 'motion_index'
-            %   	Set the variable name used for extraction
+            %   	- Set the variable name used for extraction. If the
+            %   	extracted metric output is not a [1 X T] array, you
+            %   	can associate a formating handle in ordr to use the 
+            %       plotting functions. 
+            %           For example 'pupil @format_pupil_output'
             %
             %   ROI_filter (STR) - Optional - default is ''
             %   	If non empty, only ROIs matching the name will be
@@ -205,6 +209,7 @@ classdef Video < handle
             if nargin < 4 || isempty(display)
                 display = false;
             end
+            bypass = false;
             if nargin < 5 || isempty(varname)
                 obj.current_varname  = 'motion_index';
                 callback = '';
@@ -215,7 +220,12 @@ classdef Video < handle
                 else
                     callback = '';
                 end
-                obj.current_varname = strtrim(varname{1});
+                if ~strcmpi(varname{1}, 'none')
+                    obj.current_varname = strtrim(varname{1});
+                else
+                    bypass = true;
+                    force = true;
+                end                    
             end
             if nargin < 6 || isempty(ROI_filter)
                 ROI_filter = '';
@@ -232,7 +242,7 @@ classdef Video < handle
                 if isempty(ROI_filter) && (force || any(cellfun(@isempty, obj.extracted_results)))
                     new_data_available = true;
                     metric = func();
-                    if ~iscell(metric)
+                    if ~iscell(metric) && ~bypass
                         metric = repmat({metric}, 1, obj.n_roi);
                     end
                 elseif isempty(ROI_filter)
@@ -250,7 +260,7 @@ classdef Video < handle
                             available = true;
                         end
 
-                        if ~available    
+                        if ~available && ~bypass 
                             %% Store the result in the correct field
                             current_roi = obj.rois(roi);
                             p = findprop(current_roi.extracted_data,(obj.current_varname));
@@ -269,7 +279,9 @@ classdef Video < handle
                 end
                 
                 %% Now, use get method to retreive data
-                metric = obj.extracted_results; % equialent of obj.rois.extracted_data.(obj.current_varname), for all rois;
+                if ~bypass
+                    metric = obj.extracted_results; % equivalent of obj.rois.extracted_data.(obj.current_varname), for all rois;
+                end
             else
                 fprintf(['No ROI selected/present in ',obj.path,'. Skipping extraction/rendering \n']);
                 metric = {};
@@ -571,10 +583,10 @@ classdef Video < handle
         end
         
         function set.ROI_location(obj, ROI_location)
-            obj.rois = ROI(obj);
+            %obj.rois = ROI(obj);
 
             for roi = 1:numel(ROI_location)
-                obj.rois(roi) = ROI(obj);
+                %obj.rois(roi) = ROI(obj);
                 obj.rois(roi).ROI_location  = ROI_location{roi};
             end
         end
@@ -783,11 +795,22 @@ classdef Video < handle
             % Revision Date:
             %   25-05-2020
             
-            if isempty(obj.reference_image) && ~any(arrayfun(@(x) contains(x.name, 'uisave'), dbstack))
-                video = VideoReader(obj.path);                
-                video.CurrentTime = 0;
-                vidFrame = readFrame(video);
-                obj.reference_image = double(adapthisteq(rgb2gray(vidFrame))); 
+            if isempty(obj.reference_image) && ~any(arrayfun(@(x) contains(x.name, 'uisave'), dbstack))               
+                try
+                    video = VideoReader(obj.path); 
+                    video.CurrentTime = 0;
+                    vidFrame = readFrame(video);
+                    obj.reference_image = double(adapthisteq(rgb2gray(vidFrame))); 
+                catch
+                    out = dir(obj.path);
+                    if out.bytes < 1000
+                        obj.reference_image = [];
+                        warning(['File ',obj.path,' looks empty and should probably be deleted'])
+                    else
+                        error('Video cannot be read. A common cause is a missing codc. Try installing the proper codec and restart MATLAB. A good test to know if it should work is if you can load the video in Windows Media Player')  
+                    end
+                end
+
             end
             reference_image = obj.reference_image;
         end

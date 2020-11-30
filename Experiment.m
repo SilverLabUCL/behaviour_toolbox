@@ -586,7 +586,7 @@ classdef Experiment < handle
             
             %% Make sure we get one frame for the correct video, or a frame of NaN of similar size
             real_idx        = cellfun(@(x) find(contains(x, videotype)), labels, 'UniformOutput', false);
-            missing         = cellfun(@isempty, real_idx);
+            missing         = cellfun(@isempty, real_idx) | cellfun(@(x,y) isempty(y) || isempty(x{y}), consensus_frame, real_idx);
             first_valid     = find(~missing,1,'first');
             consensus_frame(missing) = {{NaN(size(consensus_frame{first_valid}{real_idx{first_valid}}))}};
             real_idx(missing) = {1};
@@ -594,9 +594,11 @@ classdef Experiment < handle
  
             %% Concatenate
             consensus_frame = cat(3,consensus_frame{:});
-            for im = find(~[1, missing(2:end)])
-                [offset, ~] = dftreg(consensus_frame(1:100,:,first_valid), consensus_frame(1:100,:,im), 100);
-                [~, consensus_frame(:,:,im)] = dftreg(consensus_frame(:,:,first_valid), consensus_frame(:,:,im), 1,'','','','',offset);
+            if obj.parent_h.auto_register_ref_image
+                for im = find(~[1, missing(2:end)])
+                    [offset, ~] = dftreg(consensus_frame(1:100,:,first_valid), consensus_frame(1:100,:,im), 100);
+                    [~, consensus_frame(:,:,im)] = dftreg(consensus_frame(:,:,first_valid), consensus_frame(:,:,im), 1,'','','','',offset);
+                end
             end
             
             %% Preparocessing for consensus frame
@@ -696,7 +698,8 @@ classdef Experiment < handle
             
             new_data_available = false;
             for rec = 1:obj.n_rec
-                new_data_available = new_data_available && obj.recordings(rec).analyse(force, false);
+                is_new = obj.recordings(rec).analyse(force, false);
+                new_data_available = new_data_available || is_new;
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)

@@ -89,9 +89,11 @@
 
 classdef Analysis_Set < handle
     properties
-        experiments     = []           ; % Contain individual experiments
-        video_folder    = ''           ; % Top video folder where experiments are located
-        n_expe          = 0            ; % Return number of experiments
+        experiments     = []            ; % Contain individual experiments
+        video_folder    = ''            ; % Top video folder where experiments are located
+        n_expe          = 0             ; % Return number of experiments
+        auto_estimate_offsets   = true  ; % If true, video offsets are estimated by default when positioning ROIs
+        auto_register_ref_image   = false; % If true, the consensus frame is registrerd automatically for better sharpness
         default_tags    = {'Whisker'   ,...
                             'Nose'     ,...
                             'Jaw'      ,...
@@ -210,7 +212,7 @@ classdef Analysis_Set < handle
                 %% Sort alphabetically and remove empty experiments
                 obj.experiments(experiment_idx).cleanup();
             end
-            fprintf('Update finsihed...\n')
+            fprintf('Update complete...\n')
 
             %% final adjustements
             obj.cleanup();
@@ -295,7 +297,7 @@ classdef Analysis_Set < handle
             end
         end
         
-        function idx = identify(obj, filter)            
+        function idx = identify(obj, filter)    
             idx = find(contains({obj.experiments.path}, filter));
         end
 
@@ -599,8 +601,19 @@ classdef Analysis_Set < handle
             new_data_available = false;
             for experiment_idx = analysed_idx
                 is_new =  obj.experiments(experiment_idx).analyse(force, display);
-                new_data_available = new_data_available && is_new;
+                new_data_available = new_data_available || is_new;
             end    
+        end
+        
+        function path = save(obj, path)
+            my_analysis        = obj;
+            if nargin < 2 || isempty(path)
+            	path = ['saved_analysis ',strrep(datestr(datetime('now')),':','_')];
+                uisave({'my_analysis'},path);
+            else
+                save(path,'my_analysis','-v7.3');
+            end
+            
         end
 
         function set.video_folder(obj, new_video_folder)

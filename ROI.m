@@ -87,7 +87,7 @@ classdef ROI < handle
             % See also:
             
 %             obj.ROI_location    = [];
-%             obj.name            = '';
+%            obj.name            
             obj.parent_h        = parent;
             obj.extracted_data  = Extracted_Data(obj);
         end
@@ -143,7 +143,12 @@ classdef ROI < handle
 
             %% Get single or multiple extracted variable
             if numel(obj) == 1
-                result = obj.extracted_data.(obj.current_varname)(:,1);
+                result = obj.extracted_data.(obj.current_varname);
+                if ~isempty(result)
+                    result = result(:,1);
+                else
+                    warning('Your data does not seem to be in the [T X 1] format (or [T x N, where the first column is used). You probably did not associate a formatting handle when extracting the data in a first place.')
+                end
             else
                 result = cell2mat(arrayfun(@(x) x.extracted_data.(obj.current_varname)(:,1), obj, 'UniformOutput', false));
             end
@@ -207,6 +212,13 @@ classdef ROI < handle
         function set.current_varname(obj, current_varname)
             obj.parent_h.parent_h.parent_h.parent_h.current_varname = current_varname;
         end
+        
+%         function name = get.name(obj)
+%             name = obj.name;
+%             if ~isempty(name)
+%                 1
+%             end
+%         end  
     end
 end
 
