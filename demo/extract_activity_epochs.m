@@ -1,7 +1,7 @@
 %% Show how to get timepoints for a specific MI
 error('to update with new handle')
 
-%analysis = behaviour_GUI.Experiment_set;
+%analysis = behaviour_GUI.analysis;
 smoothing = [3, 0];
 method = 'movmean';
 %video_fact = 0.445;

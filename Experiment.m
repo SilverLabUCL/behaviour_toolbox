@@ -586,7 +586,7 @@ classdef Experiment < handle
             
             %% Make sure we get one frame for the correct video, or a frame of NaN of similar size
             real_idx        = cellfun(@(x) find(contains(x, videotype)), labels, 'UniformOutput', false);
-            missing         = cellfun(@isempty, real_idx);
+            missing         = cellfun(@isempty, real_idx) | cellfun(@(x,y) isempty(y) || isempty(x{y}), consensus_frame, real_idx);
             first_valid     = find(~missing,1,'first');
             consensus_frame(missing) = {{NaN(size(consensus_frame{first_valid}{real_idx{first_valid}}))}};
             real_idx(missing) = {1};

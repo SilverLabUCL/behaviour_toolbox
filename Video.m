@@ -786,12 +786,19 @@ classdef Video < handle
             if isempty(obj.reference_image) && ~any(arrayfun(@(x) contains(x.name, 'uisave'), dbstack))               
                 try
                     video = VideoReader(obj.path); 
+                    video.CurrentTime = 0;
+                    vidFrame = readFrame(video);
+                    obj.reference_image = double(adapthisteq(rgb2gray(vidFrame))); 
                 catch
-                    error('Video cannot be read. A common cause is a missing codc. Try installing the proper codec and restart MATLAB. A good test to know if it should work is if you can load the video in Windows Media Player')                    
+                    out = dir(obj.path);
+                    if out.bytes < 1000
+                        obj.reference_image = [];
+                        warning(['File ',obj.path,' looks empty and should probably be deleted'])
+                    else
+                        error('Video cannot be read. A common cause is a missing codc. Try installing the proper codec and restart MATLAB. A good test to know if it should work is if you can load the video in Windows Media Player')  
+                    end
                 end
-                video.CurrentTime = 0;
-                vidFrame = readFrame(video);
-                obj.reference_image = double(adapthisteq(rgb2gray(vidFrame))); 
+
             end
             reference_image = obj.reference_image;
         end
