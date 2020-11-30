@@ -89,9 +89,11 @@
 
 classdef Analysis_Set < handle
     properties
-        experiments     = []           ; % Contain individual experiments
-        video_folder    = ''           ; % Top video folder where experiments are located
-        n_expe          = 0            ; % Return number of experiments
+        experiments     = []            ; % Contain individual experiments
+        video_folder    = ''            ; % Top video folder where experiments are located
+        n_expe          = 0             ; % Return number of experiments
+        auto_estimate_offsets   = true  ; % If true, video offsets are estimated by default when positioning ROIs
+        auto_register_ref_image   = false; % If true, the consensus frame is registrerd automatically for better sharpness
         default_tags    = {'Whisker'   ,...
                             'Nose'     ,...
                             'Jaw'      ,...

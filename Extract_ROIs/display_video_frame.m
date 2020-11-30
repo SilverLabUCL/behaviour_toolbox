@@ -49,8 +49,11 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
     end
     link.existing_result= current_experiment.recordings(last_valid_videorec).videos(idx_to_use).extracted_results;
     link.n_vid          = size(all_frames, 3);
-    link.auto_offsets   = autoestimate_offsets('', '', all_frames);
     if ~all(all(isnan(cell2mat(ROI_offsets)))) % reload previous offsets if available
+        link.auto_offsets = {cell2mat(ROI_offsets)};
+    elseif current_experiment.parent_h.auto_estimate_offsets % otherwise, values are 0 or auto_estimates
+        link.auto_offsets   = autoestimate_offsets('', '', all_frames);
+    else
         link.auto_offsets = {cell2mat(ROI_offsets)};
     end
 

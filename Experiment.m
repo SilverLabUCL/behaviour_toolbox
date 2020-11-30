@@ -594,9 +594,11 @@ classdef Experiment < handle
  
             %% Concatenate
             consensus_frame = cat(3,consensus_frame{:});
-            for im = find(~[1, missing(2:end)])
-                [offset, ~] = dftreg(consensus_frame(1:100,:,first_valid), consensus_frame(1:100,:,im), 100);
-                [~, consensus_frame(:,:,im)] = dftreg(consensus_frame(:,:,first_valid), consensus_frame(:,:,im), 1,'','','','',offset);
+            if obj.parent_h.auto_register_ref_image
+                for im = find(~[1, missing(2:end)])
+                    [offset, ~] = dftreg(consensus_frame(1:100,:,first_valid), consensus_frame(1:100,:,im), 100);
+                    [~, consensus_frame(:,:,im)] = dftreg(consensus_frame(:,:,first_valid), consensus_frame(:,:,im), 1,'','','','',offset);
+                end
             end
             
             %% Preparocessing for consensus frame
