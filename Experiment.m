@@ -698,7 +698,8 @@ classdef Experiment < handle
             
             new_data_available = false;
             for rec = 1:obj.n_rec
-                new_data_available = new_data_available && obj.recordings(rec).analyse(force, false);
+                is_new = obj.recordings(rec).analyse(force, false);
+                new_data_available = new_data_available || is_new;
             end
 
             if any(strcmp(display, {'auto', 'pause'})) || (islogical(display) && display)

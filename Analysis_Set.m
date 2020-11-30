@@ -212,7 +212,7 @@ classdef Analysis_Set < handle
                 %% Sort alphabetically and remove empty experiments
                 obj.experiments(experiment_idx).cleanup();
             end
-            fprintf('Update finsihed...\n')
+            fprintf('Update complete...\n')
 
             %% final adjustements
             obj.cleanup();
@@ -601,8 +601,19 @@ classdef Analysis_Set < handle
             new_data_available = false;
             for experiment_idx = analysed_idx
                 is_new =  obj.experiments(experiment_idx).analyse(force, display);
-                new_data_available = new_data_available && is_new;
+                new_data_available = new_data_available || is_new;
             end    
+        end
+        
+        function path = save(obj, path)
+            my_analysis        = obj;
+            if nargin < 2 || isempty(path)
+            	path = ['saved_analysis ',strrep(datestr(datetime('now')),':','_')];
+                uisave({'my_analysis'},path);
+            else
+                save(path,'my_analysis','-v7.3');
+            end
+            
         end
 
         function set.video_folder(obj, new_video_folder)

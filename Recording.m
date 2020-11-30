@@ -288,7 +288,7 @@ classdef Recording < handle
             new_data_available = false;
             for vid = 1:obj.n_vid    
                 [~, is_new] = obj.videos(vid).analyse('', force, display);
-                new_data_available = new_data_available && is_new;
+                new_data_available = new_data_available || is_new;
             end 
         end
         
