@@ -16,7 +16,7 @@ This toolbox was created to streamline ROI selection for Video acquisition in th
 
 This toolbox will help go through all the video as fast as possible, easily manipulate/Select ROIs. The Results are stored in a database-like structure (see below). ROI location and other video info can be manipulated to do batch analysis. The only preparatory work required is to regroup the videos folders by day and experiments.
 
-The Default analysis extract the motion index, for each ROI. Howver you can apply different function based on your needs (extract small video bouts for DeepLabCut, extract Pupil diameter from an Eye ROI... ). See [examples](#Other-use-case-for-ROIs).
+The Default analysis extract the motion index, for each ROI. However you can apply different function based on your needs (extract small video bouts for DeepLabCut, extract Pupil diameter from an Eye ROI... ). See [examples](#Other-use-case-for-ROIs).
 
 Setup and general information
 =============================
@@ -71,7 +71,7 @@ Each LabVIEW video folder (*/YYMMDD_HH_mm_ss VidRec/* folder ) is expected to co
 
 
 
-> Note: an "experiment" is defined by a series of consecutive video recordings where ROIs will be identical. Some computation will be shared between videos of the same experiment, using the same ROI location across the recordings, which means the camera must not move. Camera offset can be corrected, however, if you changed the camera angle or zoom factor, you will have to split the experiments in 2.
+> Note: an "experiment" is defined by a series of consecutive video recordings where ROIs will be identical. Some computation will be shared between videos of the same experiment, using the same ROI location across the recordings, which means the camera must not move. Camera offset can be corrected, however, if you changed the camera angle or zoom factor in the middle of an experiment, you will have to split the experiments in 2, as ROIs cannot be scaled or reshape inside an experiment.
 >
 
 General data structure
@@ -124,7 +124,8 @@ Please keep an eye at the messages printed during this initial listing, as they 
 Once finished, you should see an updated GUI.
 
 > Note : As this step can be very long, it is recommended to save your database once the list was generated. See [backup analysis](#Backup-Analysis)
->
+
+> Note : Pay attention to the messages printed in the console. They may indicate problematic recordings
 
 Backup Analysis
 ===============
@@ -136,7 +137,7 @@ As some steps can be extremely time consuming, it is recommended to do some regu
 
 ![](./media/image3.png)
 
-An automated filename with a timestamp is proposed, but you can edit it.
+An automated filename with a timestamp is proposed, but you can edit it. This is simply saving `behaviour_gui.analysis`object.
 
 Manual Reload
 -------------
@@ -151,24 +152,9 @@ If you want to directly start the GUI using a previous backup, use:
 Behaviour_analysis('saved_analysis 19-May-2020 16_47_15.mat')
 ```
 
-If the Top folder field is red, it indicates that the video_path used last time has changed, either because you moved your videos or because you changed computer / Hard drive. You can edit the field if you need to extract/position new ROIs data. 
+If the Top folder field is red, it indicates that the video_path used last time has changed, either because you moved your videos or because you changed computer / Hard drive. You can edit the field if you need to extract/position new ROIs data, otherwise, it won't be possible to extract new data or load video frames.
 
 ![image-20200520185839674](media/image-20200520185839674.png)
-
-Recover from interrupted analysis
----------------------------------
-
-When extracting motion indices, you may interrupt your MI extraction. An error could also emerge from a server connection issue, or a corrupted recording. If this happens, you can restore to the last valid state by
-clicking on the [Recover interrupted analysis] button:
-
- ![](./media/image5.png)
-
-> Note : After doing this, you should immediately backup the database.
-
-Auto saving
------------
-
-Temporarily disabled. See Recover from interrupted analysis.
 
 Browse Data and Database
 ========================
@@ -186,16 +172,16 @@ The recordings listed in the selected experiments are displayed on the left
 
 ![](./media/image7.png)
 
--   '*Eye*', '*Body*' and, '*Whisker*' columns indicated the availability of the videos. In the example above, the recording 17-27-01 only have a WhiskerCam recording, while other recordings have all video recordings.
+-   '*Eye*', '*Body*' and, '*Whisker*' or '*Fast*' columns indicated the availability of the videos. In the example above, the recording 18-45-43 only have a FastCam recording, while other recordings have all video recordings.
     
--   The *selected MI* column indicates how many ROIs were selected for each video.
+-   The *selected MI* column indicates how many ROIs were selected for each video (here, 9 ROIs for BodyCam videos, 10 for EyeCam, 1 for WhiskerCam). -1 values indicates that the video is missing
     
--   The *analysed* column indicates if the motion indices were all analysed or not.
+-   The *analysed* column is ticked if all the motion indices were extracted, in all the videos (or if none were selected).
 
 Open Video/Open folder
 ----------------------
 
-You can select a specific video, or open its containing folder by clicking on the [Open Video] or [Open Folder] buttons. For video, the selcted video is opened. For folders, the containing folder is opened.
+You can select a specific video, or open its containing folder by clicking on the [Open Video] or [Open Folder] buttons. For [Open Video], the highlighted video is opened. 
 
 ![](./media/image8.png)
 
@@ -206,14 +192,14 @@ You can select a specific video, or open its containing folder by clicking on th
 Updating Database
 -----------------
 
-If you added or deleted folders, you can click on  the [Refresh File List] Button.
+If you added or deleted folders, you can click on  the [Refresh File List] Button. This will go through all the video folders and add any missing file. 
 ![](./media/image10.png)
 
 Existing analysis will be kept, new files will be added (in alphabetical order) and deleted folders will be removed.
 
 > Note : This process will take as long as the initial listing, which can last seconds to minutes depending on the location and number of the files.
 
-In the rare case where you (re)-add videos in an experiment where ROIs were already selected, you need to regenerate Motion Indices for all recordings by clicking on the [Select/Browse ROIs] Button again. The Missing MIs will be calculated next tie you click on the [Show/Analyse] button. 
+In the rare case where you (re)-add videos in an experiment where ROIs were already selected, you need to regenerate Motion Indices for all recordings by clicking on the [Select/Browse ROIs] Button again. The Missing MIs will be calculated next time you click on the [Show/Analyse] button. 
 
 Select ROIs
 ===========
@@ -231,7 +217,7 @@ Quick Selection
 
 ![](./media/image12.png)
 
-Preset names are displayed on the left. The list is extracted from the property `behaviour_GUI.Experiment_set.default_tags`. You can edit this list to add/remove quick tags.
+Preset names are displayed on the left. The list is extracted from the property `behaviour_GUI.analysis.default_tags`. You can edit this list to add/remove quick tags.
 
 Manual Addition
 ---------------
@@ -279,7 +265,8 @@ For each video, the analysis progress is displayed in the command.
 
 ![](./media/image21.png)
 
-Note : Most of the time is taken by video loading. To speed up the analysis, it is recommended to have files on a local, fast drive (eg. SSD drive).
+> Note : Most of the time is taken by video loading. To speed up the analysis, it is recommended to have files on a local, fast drive (eg. SSD drive). Avoid loading videos from a server.
+>
 
 Once all MIs are calculated, checkboxes in the *analysed* column are ticked.
 
@@ -318,7 +305,11 @@ Correct for camera movement
 
 During an experiment, you may have camera movement. You have the possibility to introduce and offset for all ROIs. ROIs will all have the same offset for a given video. ROI size cannot be changed during recordings
 
-To correct for camera displacement, you must first specify ROI location in the consensus frame. When the camera moves, the consensus frame may be blurry or show multiple ghost images, due to a camera offset. The ROIs should be correct for the beginning of the experiment.
+### Principle and manual approach
+
+To correct for camera displacement, you must first specify ROI location in the consensus frame. When the camera moves, the consensus frame may be blurry or show multiple ghost images, due to a camera offset. This behaviour can behaviour can be reduced by setting `behaviour_GUI.analysis.auto_register_ref_image = true`.
+
+The ROIs have to be positioned in relation to the beginning of the experiment (i.e. the first valid video recording, which is usually the first one).
 
 ![](./media/image27-1587374845677.png)
 
@@ -338,7 +329,7 @@ You can drag the ROIs (which will move together) to the correct location.
 
 ![](media/image31-1587374845678.png)
 
-Note: The offset is automatically applied to all the following recordings, although you can set a second different offset on a later video (which will, in turn, be applied to all the subsequent video. See example below. In **bold**, we indicate the only video that actually needed a manual intervention.
+Note: The offset is automatically applied to all the subsequent recordings, although you can set a second different offset on a later video (which will, in turn, be applied to all the subsequent video. See example below. In **bold**, we indicate the only video that actually needed a manual intervention.
 
 | video | Mean frame | rec1 | rec2 | rec3 | rec4 | rec5 | rec6 | … | rec_N |
 |:------:|:---------------:|:-----:|:-----:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
@@ -350,7 +341,9 @@ You can clear all offset (if you are on the reference frame), or all offsets sta
 
 ![image-20200430102810160](media/image-20200430102810160.png)
 
+### Automated registration
 
+By default, the code use DFT registration between each recording first frame and automatically guesses if there should be an offset. this is usually accurate and should not be disabled. However, you can disable this behaviour by setting `behaviour_GUI.analysis.auto_estimate_offsets = false`.
 
 
 Display MIs
@@ -399,7 +392,7 @@ Here is a quick example on how to extract MI's from scratch. More details about 
 my_analysis = Analysis_Set('D:\Video for Toolbox testing')
 
 %% List all recordings
-my_analysis = my_analysis.update();
+my_analysis.update();
 
 %% Select MI's for a specific experiment (here experiment 1)
 my_analysis.experiments(1).select_ROIs();
@@ -409,6 +402,9 @@ my_analysis.analyse();
 
 %% Display MI's and get output values
 [data, t] = my_analysis.experiments(end).plot_results();
+
+%% Save database
+my_analysis.save();
 ```
 
 ## Initial set up
@@ -421,10 +417,13 @@ The initial step is to isolate the Analysis_Set object. You can do this by extra
 
 ```matlab
 %% Get the Analysis set handle from the GUI
-my_analysis = behaviour_GUI.Experiment_set;
+my_analysis = behaviour_GUI.analysis;
 
 %% Get the Analysis set from a backup
 load('some_backup.mat');
+
+%% If you actually want to start the GUI at one point :
+Behaviour_analysis(my_analysis)
 ```
 
 ### Creating a new database
@@ -478,17 +477,19 @@ ROIS = {expe.recordings(2).videos.rois}
 roi = expe.recordings(2).videos(1).rois(1)
 >> roi = 
      ROI with properties:
-               n_ROI: []
-        ROI_location: [585.0909 174.5455 20 20 7513]
-              result: {}
-                name: 'Label # 1'
+       		ROI_location: [448.1951 66.1463 63.9024 60.9756 9572]
+     		extracted_data: [1×1 Extracted_Data]
+      		function_used: []
+            name: 'Eye'
+           	parent_h: [1×1 Video]
+    		current_varname: 'motion_index'
 
 % ROI_location  
 round(roi.ROI_location)
 >> ans =
          [585, 175, 20, 20, 7513]; % xstart, ystart, width, height, id
-% The id is identifying an ROI in case it has the same name.
-% for example  
+% The id is identifying a specific ROI across recordings
+% for example, in this experiment rois(2) correspond to the same "whsker" roi, although there may be some offset for the ROI_locations
 	expe.recordings(1).videos(1).rois(2).ROI_location(5)
  == expe.recordings(3).videos(1).rois(2).ROI_location(5)
 >> ans =
@@ -522,52 +523,58 @@ my_analysis.experiments(6).recordings(2).videos(1).analyse();
 vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
 vid = vid.analyse();
 
-%% Plot MI for ROI # 2
-figure();plot(vid.extracted_results{2}(:,2), vid.extracted_results{2}(:,1));
-xlabel('time (ms)')
+%% Plot MI for ROI # 2 using different time axes
+figure();plot(vid.extracted_results{2}(:,2), vid.extracted_results{2}(:,1)); hold on;
+xlabel('time (posix)')
+figure();plot(vid.timestamps, vid.extracted_results{2}(:,1)); hold on;
+xlabel('time from recording start (s)')
+figure();plot(vid.absolute_times, vid.extracted_results{2}(:,1)); hold on;
+xlabel('time (GMT)')
+
 ```
 
 
 
 ## Run custom functions on ROIs
 
-The default analysis extract the Motion Index for all selected ROIs. However, you can extract the content of ROIs for other purposes, such as pupil tracking, or DeepLabCut. To do this you nned to pass a function handle, whci can be run at the video or individual ROI level, and can be filtered for specific ROIs if needed.
+The default analysis extract the Motion Index for all selected ROIs. However, you can extract the content of ROIs for other purposes, such as pupil tracking, or DeepLabCut. To do this you need to pass a function handle, which can be run at the video or individual ROI level, and can be filtered for specific ROIs if needed. You can have 2 main use : a custom function manipulating directly the videos using the ROI location in the database, or a custom function extracting some information from the video and storing it in the database for later use.
 
 ### Example 1 : Get Mean projection of ROIs
 
-For this example, we are starting from the video defined in the [previous section](#Extract-Motion-index) :
+For this example, we are starting from the video defined in the [previous section](#Extract-Motion-index). This code demonstrate how to pass a function handle using the video path and the ROI coordinates from the database, to extract the content of the ROI. Here we show the mean projection of the extracted ROIs, but the function could be used to export small videos for DLC for example. Note that the extracted data is NOT stored in the database (see 'none' parameter), but returned. see *demo_custom_handle.m*
 
 ```matlab
-%% Demo Script : to extract mean image for a set of recordings
-vid = my_analysis.experiments(6).recordings(2).videos(1); % for display purpose
-im = vid.analyse(@(~,~) get_mean_proj(vid.path, vid.ROI_location{1}));
+%% To test this, draw an Eye ROI on at least a video, and adjust indexes here to point at the correct video
+vid = my_analysis.experiments(1).recordings(2).videos(1); % for display purpose
+
+%% Demo Script : to extract mean image for a set of recordings, for the Eye ROI
+ROI_location = vid.ROI_location{find(contains(vid.roi_labels, 'Eye'))};
+im = vid.analyse(@(~,~) get_mean_proj(vid.path, ROI_location), '', '', 'none');
 figure();imagesc(im);axis image
 
 function im = get_mean_proj(file_path_or_data, ROI)
-    [~, video] = get_MI_from_video(file_path_or_data, '', ROI);
+    [~, video] = get_MI_from_video(file_path_or_data, ROI);
     im = nanmean(video{1}, 3);
 end
 ```
 
 ### Example 2 : Track Pupil diameter using an external function
 
-For this example, we are going to run manually a function using pre-set ROI coordinates, and extract pupil tracking index
+For this example, we are going to run manually a function using pre-set ROI coordinates, and extract pupil tracking index. In this example, we are setting a new variable name. The variable content will be stored in the database. We can then use the embedded plot function to display some of the results. Because the code extracting pupil index store the result in a struct, we ned to happen a formatting function that will only return a [T x 1] output. Therefore, running this code requires 2 function : a function to extract the pupil data, and a function to format the output of this extraction. see *demo_pupil_extraction.m*
 
 ```Matlab
-%% Get analysis handle (for clarity)
-my_analysis = behaviour_GUI.Experiment_set;
+my_analysis = behaviour_GUI.analysis;
+usable = find(cellfun(@(x) any(strcmp(x, 'Eye')), {my_analysis.experiments.roi_labels}));
+force = true;
+exp = 1; % 26
 
-%% Identify Videos with an Eye ROI
-usable = cellfun(@(x) any(strcmp(x, 'Eye')), {my_analysis.experiments.roi_labels});
-
-%% Now, for each ROI called "Eye", run pupil extraction
 rendering = true;
-thresh_factor = 1.5;
+thresh_factor = 1.4;
 dark_prctile = 1;
 
-%% Method 1, direct call
+%% Method 1, direct function call, in a loop, not using the analyse function.
 for exp_idx = usable
-    for rec_idx = 1:my_analysis.experiments(idx).n_rec
+    for rec_idx = 1:my_analysis.experiments(exp_idx).n_rec
         rec = my_analysis.experiments(exp_idx).recordings(rec_idx);
         for vid_idx = 1:rec.n_vid
             vid = rec.videos(vid_idx);
@@ -580,29 +587,25 @@ for exp_idx = usable
     end
 end
 
-%% Method 2, using analyse() method and function callback
-for exp_idx = usable
-    for rec_idx = 1:my_analysis.experiments(idx).n_rec
+%% Method 2, using analyse() method and function callback, and storing data in the database
+
+%% Set a new variable name. This is key to avoid overwriting the motion_index data 
+behaviour_GUI.analysis.current_varname = 'pupil';
+
+for exp_idx = exp%usable
+    for rec_idx = 1:my_analysis.experiments(exp_idx).n_rec
         rec = my_analysis.experiments(exp_idx).recordings(rec_idx);
         for vid_idx = 1:rec.n_vid
             vid = rec.videos(vid_idx);
-            data = vid.analyse(@(~,~) pupil_analysis(vid.path,...
-            										rendering,...
-                                                    thresh_factor,...
-                                                    dark_prctile,...
-                                                    vid.ROI_location{cellfun(@(x) contains(x, 'Eye'), vid.roi_labels)}), true);
+            fh = @(~,~) pupil_analysis(vid.path, rendering, thresh_factor, dark_prctile, vid.ROI_location{cellfun(@(x) contains(x, 'Eye'), vid.roi_labels)});
+            data = vid.analyse(fh, force, '', 'pupil @format_pupil_output','Eye');
         end
     end
 end
+
+%% Now plot extracted results
+behaviour_GUI.analysis.experiments(exp).plot_results
             
-
-```
-
-### Example 3 : Store extracted metrics using an external function
-
-For this example, we are going to run a function using pre-set ROI coordinates, and store info in a new field (not MI)
-
-```matlab
 
 ```
 
