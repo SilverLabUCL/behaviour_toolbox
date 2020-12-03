@@ -53,6 +53,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         link.auto_offsets = {cell2mat(ROI_offsets)};
     elseif current_experiment.parent_h.auto_estimate_offsets % otherwise, values are 0 or auto_estimates
         link.auto_offsets   = autoestimate_offsets('', '', all_frames);
+        ROI_offsets         = mat2cell(link.auto_offsets{1}, ones(1,50));
     else
         link.auto_offsets = {cell2mat(ROI_offsets)};
     end
@@ -92,7 +93,11 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         add_rect('', '', roi_position, label, color, size(all_frames, 3));
         
         %% Update the per-video offsets (same offset for all ROIs for now)
-        current_offset{roi_idx} = cell2mat(ROI_offsets);            
+        %if iscell
+            current_offset{roi_idx} = cell2mat(ROI_offsets);    
+        %else
+        %    current_offset = ROI_offsets;
+        %end
         %link.name(roi_idx)  = {label};
         %link.label(roi_idx) = {text(roi_position(1)-5,roi_position(2)-5, ['\bf ',label], 'Color', [1,0.2,0.2])};
     end 
