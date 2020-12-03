@@ -355,11 +355,12 @@ classdef Experiment < handle
             end
         end 
         
-        function failed = select_ROIs(obj, fig_handle, default_tags)   
+        function [failed, modified] = select_ROIs(obj, fig_handle, default_tags)   
             %% Browse experiment folder and add all possible valid videos
             % -------------------------------------------------------------
             % Syntax: 
-            %   failed = Experiment.select_ROIs(fig_handle, default_tags)  
+            %   [failed, modified] = 
+            %               Experiment.select_ROIs(fig_handle, default_tags)  
             % -------------------------------------------------------------
             % Inputs:
             %   fig_handle (BOOL) - Optional - Default is ''
@@ -397,6 +398,7 @@ classdef Experiment < handle
                 default_tags = '';
             end
 
+            modified = false(1, numel(obj.videotypes));
             if ~isempty(obj)
                 clear global current_offset current_pos roi_handles
                 global current_pos current_offset
@@ -468,18 +470,19 @@ classdef Experiment < handle
                                 former_offsets      = cell2mat(arrayfun(@(x) x.videos(video_type_idx).video_offset, [obj.recordings], 'UniformOutput', false)');
                                 roi_change_detected = roi_change_detected || (~isempty(offsets) && ~all(all(former_offsets == offsets)));
                             end
-                        else
+                        else                            
                             break
                         end
                     end
 
                     %% Add new windows and update ROI windows location  
                     try
-                        roi_available = isprop(obj.recordings(rec).videos(video_type_idx),'n_roi');
+                        roi_available = isprop(obj.recordings(rec).videos(video_type_idx),'n_roi') && obj.recordings(rec).videos(video_type_idx).n_roi;
                     catch
                         roi_available = false;    
                     end
                     if roi_change_detected || (isempty(current_pos) && roi_available)% && current_experiment.recordings(rec).videos(video_type_idx).n_roi > 0)
+                        modified(video_type_idx) = true;
                         for rec = 1:obj.n_rec
                             target = obj.videotypes{video_type_idx};
                             local_video_type_idx = find(contains(obj.recordings(rec).videotypes, target));

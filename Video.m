@@ -88,6 +88,7 @@ classdef Video < handle
         roi_labels      ; % Name of each ROI
         ROI_location    ; % ROI location
         extracted_results; % All extracted results
+        is_extracted    ; % flag is the current variable was extracted without loading it
         video_offset    ; % Video offset relative to first experiment recording
         position        ; % Camera Position?
         name            ; % ---
@@ -726,6 +727,17 @@ classdef Video < handle
                 video_offset = obj.video_offset;
             end
         end
+        
+        function is_extracted = get.is_extracted(obj)
+            is_extracted = zeros(1,obj.n_roi);
+            for roi = 1:obj.n_roi
+                if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
+                    is_extracted(roi) = ~isempty(obj.rois(roi).extracted_data.(obj.rois(roi).current_varname));
+                else
+                    is_extracted(roi) = NaN;
+                end
+            end            
+        end
 
         function extracted_results = get.extracted_results(obj)
             %% Return result for each ROI
@@ -763,6 +775,7 @@ classdef Video < handle
                             fprintf(['there are more video frames than timestamp values in ',obj.path,' Timestamp export may have failed\n']);
                         elseif size(extracted_results{roi}, 1) < size(obj.t,1)
                             fprintf(['there are more timestamp values in ',obj.path,' than video frames.  Video recording or export may have failed\n']);
+                            extracted_results{roi} = [NaN(size(obj.t)), obj.t]; 
                         else
                             fprintf(['Problem interpreting data. Extracted data should return a single column of data\n']);
                         end

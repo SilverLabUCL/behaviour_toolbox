@@ -478,27 +478,21 @@ classdef Analysis_Set < handle
             end
         end
         
-        function analysed_idx = select_ROIs(obj, filter_list)
-            %% Check if this experiment has already be listed somewhere.
-            % If yes, return the correct index
-            % If not, return a new, unused index
+        function [analysed_idx, modified] = select_ROIs(obj, filter_list)
+            %% Browse experiment folder and add all possible valid videos
             % -------------------------------------------------------------
             % Syntax: 
-            %   analysed_idx = Analysis_Set.select_ROIs(filter_list)
+            %   analysed_idx = Experiment.select_ROIs(filter_list)  
             % -------------------------------------------------------------
             % Inputs:
-            %   filter_list (STR or CELL ARRAY of STR) - Optional - default
-            %           is ''
-            %   	If non-empty, only video path that match the filter
-            %   	will be updated and displayed
+            %   filter_list (STR) - Optional - Default is ''
+            %   	Filter the experiments that will be analysed
             % -------------------------------------------------------------
             % Outputs: 
-            %   analysed_idx (the indexes of the experiments that 
-            %   	The idndexes of the experiments that were updated
+            %   analysed_idx
+            %       List of experiments that were analyzed
             % -------------------------------------------------------------
             % Extra Notes:
-            % * Experiments that will be displayed are also updated in case
-            %   you added/removed videos
             % -------------------------------------------------------------
             % Examples:
             % * Setup all ROIs
@@ -528,9 +522,10 @@ classdef Analysis_Set < handle
             end
 
             %% Now extract ROIs
+            modified = {};
             for experiment_idx = analysed_idx
                 %% Now that all recordings were added, we can select ROIs
-                obj.experiments(experiment_idx).select_ROIs('', obj.default_tags);
+                [~, modified{end+1}] = obj.experiments(experiment_idx).select_ROIs('', obj.default_tags);
             end
         end
 

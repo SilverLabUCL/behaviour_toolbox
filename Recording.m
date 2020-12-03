@@ -865,7 +865,7 @@ classdef Recording < handle
             
             analysed = true;
             for vid = 1:obj.n_vid
-                if obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).extracted_results{:}}))
+                if ~all(obj.videos(vid).is_extracted)%obj.videos(vid).n_roi > 0 && any(cellfun(@isempty, {obj.videos(vid).extracted_results{:}}))
                     analysed = false;
                     break
                 end
