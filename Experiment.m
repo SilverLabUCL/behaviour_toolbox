@@ -627,7 +627,7 @@ classdef Experiment < handle
             elseif ischar(videotypes)
                 videotypes = {videotypes};
             end
-
+            
             all_offsets = {};
             for type = 1:numel(videotypes)
                 [~, all_frames] = obj.get_consensus_frame(videotypes{type});
