@@ -53,7 +53,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         link.auto_offsets = {cell2mat(ROI_offsets)};
     elseif current_experiment.parent_h.auto_estimate_offsets % otherwise, values are 0 or auto_estimates
         link.auto_offsets   = autoestimate_offsets('', '', all_frames);
-        ROI_offsets         = mat2cell(link.auto_offsets{1}, ones(1,50));
+        ROI_offsets         = mat2cell(link.auto_offsets{1}, ones(1,size(link.auto_offsets{1}, 1)));
     else
         link.auto_offsets = {cell2mat(ROI_offsets)};
     end
