@@ -131,6 +131,7 @@ function [current_experiment, names] = display_video_frame(current_experiment, v
         pause(display_duration);
     end
 
+    link.name       = erase(link.name,'\');
     names           = link.name;
     close all
 end
@@ -276,6 +277,12 @@ function add_rect(~, src, position, label, color, n_vid)
 
     if numel(position) == 4
         id = round(unifrnd(1,10000)); % use this to identify rectangles
+        if numel(current_pos)
+            existing_ids = cellfun(@(x) x(5), current_pos); % for this video;
+            while ismember(id,existing_ids)
+                id = round(unifrnd(1,10000));
+            end 
+        end
         position = [position, id];
     else
         id = position(5);
