@@ -731,7 +731,7 @@ classdef Video < handle
         function is_extracted = get.is_extracted(obj)
             is_extracted = zeros(1,obj.n_roi);
             for roi = 1:obj.n_roi
-                if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
+                if isprop(obj.rois(roi), 'extracted_data') && isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
                     is_extracted(roi) = ~isempty(obj.rois(roi).extracted_data.(obj.rois(roi).current_varname));
                 else
                     is_extracted(roi) = NaN;
@@ -764,7 +764,7 @@ classdef Video < handle
             
             extracted_results    = cell(1, obj.n_roi);
             for roi = 1:obj.n_roi
-                if isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
+                if isprop(obj.rois(roi), 'extracted_data') && isprop(obj.rois(roi).extracted_data, obj.rois(roi).current_varname)
                     extracted_results{roi} = obj.rois(roi).extracted_data.(obj.rois(roi).current_varname);
                     if ~isempty(extracted_results{roi})
                         if size(extracted_results{roi}, 1) == size(obj.t,1) && size(extracted_results{roi}, 2) == 1
