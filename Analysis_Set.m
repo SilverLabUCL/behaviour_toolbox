@@ -107,6 +107,7 @@ classdef Analysis_Set < handle
         folder_exclusion= {' unidentified'} ; % path containing elements in this list are ignored
         videotypes      = {}             ; % List all existing videos types
         current_varname = 'motion_index' ; % The metric currently used
+        folder_structure = '/*-*-*/experiment_*'; % defines how experiments containing video folders can be found %% '/HG */exp *'
     end
 
     methods
@@ -185,7 +186,7 @@ classdef Analysis_Set < handle
             end
             
             %% Get all experiments in the video folder
-            experiment_folders = dir([obj.video_folder, '/*-*-*/experiment_*']); 
+            experiment_folders = dir([obj.video_folder, obj.folder_structure]); 
             if isempty(obj.video_folder) || ~isdir(obj.video_folder) || isempty(experiment_folders)
                 error('You must set a valid video_folder path in your Experiment Set. If you changed computer or moved your files, adjust Analysis_set.video_folder')
             end
