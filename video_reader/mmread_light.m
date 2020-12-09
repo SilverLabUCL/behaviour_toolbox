@@ -40,7 +40,13 @@ function video_full = mmread_light(filename, dump_data)
     matlabCommand = '';
     
     %% Quick query to get some useful values & Array preallocation
-    vidObj = VideoReader(filename);
+    try
+        vidObj = VideoReader(filename);
+    catch
+        video_full = [];
+        warning(['Unable to load ',filename,'. Video is empty, corrupted or uses an unrecognized codec\n'])
+        return
+    end
     numFrames = ceil(vidObj.FrameRate*vidObj.Duration);
     batchsize = 500;
     batches = [1:batchsize:numFrames,numFrames+1]; %% FFGrab('doCapture') uses a lot of memory  if we load everythin at once, so we do smaller batches;

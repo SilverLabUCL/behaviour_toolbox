@@ -119,15 +119,19 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, ren
     end
     
     %% Set some useful variables
-    if ~dump_data
-        %% When video data is available at once (fastest)
-        nFrames             = size(file_path_or_data, 3);
-        file_path_or_data   = {file_path_or_data};
-        n_src = 1; % When not dumping data, batch size is 1;
+    if ~isempty(file_path_or_data)
+        if ~dump_data
+            %% When video data is available at once (fastest)
+            nFrames             = size(file_path_or_data, 3);
+            file_path_or_data   = {file_path_or_data};
+            n_src = 1; % When not dumping data, batch size is 1;
+        else
+            %% When video data is available by batch (memory saving)
+            [~, n_src]          = size(file_path_or_data,'video_full');
+            nFrames             = [];
+        end
     else
-        %% When video data is available by batch (memory saving)
-        [~, n_src]          = size(file_path_or_data,'video_full');
-        nFrames             = [];
+        n_src = 0;nFrames = 0;
     end
     
     %% Now collect data, batch by batch
