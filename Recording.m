@@ -482,8 +482,12 @@ classdef Recording < handle
                         end
                     end
                             
-                    if regroup
-                        n_rois      = sum(contains(unique(current_labels{1}), ROI_filter)); 
+                    if regroup 
+                        if ~isempty([current_labels{:}])
+                            n_rois      = sum(contains(unique(current_labels{1}), ROI_filter)); 
+                        else
+                            n_rois = 0;
+                        end
                     else
                         n_rois      = sum(contains(current_labels{1}, ROI_filter)); 
                         ROI_names   = current_labels{1};
