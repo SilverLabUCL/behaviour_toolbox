@@ -168,12 +168,11 @@ function [motion_indexes, video] = get_MI_from_video(file_path_or_data, ROI, ren
                         for ax = 3:4
                             if (roi(ax) - max_allowed_size(ax)) > 0 % clip axis if too big
                                 roi(ax) = max_allowed_size(ax); %stop at end of frame
-                            elseif roi(ax-2) < 0
+                            elseif roi(ax-2) <= 0
                                 roi(ax)   = roi(ax) - roi(ax-2); % reduce size to start at 1
                                 roi(ax-2) = 1;                   % start at 1
                             end
                         end
-
                         temp{el}    = video(roi(2):roi(2)+roi(4), roi(1):roi(1)+roi(3), :);
                         %figure(el);cla();imagesc(max(temp{el},[],3));axis image
                     else
