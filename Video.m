@@ -322,7 +322,7 @@ classdef Video < handle
             % See also: Recording.plot_results     
             
             [timepstamp_path, file] = fileparts(obj.path);
-            file                    = erase(file, '-1');
+            file                    = obj.video_types;%   erase(file, '-1');
             timepstamp_path         = fileparts(timepstamp_path); % To use the parent folder instead (because it has absolute timestamps)
             timepstamp_path         = [timepstamp_path,'/',file,'-relative times.txt'];
 
