@@ -186,7 +186,7 @@ classdef Recording < handle
 
             recordings_videos = dir([obj.path, '**/*.avi']);
             %% Code doesn't handle the *-2.avi videos
-            pb = ~contains({recordings_videos.name}, '-1.avi');
+            pb = ~contains({recordings_videos.name}, '-1') | ~contains({recordings_videos.name}, '.avi');
             if any(pb)
                 fprintf(['WARNING !!!!!!!!!!!!!! - TO FIX - ', obj.path,' contains a split video and will not be analysed\n'])
                 recordings_videos = recordings_videos(~pb);

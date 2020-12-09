@@ -901,6 +901,7 @@ classdef Video < handle
             %   21-05-2020
             
             [~, video_name] = fileparts(obj.path);
+            video_name = video_name(1:strfind(video_name,'-')-1);
         end
         
         function current_varname = get.current_varname(obj)

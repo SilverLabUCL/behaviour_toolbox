@@ -321,7 +321,7 @@ classdef Experiment < handle
             fprintf(['Adding recordings in folder ... ',obj.path,' \n'])
             
             %% List all recordings
-            recordings_folder = dir([obj.path, '*_*_*']);
+            recordings_folder = dir([obj.path, '*_*_*VidRec*']);
 
             obj.splitvideos = {};
             if ~isempty(recordings_folder) %% Only empty if there is no video or if the folder structure is wrong
