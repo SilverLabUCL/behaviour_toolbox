@@ -108,6 +108,7 @@ classdef Analysis_Set < handle
         videotypes      = {}             ; % List all existing videos types
         current_varname = 'motion_index' ; % The metric currently used
         folder_structure = '/*-*-*/experiment_*'; % defines how experiments containing video folders can be found %% '/HG */exp *'
+        expdate         = ''; %in YYMMDD format - prefix of experiment folders
     end
 
     methods
